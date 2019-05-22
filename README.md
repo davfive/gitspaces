@@ -32,8 +32,30 @@ like this. Clones are expensive, committing just to context switch is a pain and
 
 Gitspaces are essentially a lightweight implementation of ClearCase Views for git projects.
 
+## Command overview
+
+Once gitspaces scripts are available in your environment, all gitspaces commands are prefixed with `gs`. e.g.
+
+Command     | Description
+------------|------------------------
+`gs switch` | Switch to a different top-level gitspace project.
+`gs ls`     | List repository information (e.g., what branch they are on)
+`gs mv`     | Rename a current gitspace
+`gs sleep`  | Archive a gitspace (not using it currently - renames to _.zzz-# and hides from lists)
+`gs cd`     | cd around a gitspaces project. Switch gitspace, repos, folder
+`gs cd -`   | Switch to a different gitspace (allows you wake one up you put to sleep to use fresh)
+
+
 ## Quick Setup
 
+0. Download/Clone gitspaces repo and add it to your .bashrc file
+
+   ```
+   cp gitspaces ~/bashlibs/gitspaces # or whereever you want
+   echo ". ~/bashlibs/gitspaces/gitspaces.sh" >> ~/.bashrc
+   . ~/.bashrc
+   ```
+   
 1. Create a code project folder
 
    `~/code/projectA`
@@ -42,11 +64,11 @@ Gitspaces are essentially a lightweight implementation of ClearCase Views for gi
    
    `~/code/projectA/gsconfig.ini`
 
-3. Create 1 gitspace in the project folder (prefix it with _.
+3. Create 1 gitspace in the project folder (prefix it with \_.)
 
    `~/code/projectA/_.first`
    
-4. Clone all of your repositories into the _.first folder
+4. Clone all of your repositories into the \_.first gitspace folder
 
    ```
    ~/code/projectA/
@@ -56,3 +78,13 @@ Gitspaces are essentially a lightweight implementation of ClearCase Views for gi
       ...
       +- projectA-repo-N
    ```
+5. Create additional gitspaces for projectA by simply cp -R on _.first (way faster usually than cloning)
+
+  ```
+  cd ~/code/projectA
+  cp -R _.first _.second
+  ...
+  cp -R _.first _.nth
+  ```
+  
+  You can add a new gitspace folder anytime you want when you need more. I've generally found that 5 are sufficient.
