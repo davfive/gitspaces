@@ -84,11 +84,11 @@ Command     | Description
    ```
 5. Create additional gitspaces for projectA by simply cp -R on _.first (way faster usually than cloning)
 
-  ```
-  cd ~/code/projectA
-  cp -R _.first _.second
-  ...
-  cp -R _.first _.nth
-  ```
+   ```
+   cd ~/code/projectA
+   cp -R _.first _.second
+   ...
+   cp -R _.first _.nth
+   ```
   
   You can add a new gitspace folder anytime you want when you need more. I've generally found that 5 are sufficient.
