@@ -44,6 +44,7 @@ Command     | Description
 `gs sleep`  | Archive a gitspace (not using it currently - renames to _.zzz-# and hides from lists)
 `gs cd`     | cd around a gitspaces project. Switch gitspace, repos, folder
 `gs cd -`   | Switch to a different gitspace (allows you wake one up you put to sleep to use fresh)
+`gs co`     | Choose from a list of 'BranchSet's (in gsconfig.ini) and will git pull each repos to it's specified branch
 
 
 ## Quick Setup
