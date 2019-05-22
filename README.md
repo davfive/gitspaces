@@ -56,7 +56,7 @@ Command     | Description
    . ~/.bashrc
    ```
    
-1. Create a code project folder
+1. Create a code project folder (will house projectA's gitspaces)
 
    `~/code/projectA`
 
