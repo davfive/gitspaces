@@ -45,6 +45,9 @@ Command     | Description
 `gs cd`     | cd around a gitspaces project. Switch gitspace, repos, folder
 `gs cd -`   | Switch to a different gitspace (allows you wake one up you put to sleep to use fresh)
 `gs co`     | Choose from a list of 'BranchSet's (in gsconfig.ini) and will git pull each repos to it's specified branch
+`gs code`   | Launches Visual Studio Code with .code-workspace file updated with proper paths for debugging
+`gs init`   | _TODO_: Creates gsconfig.ini, first gs space folder and space .code-workspace config file
+`gs cp`     | _TODO_: Copies an existing gitspace folder to create another (and puts it to sleep)
 
 
 ## Quick Setup
