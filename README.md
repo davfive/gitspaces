@@ -1,3 +1,5 @@
+<img src="gitspaces.png" width="100">
+
 # gitspaces - A git development workspace manager
 
 > NOTE: I am calling all things "scripts". They are actually no scripts at all that are called from the cmdline. They are all bash aliases and functions, but to have one word, I call everything scripts.
