@@ -70,9 +70,8 @@ Command     | Description
    ```
 
 3. Setup a GitSpaces project folder
-   
+   > Future: this is what 'gs init' will do
    ```
-   # Future: this is what `gs init` will do
    cd ~/code/projectA
    cp ~/.gitspaces/userfiles/gitspaces.ini .        # See file comments for details
    mkdir $GITSPACES_SPACESDIR  # defaults to '_'    # Where all of your project spaces will live
@@ -103,8 +102,9 @@ Command     | Description
    git clone <projectA-repoN>
    ```
    
-5. Create additional GitSpaces for projectA by simply 'cp -R firstspace secondspace' (way faster usually than re-cloning)
-   > Note the copy operation is way quicker if you clean your firstspace repos' (git clean -dx -f)
+5. Create additional GitSpaces for projectA
+   > Simply 'cp -R firstspace secondspace' (way faster usually than re-cloning)  
+   > Note the copy operation is way quicker if you clean your firstspace repos' (git clean -dx -f)  
    ```
    cd ~/code/projectA
    cp -R firstspace secondspace
@@ -112,7 +112,7 @@ Command     | Description
    cp -R firstspace nthspace
    ```
   
-  You can add a new gitspace folder anytime you want when you need more. I've generally found that 5 are sufficient.
+   You can add a new gitspace folder anytime you want when you need more. I've generally found that 5 are sufficient.
 
 6. Add your new GitSpaces project to GITSPACES_PROJDIRS in ~/.gitspacesrc.sh and resource
 
