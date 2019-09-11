@@ -13,10 +13,10 @@ GitSpaces is a set of bash scripts for managing git-based development workspaces
    * Space renaming
    * Per user, space configuration overrides
 2. Cross-repository branch management
-   * Common Development aids
-   * Visual Studio Code configuration per workspace
+   * Common Development aids (multi-repo branch sets for ensuring on Development/Production/... branches)
    * Common (and uncommon) git alias
    * Directory change aliases (to each repository)
+   * Visual Studio Code  per workspace
 
 ## Background
 
@@ -52,43 +52,77 @@ Command     | Description
 
 ## Quick Setup
 
-0. Download/Clone gitspaces repo and add it to your .bashrc file
+1. Download/Clone gitspaces repo and add it to your .bashrc file
 
    ```
-   cp gitspaces ~/bashlibs/gitspaces # or whereever you want
-   echo ". ~/bashlibs/gitspaces/gitspaces.sh" >> ~/.bashrc
+   cd ~
+   git clone <repo-path> .gitspaces
+   echo ". ~/.gitspaces/gitspaces.sh" >> ~/.bashrc
+   cp ~/.gitspaces/userfiles/.gitspacesrc.sh  ~/
+   perl -pi -e "s/^#alias/alias/ ~/.gitspacesrc.sh  # aliases gs=gitspaces, cds='gs cd'
    . ~/.bashrc
    ```
    
-1. Create a code project folder (will house projectA's gitspaces)
+2. Create a code project folder (will house projectA's gitspaces)
 
-   `~/code/projectA`
+   ```
+   mkdir -p ~/code/projectA
+   ```
 
-2. Copy the gsconfig.ini file there.
+3. Setup a GitSpaces project folder
    
-   `~/code/projectA/gsconfig.ini`
+   ```
+   # Future: this is what `gs init` will do
+   cd ~/code/projectA
+   cp ~/.gitspaces/userfiles/gitspaces.ini .        # See file comments for details
+   mkdir $GITSPACES_SPACESDIR  # defaults to '_'    # Where all of your project spaces will live
+   mkdir -p $GITSPACES_SPACESDIR/firstspace         # First project space, you can rename it later
+   cd $GITSPACES_SPACESDIR/firstspace
 
-3. Create 1 gitspace in the project folder (prefix it with \_.)
+   # A GitSpaces project folder has the following structure:
+   ~/code/projectA/
+    |- gitspaces.ini
+    |- _/
+       +- space-1/
+          +- projectA-repo-1
+          ...
+          +- projectA-repo-N
+       ...
+       +- space-N/
+          +- projectA-repo-1
+          ...
+          +- projectA-repo-N
+   ```
 
-   `~/code/projectA/_.first`
-   
 4. Clone all of your repositories into the \_.first gitspace folder
 
    ```
-   ~/code/projectA/
-   |- gsconfig.ini
-   |- _.first/
-      +- projectA-repo-1
-      ...
-      +- projectA-repo-N
+   cd ~/code/projectA/_/firstspace
+   git clone <projectA-repo1>
+   ...
+   git clone <projectA-repoN>
    ```
-5. Create additional gitspaces for projectA by simply cp -R on _.first (way faster usually than cloning)
-
+   
+5. Create additional GitSpaces for projectA by simply 'cp -R firstspace secondspace' (way faster usually than re-cloning)
+   > Note the copy operation is way quicker if you clean your firstspace repos' (git clean -dx -f)
    ```
    cd ~/code/projectA
-   cp -R _.first _.second
+   cp -R firstspace secondspace
    ...
-   cp -R _.first _.nth
+   cp -R firstspace nthspace
    ```
   
   You can add a new gitspace folder anytime you want when you need more. I've generally found that 5 are sufficient.
+
+6. Add your new GitSpaces project to GITSPACES_PROJDIRS in ~/.gitspacesrc.sh and resource
+
+7. Start using GitSpaces
+
+8. Optional: Include ~/.gitspaces/userfiles/gitconfig
+
+   My common git aliases are in the userfiles folder. Just add the following to your ~/.gitconfig
+   
+   ```
+   [include]
+   path = ~/.gitspaces/userfiles/gitconfig
+   ```
