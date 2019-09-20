@@ -131,7 +131,7 @@ function gs_lsspaces() {
 	local spacesdir=$(gs_getspacesdir)
 	[ ! -d "$(gs_checkspacesdir "$spacesdir")" ] && return 1
 
-	(cd $spacesdir; find . -type d -maxdepth 1 | grep -v -x '.' | sort | xargs basename)
+	(cd $spacesdir; find .  -maxdepth 1 -type d | grep -v -x '.' | sort | xargs basename -a)
 }
 
 function gs_lsrepos() {
@@ -139,7 +139,7 @@ function gs_lsrepos() {
 	[ ! -d "$(gs_checkspacesdir "$spacesdir")" ] && return 1
 	local space=$(gs_getspace)
 
- 	echo $(cd "$spacesdir/$space" ; find . -type d -name ".git" -maxdepth 2 -exec dirname {} \; | xargs basename | sort)
+ 	echo $(cd "$spacesdir/$space" ; find . -maxdepth 2 -type d -name ".git" -exec dirname {} \; | xargs basename -a | sort)
 }
 
 alias mvs=gs_mvspace
@@ -262,7 +262,7 @@ function gs_cdspace()  {
 	if [ $# -ge 1 ]; then
 		local checkrepos
 		for checkrepos in $1 $(gs_config get ReposAliases $1); do
-			if [ "1" -eq $(find $spacesdir/$space -type d -name "$checkrepos" -maxdepth 1 2> /dev/null | wc -l) ]; then
+			if [ "1" -eq $(find $spacesdir/$space -maxdepth 1 -type d -name "$checkrepos" 2> /dev/null | wc -l) ]; then
 				repos=$checkrepos
 				shift
 				break

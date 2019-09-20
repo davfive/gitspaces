@@ -9,7 +9,7 @@ function gs_config() {
   case "$1" in
     list)
   	  local sectionre=$2
-      for section in $(cat $inifile | grep -E "\[$sectionre" | sed -e "s#\[##g" | sed -e "s#\]##g"); do
+      for section in $(cat $inifile | grep -v '^#' | grep -E "\[$sectionre" | sed -e "s#\[##g" | sed -e "s#\]##g"); do
         echo "$section"
       done
       return 0
@@ -20,9 +20,10 @@ function gs_config() {
 
       # https://stackoverflow.com/questions/49399984/parsing-ini-file-in-bash
       # This awk line turns ini sectins => [section-name]key=value
-      local lines=$(awk '/\[/{prefix=$0; next} $1{print prefix $0}' $inifile)
+      local lines=$(cat $inifile | grep -v '^#' | awk '/\[/{prefix=$0; next} $1{print prefix $0}')
       local rckey=1 # not found
       for line in $lines; do
+        2> echo "$line"
         echo "$line" | grep -q -E "^\[$sectionre"
         if [ $? -eq 0 ]; then
           local keyval=$(echo $line | sed -e "s/^\[$sectionre.*\]//")
