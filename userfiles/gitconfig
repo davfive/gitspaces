@@ -113,6 +113,7 @@
   b- = "!f() { (set -x; git checkout - ; ) }; f;"
   bp = "!f() { (set -x; git checkout $(git parent 2>/dev/null); ) }; f;"
 
+  bdo="!f() { (set -x; git branch-delete-orphans; ) }; f;"
   branch-delete-orphans= "!f() {                              \
         echo \"Fetching latest git references ...\";          \
         git fetch -p;                                         \
@@ -132,8 +133,6 @@
               done;                                           \
         done;                                                 \
 }; f;"
-  
-bdo="!f() { (set -x; git branch-delete-orphans; ) }; f;"
 
 # Reset/revert aliases
 co-- = "!f() {                                         \
@@ -219,4 +218,20 @@ co-- = "!f() {                                         \
         | sed 's/[\\^~].*//';                        \
   }; f"
 
+  # Find oldest-ancestor (root) of two branches)
+  root = "!f() { \
+        diff --old-line-format='' --new-line-format='' \
+          <(git rev-list --first-parent \"${1:-master}\") \
+          <(git rev-list --first-parent \"${2:-HEAD}\"); \
+  }; f"
 
+  # Output file history
+  fh="!f() { echo 'git history '$@; git history \"$@\"; }; f"
+  history = "!f() { \
+    for hash in $(git rev-list --all --objects -- $1 | grep $1 | awk '{ print $1}'); do \
+       echo '===================================================================================='; \
+       echo \"cat-file $1:$hash\"; \
+       echo '===================================================================================='; \
+       git cat-file -p $hash; \
+       done; \
+  }; f"
