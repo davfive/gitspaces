@@ -13,6 +13,7 @@
   fetch-prune = "!f() { (set -x; git fetch --prune origin \"$@\"; ) }; f"
   f = fetch
   push = "!f() { (set -x; git push origin \"$@\"; ) }; f"
+  desc = "describe"
 
   # Add - specify on cmdline or get list of non-staged changed files
   a = "!f() {                                      \
