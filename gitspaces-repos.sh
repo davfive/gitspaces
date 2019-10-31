@@ -75,7 +75,7 @@ function gs_repos() {
 					fi
 
 					gs_repoCheckout $repo $newbr
-					local currbr=$(gs_getBranch $repo)
+					local currbr=$(gs_repoGetBranch $repo)
 					if [ "x$currbr" != "x$newbr" ]; then
 						gs_echoc $GS_ECHO_RED "Error: Failed to change to new branch '$newbr'"
 						return 1
