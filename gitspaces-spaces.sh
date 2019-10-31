@@ -72,7 +72,8 @@ function gs_codespace() {
 	[ ! -d "$(gs_checkspacesdir "$spacesdir")" ] && return 1
 
 	space=$(gs_getspace)
-	(cd $spacesdir/$space; code .)
+	codeworkspace=$(gs_writecodeworkspace)
+	(cd $spacesdir/$space; code $codeworkspace)
 }
 
 function gs_getspace() {
@@ -142,12 +143,28 @@ function gs_lsrepos() {
  	echo $(cd "$spacesdir/$space" ; find . -maxdepth 2 -type d -name ".git" -exec dirname {} \; | xargs basename -a | sort)
 }
 
+function gs_writecodeworkspace() {
+	# Setup the code-workspace so my vscode sessions are named with the gitspace
+	local spacesdir=$(gs_getspacesdir)
+	local space=$(gs_getspace)
+
+	codeworkspace="$spacesdir/$space/.code-workspace/$space.code-workspace"
+	rm -f "$(dirname $codeworkspace)/*"
+	mkdir -p "$(dirname $codeworkspace)"
+	echo "{ \"folders\": [ " > $codeworkspace
+	for repo in $(gs_lsrepos); do
+		echo "{ \"path\": \"../$repo\" }," >> $codeworkspace
+	done
+	echo " ] }" >> $codeworkspace
+	echo $codeworkspace
+}
+
 alias mvs=gs_mvspace
 function gs_mvspace() {
 	local spacesdir=$(gs_getspacesdir)
 	[ ! -d "$(gs_checkspacesdir "$spacesdir")" ] && return 1
 
-	local oldspace newspace
+	local oldspace newspace cddir codeworkspace
 	case "$1" in
 		'')
 			echo "What's the new space name?"
@@ -180,6 +197,7 @@ function gs_mvspace() {
 		cd $spacesdir
 		mv $oldspace $newspace
 		cd $cddir
+		gs_writecodeworkspace > /dev/null
 	fi
 
 	return 0
