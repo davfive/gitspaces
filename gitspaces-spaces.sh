@@ -147,8 +147,9 @@ function gs_writecodeworkspace() {
 	# Setup the code-workspace so my vscode sessions are named with the gitspace
 	local spacesdir=$(gs_getspacesdir)
 	local space=$(gs_getspace)
+	local project=$(basename $(dirname $spacesdir)) # .../aurora/_ => aurora
 
-	codeworkspace="$spacesdir/$space/.code-workspace/$space.code-workspace"
+	codeworkspace="$spacesdir/$space/.code-workspace/$project~$space.code-workspace"
 	rm -f "$(dirname $codeworkspace)/*"
 	mkdir -p "$(dirname $codeworkspace)"
 	echo "{ \"folders\": [ " > $codeworkspace

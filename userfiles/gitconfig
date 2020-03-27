@@ -12,8 +12,9 @@
       
   fetch-prune = "!f() { (set -x; git fetch --prune origin \"$@\"; ) }; f"
   f = fetch
-  push = "!f() { (set -x; git push origin \"$@\"; ) }; f"
+  push = "!f() { (set -x; git push origin \"$@\";) }; f"
   desc = "describe"
+  dt = "!f() { (set -x ; git describe --long --tags;) }; f;"
 
   # Add - specify on cmdline or get list of non-staged changed files
   a = "!f() {                                      \
@@ -70,7 +71,7 @@
         fi;                                                   \
               echo 'Creating new branch: '\"$1\";             \
               (set -x; git checkout -b \"$1\"                 \
-                && git push --set-upstream origin \"$1\");    \
+                && git push --upstream origin \"$1\");        \
   }; f"
 
   # Switch branches (local or remote)
@@ -234,5 +235,13 @@ co-- = "!f() {                                         \
        echo \"cat-file $1:$hash\"; \
        echo '===================================================================================='; \
        git cat-file -p $hash; \
+       done; \
+  }; f"
+
+  # Output binary history
+  bh="!f() { echo 'git binstory '$@; git binstory \"$@\"; }; f"
+  binstory = "!f() { \
+    for hash in $(git rev-list --all --objects -- $1 | grep $1 | awk '{ print $1}'); do \
+       echo \"$1:$hash\"; \
        done; \
   }; f"
