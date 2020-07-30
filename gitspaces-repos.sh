@@ -122,7 +122,7 @@ function gs_repos() {
 					gs_tsecho "Pulling $space::$repo [$branch]"
 
 					# For all cases now that we are on the correct branch
-					gs_repoIsDirty $repo && gs_askyesno "Stash required before pull. Stash then pull anyway?"
+					gs_repoStashAsk $repo
 					if [ $? -eq 0 ]; then
 						gs_repoStash $repo
 					else
