@@ -18,4 +18,4 @@ export GS_ECHO_GREEN='\033[32m'
 export GS_ECHO_RED='\033[31m'
 export GS_ECHO_PLAIN='\033[0m'
 function gs_echoc() { local begcolor=$1; shift; echo -n -e $begcolor; echo -e "$@"$ECHO_PLAIN; }
-function ts_tsecho() {	echo; gs_echoc $ECHO_BLUE "## `date +"%Y-%m-%d %H:%M:%S"`: ""$@"; }
+function gs_tsecho() {	echo; gs_echoc $ECHO_BLUE "## `date +"%Y-%m-%d %H:%M:%S"`: ""$@"; }
