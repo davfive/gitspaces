@@ -1,6 +1,9 @@
+[core]
+  longpaths = true
+[help]
+  autocorrect = 10
 [grep]
   extendRegexp = true
-
 [alias]
   # All aliases are wrapped in a function/set -x so i can always 
   # remember what command(s) I'm actually running with the shortcut
