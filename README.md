@@ -6,8 +6,7 @@
 
 ## Upcoming Work
 
-- [ ] Convert bash scripts into python with a light shell wrapper (to support changing directories)
-- [ ] Convert bash scripts into golang with a light shell wrapper (to support changing directories)
+- [ ] Convert bash scripts into either python or golang with a light shell wrapper (to support changing directories)
 
 ## Overview
 
