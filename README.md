@@ -4,6 +4,10 @@
 
 > NOTE: I am calling all things "scripts". They are actually no scripts at all that are called from the cmdline. They are all bash aliases and functions, but to have one word, I call everything scripts.
 
+## Upcoming Work
+
+- [ ] Convert bash scripts into either python or golang with a light shell wrapper (to support changing directories)
+
 ## Overview
 
 GitSpaces is a set of bash scripts for managing git-based development workspaces. The main features are
