@@ -68,33 +68,29 @@ function gs_repos() {
 						continue
 					fi
 
-					gs_repoStashAsk $repo
-					if [ $? -ne 0 ]; then
-						gs_echoc $GS_ECHO_RED "Warning: Chose to not change branch/pull for repo $repo"
-						continue
-					fi
-
+					gs_repoFetch $repo
+					gs_repoStashAsk $repo # Ok if they don't, try anyway
 					gs_repoCheckout $repo $newbr
 					local currbr=$(gs_repoGetBranch $repo)
 					if [ "x$currbr" != "x$newbr" ]; then
 						gs_echoc $GS_ECHO_RED "Error: Failed to change to new branch '$newbr'"
 						return 1
 					fi
-				fi
 
-				# For all cases now that we are on the correct branch
-				gs_repoStashAsk $repo
-				if [ $? -ne 0 ]; then
-					gs_echoc $GS_ECHO_RED "Warning: Skipping pull for repo $repo"
-					continue
-				fi
+					# For all cases now that we are on the correct branch
+					gs_repoStashAsk $repo
+					if [ $? -ne 0 ]; then
+						gs_echoc $GS_ECHO_RED "Warning: Skipping pull for repo $repo"
+						continue
+					fi
 
-				# Pull Latest Changes
-				echo "Pulling latest changes for branch $oldbr ..."
-				gs_repoPull $repo
-				if [ $? -ne 0 ]; then
-					gs_echoc $GS_ECHO_RED "Error: Failed to pull latest changes"
-					return 1
+					# Pull Latest Changes
+					echo "Pulling latest changes for branch $newbr ..."
+					gs_repoPull $repo
+					if [ $? -ne 0 ]; then
+						gs_echoc $GS_ECHO_RED "Error: Failed to pull latest changes"
+						return 1
+					fi
 				fi
 			done
 			return 0

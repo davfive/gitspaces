@@ -20,17 +20,17 @@
   dt = "!f() { (set -x ; git describe --long --tags;) }; f;"
 
   # Add - specify on cmdline or get list of non-staged changed files
-  a = "!f() {                                      \
-    if [ $# -gt 0 ]; then                          \
-          (set -x; git add \"$@\");                \
-              return $?;                           \
-        fi;                                        \
-        PS3='Select one: ';                        \
-        echo 'Add File: ';                         \
-        select file in $(git diff --name-only); do \
-              (set -x; git add \"$file\");         \
-              break;                               \
-        done;                                      \
+  a = "!f() {                                  \
+    if [ $# -gt 0 ]; then                      \
+      (set -x; git add \"$@\");                \
+      return $?;                               \
+    fi;                                        \
+    PS3='Select one: ';                        \
+    echo 'Add File: ';                         \
+    select file in $(git diff --name-only); do \
+      (set -x; git add \"$file\");             \
+      break;                                   \
+    done;                                      \
   }; f"
 
   # Logging aliases ... except don't set-x echo the log ones (too wordy)

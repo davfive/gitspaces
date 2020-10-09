@@ -23,7 +23,7 @@ function gs_config() {
       local lines=$(cat $inifile | grep -v '^#' | awk '/\[/{prefix=$0; next} $1{print prefix $0}')
       local rckey=1 # not found
       for line in $lines; do
-        2> echo "$line"
+        >&2 echo "$line"
         echo "$line" | grep -q -E "^\[$sectionre"
         if [ $? -eq 0 ]; then
           local keyval=$(echo $line | sed -e "s/^\[$sectionre.*\]//")
