@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/davfive/gitspaces/v2/internal/console"
-	"github.com/davfive/gitspaces/v2/internal/gitspaces"
+	"github.com/davfive/gitspaces/internal/console"
+	"github.com/davfive/gitspaces/internal/gitspaces"
 
 	"github.com/spf13/cobra"
 )

@@ -1,6 +1,6 @@
 package main
 
-import "github.com/davfive/gitspaces/v2/cmd"
+import "github.com/davfive/gitspaces/cmd"
 
 func main() {
 	cmd.Execute()
