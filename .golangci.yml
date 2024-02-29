@@ -1,0 +1,12 @@
+linters:
+  disable-all: true
+  enable:
+    - govet
+    - gofmt
+    - revive
+    - staticcheck
+    - errcheck
+    - nilerr
+    - gosec
+
+# Path: .golangci.yml
