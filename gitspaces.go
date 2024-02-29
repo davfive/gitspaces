@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	cmd "github.com/davfive/gitspaces/v2/cmd"
