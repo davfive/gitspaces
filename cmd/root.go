@@ -1,6 +1,3 @@
-/*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
@@ -8,7 +5,6 @@ import (
 
 	"github.com/davfive/gitspaces/v2/gitspaces"
 	"github.com/davfive/gitspaces/v2/helper"
-
 	"github.com/spf13/cobra"
 )
 
