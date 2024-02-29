@@ -1,4 +1,4 @@
-module gitspaces
+module github.com/davfive/gitspaces/v2
 
 go 1.22.0
 

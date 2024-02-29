@@ -6,8 +6,8 @@ package cmd
 import (
 	"os"
 
-	"gitspaces/internal/gitspaces"
-	"gitspaces/internal/helper"
+	"github.com/davfive/gitspaces/v2/internal/gitspaces"
+	"github.com/davfive/gitspaces/v2/internal/helper"
 
 	"github.com/spf13/cobra"
 )

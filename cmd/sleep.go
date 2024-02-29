@@ -4,8 +4,8 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"gitspaces/internal/console"
-	"gitspaces/internal/gitspaces"
+	"github.com/davfive/gitspaces/v2/internal/console"
+	"github.com/davfive/gitspaces/v2/internal/gitspaces"
 
 	"github.com/spf13/cobra"
 )

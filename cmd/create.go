@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 
-	"gitspaces/internal/console"
-	"gitspaces/internal/gitspaces"
-	"gitspaces/internal/helper"
+	"github.com/davfive/gitspaces/v2/internal/console"
+	"github.com/davfive/gitspaces/v2/internal/gitspaces"
+	"github.com/davfive/gitspaces/v2/internal/helper"
 
 	"github.com/spf13/cobra"
 )
