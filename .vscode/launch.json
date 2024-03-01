@@ -5,7 +5,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "gitspaces create",
+      "name": "gitspaces create:https",
       "type": "go",
       "request": "launch",
       "mode": "auto",
@@ -13,7 +13,22 @@
       "cwd": "/Users/davidmay/code/davfive/testarea",
       "args": [
         "create",
-        "https://github.com/davfive/gitspaces/v22.git",
+        "https://github.com/davfive/gitspaces.git",
+        "-n",
+        "3"
+      ],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "gitspaces create:ssh",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}",
+      "cwd": "/Users/davidmay/code/davfive/testarea",
+      "args": [
+        "create",
+        "git@github.com:davfive/gitspaces.git",
         "-n",
         "3"
       ],

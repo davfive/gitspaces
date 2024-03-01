@@ -10,6 +10,13 @@ func Println(format string, a ...any) {
 	fmt.Println()
 }
 
+func PrintSeparateln(format string, a ...any) {
+	fmt.Println()
+	fmt.Printf(format, a...)
+	fmt.Println()
+	fmt.Println()
+}
+
 func Errorln(format string, a ...any) error {
 	format = "Error: " + format
 	fmt.Fprintf(os.Stderr, format, a...)

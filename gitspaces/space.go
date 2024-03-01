@@ -11,7 +11,6 @@ import (
 	"github.com/davfive/gitspaces/v2/console"
 	"github.com/davfive/gitspaces/v2/helper"
 
-	"github.com/go-git/go-git/v5"
 	cp "github.com/otiai10/copy"
 )
 
@@ -24,10 +23,11 @@ type SpaceStruct struct {
 }
 
 func CreateSpaceFromUrl(project *ProjectStruct, url string, path string) (space *SpaceStruct, err error) {
-	if _, err = git.PlainClone(path, false, &git.CloneOptions{
-		URL:      url,
-		Progress: os.Stdout,
-	}); err != nil {
+	// go-git doesn't have a robust ssh-cloning implementation (gits tripped up easily by ssh config, )
+	cmd := exec.Command("git", "clone", url, path)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err = cmd.Run(); err != nil {
 		return nil, err
 	}
 

@@ -28,7 +28,7 @@ func CreateProject(url string, dir string, numSpaces int) (project *ProjectStruc
 	}
 	projectPath := filepath.Join(helper.Getwd(), dir)
 
-	fmt.Printf("Creating Project with %d spaces at '%s' ...\n", numSpaces, projectPath)
+	console.PrintSeparateln("Creating Project with %d spaces at '%s' ...", numSpaces, projectPath)
 	project = NewProject(projectPath)
 	if err = project.init(); err != nil {
 		return nil, err
