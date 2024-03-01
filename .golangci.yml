@@ -2,7 +2,7 @@ linters:
   disable-all: true
   enable:
     - govet
-    - gofmt
+    - goformat
     - revive
     - staticcheck
     - errcheck
