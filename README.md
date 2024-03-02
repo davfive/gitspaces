@@ -1,6 +1,6 @@
 
 # gitspaces - A git development workspace manager
-<img src="./docs/files/gitspaces-banner.png" width="100%">
+<img src="./docs/files/gitspaces-banner.jpg" width="100%">
 
 # 
 
