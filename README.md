@@ -1,54 +1,76 @@
-<img src="./docs/files/gitspaces.png" width="100">
 
 # gitspaces - A git development workspace manager
+<img src="./docs/files/gitspaces-banner.png" width="100%">
 
-> [!TIP]
-> QuickStart Guide
-> 1. [Install Go](https://go.dev/doc/install)
-> 2. Install GitSpaces with  
->    `$ go install github.com/davfive/gitspaces/v2@latest`
-> 3. Setup GitSpaces with
->    `gitspaces setup`
-> 4. Create your first GitSpace with  
->    `$ cd /path/to/a/ProjectPaths/dir`  
->    `$ gitspaces create REPO_URL`
+# 
 
-## Background
+> Coming in Spring 2024
 
-The general idea is that for any given project you might be working on a feature here, a hotfix there, another feature there, and a bugfix somewhere else. You may handle all of these "concurrent" activities by forcing yourself to commit on your branch, change branches, or stash stuff. I've found that to be a lot of overhead especially if you are coordinating this across multiple repositories in a project.
+## What is GitSpaces
 
-For those of you with a, ahem, ClearCase background, you're familiar with the concept of ClearCase Views. Essentially it's an isolated workspace that has all of your project code where you can work on ONE THING. If you are asked to fix a bug or something else concurrently, you just create a new view (they're cheap) and work there. Unfortunately, git has no concept
-like this. Clones are expensive, committing just to context switch is a pain and messes up your commit history to boot.
+GitSpaces is a structured folder/directory system for working concurrently on independent parallel development tasks within and across multiple proects.
 
-GitSpaces are essentially a lightweight implementation of ClearCase Views for git projects.
+For those of you with experience using, ahem, the ClearCase vcs, you're familiar with the concept of ClearCase Views. GitSpaces is clearcase view for git projects.
 
-GitSpace projects (made with `gitspaces create ...` ) are the containers to manage these spaces.
+A GitSpace is an isolated workspace that has all of your project code where you can work on ONE THING. A GitSpace project is a collection of spaces (think independent clones) for the project. If you are asked to fix a bug or something else in parallel, you just open a new space and work there.
 
-## Commands
-`gitspaces COMMAND`. Simplify your life with `alias gs=gitspaces`.
+## Project Roadmap
 
+See [GitSpaces v2 Roadmap](https://github.com/users/davfive/projects/5/views/2)
+
+## Getting Started
+
+gitspaces is implemented in Go, so
+
+1. [Install Go](https://go.dev/doc/install)
+   
+2. Install GitSpaces  
+   ```
+   $ go install github.com/davfive/gitspaces/v2@latest
+     -> installs to ~/go/bin/gitspaces
+   ```
+3. Run GitSpaces setup
+   ```
+   $ gitspaces setup
+     -> creates ~/.gitspaces/...
+   $ vim ~/.gitspaces/config.yaml
+     -> update ProjectPaths list
+   $ vim ~/.bashrc (or ~/.zshrc)
+     -> add '. ~/.gitspaces/shellfunction.sh'
+     -> add 'alias gs=gitspaces' (optional)
+   $ . ~/.bashrc (or ~/.zshrc)
+   ```
+
+4. Create a GitSpace project
+   ```
+   $ cd /path/to/one/of/ProjectPaths
+   $ gitspaces create REPO_URL
+     -> creates project and cd's into space
+   ```
+
+5. Start using GitSpaces
+
+## Documentation
+
+### The `gitspaces` command 
+#### USAGE
+`gitspaces COMMAND`Simplify your life with `alias gs=gitspaces`.
+
+#### WHERE
 COMMAND  | Description
 ---------|------------------------
 `create` | Creates a new GitSpace project from a git repo url
-`switch` | Switch to a different space (in the same or different project)
+`switch` | Switch spaces. Default, same as `gitspaces` w/o a command.
 `rename` | Rename a current gitspace
 `sleep`  | Archive a gitspace and wakes up another one
-`code`   | Launches Visual Studio Code with .code-workspace
+`code`   | Launches Visual Studio Code Workspace for the space
 
-> [!NOTE]
-> 1. Try `gitspaces -h` or `gitspaces COMMAND -h`
-> 
-> 2. `gitspaces code` opens a workspace not the folder, with the title `PROJECTNAME~SPACENAME` so you can differentiate windows.
-> 
-> 3. Running `gitspaces` by itself does a `gitspaces switch`
+### Examples
 
-## `gitspaces switch` experience
-![gitspaces switch demo](./docs/files/gitspaces-switch-demo.png)
 
-## Project creation and layout
-`$ gitspaces create git@github.com:davfive/gitspaces.git -n NUM_SPACES 
-`
+## GitSpace Structure
 
+### GitSpace Project Layout
 ```
 ~/.../projects
  └── project-a
@@ -68,7 +90,7 @@ COMMAND  | Description
      └── active-N/
 ```
 
-## User options and dotfiles
+### GitSpace User Config
 ```
 # Created first time gitspaces is run
 ~/.gitspaces/
@@ -78,32 +100,13 @@ COMMAND  | Description
      └──  zshrc  (zsh wra...)
 ```
 
-## User configuration file
-`~/.gitspaces/config.yaml`
+#### config.yaml
+
 ```yaml
+~/.gitspaces/config.yaml
+
 ProjectPaths:
     - /path/to/a/projects/directory
     - /path/to/another/directory
     - ...
 ```
-
-## Installation, setup, and first use
-
-gitspaces is implemented in Go, so
-
-1. [Install Go](https://go.dev/doc/install)  
-   > then check that your GOPATH is set with `go env GOPATH`
-   
-2. run `go install github.com/davfive/gitspaces/v2@latest`  
-   > It will be installed to $GOPATH/bin/gitspaces
-
-3. TODO: put setup steps here
-
-4. Run `gitspaces create REPO_URL` from your projects directory
-
-5. Start using GitSpaces
-
-## Still to do
-
-1. Add support for multiple repositories in a space  
-   > It can be easily done manually right now if you know how
