@@ -1,6 +1,17 @@
-<img src="gitspaces.png" width="100">
+<img src="./docs/files/gitspaces.png" width="100">
 
 # gitspaces - A git development workspace manager
+
+> [!TIP]
+> QuickStart Guide
+> 1. [Install Go](https://go.dev/doc/install)
+> 2. Install GitSpaces with  
+>    `$ go install github.com/davfive/gitspaces/v2@latest`
+> 3. Setup GitSpaces with
+>    `gitspaces setup`
+> 4. Create your first GitSpace with  
+>    `$ cd /path/to/a/ProjectPaths/dir`  
+>    `$ gitspaces create REPO_URL`
 
 ## Background
 
@@ -30,6 +41,9 @@ COMMAND  | Description
 > 2. `gitspaces code` opens a workspace not the folder, with the title `PROJECTNAME~SPACENAME` so you can differentiate windows.
 > 
 > 3. Running `gitspaces` by itself does a `gitspaces switch`
+
+## `gitspaces switch` experience
+![gitspaces switch demo](./docs/files/gitspaces-switch-demo.jpg)
 
 ## Project creation and layout
 `$ gitspaces create git@github.com:davfive/gitspaces.git -n NUM_SPACES 

@@ -142,7 +142,7 @@ func (project *ProjectStruct) ChooseSpace() (space *SpaceStruct, err error) {
 	}
 	numSleepers := len(project.getSleeperSpacePaths())
 	if numSleepers > 0 {
-		spaceNames = append(spaceNames, fmt.Sprintf("[New Space] (%d)", numSleepers))
+		spaceNames = append(spaceNames, fmt.Sprintf("[Wakeup] (%d)", numSleepers))
 	}
 
 	idx, _, err := console.GetUserChoice("space", spaceNames)
