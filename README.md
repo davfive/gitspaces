@@ -1,8 +1,7 @@
 
-# gitspaces - A git development workspace manager
-<img src="./docs/files/gitspaces-banner.jpg" width="100%">
+<img src="./docs/files/gitspaces.png" width="100"/>
 
-# 
+# gitspaces - A git development workspace manager
 
 > Coming in Spring 2024
 
