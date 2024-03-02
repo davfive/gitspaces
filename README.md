@@ -43,7 +43,7 @@ COMMAND  | Description
 > 3. Running `gitspaces` by itself does a `gitspaces switch`
 
 ## `gitspaces switch` experience
-![gitspaces switch demo](./docs/files/gitspaces-switch-demo.jpg)
+![gitspaces switch demo](./docs/files/gitspaces-switch-demo.png)
 
 ## Project creation and layout
 `$ gitspaces create git@github.com:davfive/gitspaces.git -n NUM_SPACES 
