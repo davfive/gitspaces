@@ -24,11 +24,12 @@ gitspaces is implemented in Go, so
 1. [Install Go](https://go.dev/doc/install)
    
 2. Install GitSpaces  
+   [![Go Reference](https://pkg.go.dev/badge/github.com/davfive/gitspaces/v2.svg)](https://pkg.go.dev/github.com/davfive/gitspaces/v2)
    ```
    $ go install github.com/davfive/gitspaces/v2@latest
      -> installs to ~/go/bin/gitspaces
    ```
-3. Run GitSpaces setup
+4. Run GitSpaces setup
    ```
    $ gitspaces setup
      -> creates ~/.gitspaces/...
@@ -40,14 +41,14 @@ gitspaces is implemented in Go, so
    $ . ~/.bashrc (or ~/.zshrc)
    ```
 
-4. Create a GitSpace project
+5. Create a GitSpace project
    ```
    $ cd /path/to/one/of/ProjectPaths
    $ gitspaces create REPO_URL
      -> creates project and cd's into space
    ```
 
-5. Start using GitSpaces
+6. Start using GitSpaces
 
 ## Documentation
 
