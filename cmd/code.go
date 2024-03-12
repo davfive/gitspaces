@@ -10,7 +10,7 @@ import (
 // codeCmd represents the code command
 var codeCmd = &cobra.Command{
 	Use:   "code",
-	Short: "Open space as a workspace in Visual Studio Code",
+	Short: "Open Space as a workspace in Visual Studio Code",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		space, err := gitspaces.GetSpace()

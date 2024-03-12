@@ -11,7 +11,6 @@ import (
 var rootCmd = &cobra.Command{
 	Use:     "gitspaces",
 	Short:   "Concurrent development manager for a single project",
-	Long:    "Concurrent development manager for a single project",
 	Version: helper.GetBuildVersion(),
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		return gitspaces.Init(cmd)
