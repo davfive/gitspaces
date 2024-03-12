@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/davfive/gitspaces/v2/console"
 	"github.com/davfive/gitspaces/v2/gitspaces"
 	"github.com/davfive/gitspaces/v2/helper"
@@ -12,18 +10,16 @@ import (
 
 // createCmd represents the create command
 var createCmd = &cobra.Command{
-	Use:   "create [flags] URL [DIR]",
-	Short: "Creates a GitSpace from the provided repo url",
-	Long:  "Creates a GitSpace from the provided repo url.",
-	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 1 {
-			return fmt.Errorf("requires a URL argument")
-		}
-		if len(args) > 2 {
-			return fmt.Errorf("unexpected positional arguments after URL [DIR]")
-		}
-		return nil
-	},
+	Use: UseWhere(
+		"create [flags] <repo> [... <repo-N>] [<dir>]",
+		[]WhereArg{
+			{"repo", "repo as in `git clone <repo>`"},
+			{"dir", "Directory to use for GitSpaces project. Default is first repo name."},
+		},
+	),
+	Short:   "Creates a GitSpace from the provided repo url",
+	Args:    cobra.MinimumNArgs(1),
+	Aliases: []string{"c"},
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		url := args[0]
 		dir := helper.GetStringAtIndex(args, 1, "")

@@ -92,8 +92,11 @@ func (space *SpaceStruct) OpenVSCode() error {
 	return exec.Command(codeExecPath, space.codeWsFile).Start()
 }
 
-func (space *SpaceStruct) Rename() error {
-	return space.move("Rename")
+// Rename renames the space.
+// It takes a variadic parameter of type string, which represents the optional new name for the space.
+// If successful, it returns nil. Otherwise, it returns an error.
+func (space *SpaceStruct) Rename(arguments ...string) error {
+	return space.move("Rename", arguments...)
 }
 
 func (space *SpaceStruct) Sleep() (err error) {
@@ -149,9 +152,14 @@ func (space *SpaceStruct) deleteCodeWorkspaceFile() (err error) {
 	return nil
 }
 
-func (space *SpaceStruct) move(moveVerb string) error {
+func (space *SpaceStruct) move(moveVerb string, arguments ...string) error {
+	var newName string // pining for default args and/or a ternary operator :/
+	if len(arguments) > 0 {
+		newName = arguments[0]
+	}
 	name, err := console.GetUserInputWithValidation(
 		fmt.Sprintf("%s space as", moveVerb),
+		newName,
 		func(s string) error {
 			checkpath := filepath.Join(space.project.Path, s)
 			if strings.HasPrefix(s, ".") || helper.PathExists(checkpath) {

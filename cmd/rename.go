@@ -12,16 +12,22 @@ import (
 
 // renameCmd represents the rename command
 var renameCmd = &cobra.Command{
-	Use:   "rename",
-	Short: "Rename the current space",
-	Long:  `Rename the current space`,
+	Use: UseWhere(
+		"rename [flags] [<new-name>]",
+		[]WhereArg{
+			{"new-name", "name of the new space"},
+		},
+	),
+	Short:   "Rename the current space",
+	Args:    cobra.RangeArgs(0, 1),
+	Aliases: []string{"move", "mv"},
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		space, err := gitspaces.GetSpace()
 		if err != nil {
 			return err
 		}
 
-		if err = space.Rename(); err != nil {
+		if err = space.Rename(args...); err != nil {
 			return console.Errorln("Failed to rename space: %s", err)
 		}
 

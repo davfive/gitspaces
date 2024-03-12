@@ -13,6 +13,7 @@ import (
 var switchCmd = &cobra.Command{
 	Use:   "switch",
 	Short: "Switch to project/space (user choice)",
+	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		space, err := gitspaces.SwitchSpace()
 		if err != nil {

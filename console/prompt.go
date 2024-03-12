@@ -6,15 +6,23 @@ import (
 	"github.com/manifoldco/promptui"
 )
 
-func GetUserInput(label string) (string, error) {
-	return GetUserInputWithValidation(label, nil)
+type UserInputOptionsStruct struct {
+	Label   string
+	Default string `default:""`
 }
 
-func GetUserInputWithValidation(label string, validate func(string) error) (string, error) {
+func GetUserInput(label string, value string) (string, error) {
+	return GetUserInputWithValidation(label, value, nil)
+}
+
+func GetUserInputWithValidation(label string, value string, validate func(string) error) (string, error) {
 	prompt := promptui.Prompt{
 		Label:       label,
 		HideEntered: true,
+		Default:     value,
+		AllowEdit:   true,
 		Validate:    validate,
+		Pointer:     promptui.DefaultCursor,
 	}
 
 	return prompt.Run()
