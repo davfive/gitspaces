@@ -3,7 +3,9 @@ package gitspaces
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 
 	"github.com/davfive/gitspaces/v2/console"
@@ -18,6 +20,22 @@ type userStruct struct {
 	ppid         int
 	projectPaths []string
 	shellFiles   map[string]string
+}
+
+func (user *userStruct) OpenConfigFile() (err error) {
+	configFile := user.config.ConfigFileUsed()
+	if configFile == "" {
+		return fmt.Errorf("No config file found")
+	}
+
+	switch runtime.GOOS {
+	case "windows":
+		return exec.Command("cmd", "/c", configFile).Start()
+	case "darwin":
+		return exec.Command("open", configFile).Start()
+	default:
+		return fmt.Errorf("unsupported OS: %s", runtime.GOOS)
+	}
 }
 
 func initUser() (user *userStruct, err error) {
@@ -73,7 +91,7 @@ func (user *userStruct) createBashrcFile() (err error) {
 	return err
 }
 
-func (user *userStruct) initConfig() (err error) {
+func (user *userStruct) initConfig() error {
 	user.config = viper.New()
 	user.config.SetConfigName("config.yaml")
 	user.config.SetConfigType("yaml")
