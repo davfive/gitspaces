@@ -23,12 +23,12 @@ var createCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		url := args[0]
 		dir := helper.GetStringAtIndex(args, 1, "")
-		numClones, _ := cmd.Flags().GetInt("num_clones")
+		numClones, _ := cmd.Flags().GetInt("num_spaces")
 
 		var project *gitspaces.ProjectStruct
 		var space *gitspaces.SpaceStruct
 
-		if project, err = gitspaces.CreateProject(url, dir, numClones); err != nil {
+		if project, err = gitspaces.CreateProject(dir, url, numClones); err != nil {
 			return err
 		}
 
@@ -36,7 +36,7 @@ var createCmd = &cobra.Command{
 			return err
 		}
 
-		console.Println("\nCreated GitSpace at '%s' with %d clones", project.Path, numClones)
+		console.Println("\nCreated GitSpace project at '%s' with %d spaces", project.Path, numClones)
 
 		gitspaces.User.WriteCdToPath(space.Path)
 		return nil
@@ -45,5 +45,5 @@ var createCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(createCmd)
-	createCmd.Flags().IntP("num_clones", "n", 3, "Number of sleeper clones to create")
+	createCmd.Flags().IntP("num_spaces", "n", 3, "Number of spaces to create in project")
 }

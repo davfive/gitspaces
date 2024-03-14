@@ -160,13 +160,7 @@ func (space *SpaceStruct) move(moveVerb string, arguments ...string) error {
 	name, err := console.GetUserInputWithValidation(
 		fmt.Sprintf("%s space as", moveVerb),
 		newName,
-		func(s string) error {
-			checkpath := filepath.Join(space.project.Path, s)
-			if strings.HasPrefix(s, ".") || helper.PathExists(checkpath) {
-				return errors.New("invalid")
-			}
-			return nil
-		},
+		console.MakeDirnameAvailableValidator(space.project.Path),
 	)
 	if err != nil {
 		return err
