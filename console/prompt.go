@@ -1,8 +1,12 @@
 package console
 
 import (
+	"errors"
 	"fmt"
+	"path/filepath"
+	"strings"
 
+	"github.com/davfive/gitspaces/v2/helper"
 	"github.com/manifoldco/promptui"
 )
 
@@ -46,4 +50,13 @@ func GetUserChoice(context string, items []string) (int, string, error) {
 	}
 
 	return prompt.Run()
+}
+
+func MakeDirnameAvailableValidator(parentDir string) func(string) error {
+	return func(dirname string) error {
+		if strings.HasPrefix(dirname, ".") || helper.PathExists(filepath.Join(parentDir, dirname)) {
+			return errors.New("invalid")
+		}
+		return nil
+	}
 }

@@ -110,10 +110,18 @@ func (user *userStruct) checkProjectPaths() (err error) {
 			fmt.Sprintf("No 'ProjectPaths' section in %s", user.config.ConfigFileUsed()),
 		)
 	} else {
-		for _, path := range user.projectPaths {
+		for i, path := range user.projectPaths {
+			if path, err = filepath.Abs(path); err != nil {
+				configErrors = append(configErrors, fmt.Sprintf("ProjectPath error: %s", err))
+				continue
+			}
+
 			if !helper.PathExists(path) {
 				configErrors = append(configErrors, fmt.Sprintf("ProjectPath does not exist: %s", path))
+				continue
 			}
+
+			user.projectPaths[i] = path // Abs() path
 		}
 	}
 

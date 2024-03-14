@@ -22,13 +22,12 @@ type ProjectStruct struct {
 // Create creates the Project directory, dotfile, sleeping clones, and the default
 // clone in the spaces' working directory named after the repo's default branch.
 // It returns a pointer to the Project object or an error
-func CreateProject(url string, dir string, numSpaces int) (project *ProjectStruct, err error) {
-	if dir == "" {
-		dir = helper.FileBase(url, ".git")
+func CreateProject(dir string, url string, numSpaces int) (project *ProjectStruct, err error) {
+	var projectPath string
+	if projectPath, err = getNewProjectPath(dir, url); err != nil {
+		return nil, err
 	}
-	projectPath := filepath.Join(helper.Getwd(), dir)
 
-	console.PrintSeparateln("Creating Project with %d spaces at '%s' ...", numSpaces, projectPath)
 	project = NewProject(projectPath)
 	if err = project.init(); err != nil {
 		return nil, err
@@ -39,7 +38,7 @@ func CreateProject(url string, dir string, numSpaces int) (project *ProjectStruc
 		return nil, err
 	}
 
-	for i := 2; i < numSpaces; i++ {
+	for i := 1; i < numSpaces; i++ {
 		if _, err := firstSpace.Duplicate(); err != nil {
 			return nil, err
 		}
@@ -117,6 +116,28 @@ func SwitchSpace() (space *SpaceStruct, err error) {
 	}
 
 	return space, nil
+}
+
+func getNewProjectPath(dir string, url string) (projectPath string, err error) {
+	parentDir := helper.Getwd()
+
+	// Let user chose which ProjectPaths to put the new project in
+	_, parentDir, err = console.GetUserChoice("Choose a project root", User.projectPaths)
+	if err != nil {
+		return "", err
+	}
+
+	// Get this project directory name
+	if dir == "" {
+		dir = helper.FileBase(url, ".git")
+	}
+	dir, err = console.GetUserInputWithValidation(
+		"Project Directory",
+		dir,
+		console.MakeDirnameAvailableValidator(parentDir),
+	)
+
+	return filepath.Join(parentDir, dir), nil
 }
 
 func switchProject() (space *SpaceStruct, err error) {
