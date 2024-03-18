@@ -2,8 +2,23 @@ package helper
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"runtime/debug"
 )
+
+func DirectoryIsEmpty(path string) (bool, error) {
+	// Note: returns false if the directory doesn't exist/won't open
+	var err error
+	var f *os.File
+	if f, err = os.Open(path); err == nil {
+		defer f.Close()
+		if _, err = f.Readdir(1); err == io.EOF {
+			return true, nil
+		}
+	}
+	return false, err // Either not empty or error, suits both cases
+}
 
 func GetStringAtIndex(array []string, index int, fallback string) string {
 	if index < len(array) {

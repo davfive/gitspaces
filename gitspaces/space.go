@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/davfive/gitspaces/v2/console"
@@ -14,24 +15,108 @@ import (
 	cp "github.com/otiai10/copy"
 )
 
+type SpaceStat struct {
+	space      *SpaceStruct
+	wasStated  bool
+	IsEmpty    bool
+	numRepos   int
+}
+
+func NewSpaceStat(space *SpaceStruct) *SpaceStat {
+	return &SpaceStat{
+		space: space,
+	}
+}
+
+func (stat *SpaceStat) stat() *SpaceStat {
+	if stat.IsEmpty, err helper.DirectoryIsEmpty(space.Path) {
+		
+}
+
+
 // Gitspace is a struct that represents a git repository
 type SpaceStruct struct {
 	Name       string
 	Path       string
+	Stat       *SpaceStat
+	IsEmpty    bool
+	IsMonoRepo bool
 	project    *ProjectStruct
 	codeWsFile string
 }
 
-func CreateSpaceFromUrl(project *ProjectStruct, url string, path string) (space *SpaceStruct, err error) {
-	// go-git doesn't have a robust ssh-cloning implementation (gits tripped up easily by ssh config, )
-	cmd := exec.Command("git", "clone", url, path)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err = cmd.Run(); err != nil {
-		return nil, err
+func CreateSpace(project *ProjectStruct) *SpaceStruct {
+	newSpace := NewSpace(project, project.getEmptySleeperPath())
+	newSpace.init()
+	return newSpace
+}
+
+func (space *SpaceStruct) spaceState() (int, error) {
+	// Assumes space directory exists
+	if isEmpty, err := helper.DirectoryIsEmpty(space.Path); err != nil {
+		return -1, err
+	}
+
+	if isEmpty {
+		return 0, nil
+	}
+
+	if helper.PathExists(filepath.Join(space.Path, ".git")) {
+		return 1
+	}
+
+	
+
+	if _, err := os.Stat(filepath.Join(space.Path, ".git")); !os.IsNotExist(err) {
+
+	os.ReadDir(space.Path)
+
+	return helper.CountDirs(space.Path)
+}
+
+
+func (space *SpaceStruct) AddRepoFromUrls(project *ProjectStruct, url string, path string) error {
+	dir := strings.TrimSuffix(filepath.Base(url), ".git")
+
+	if space.numRepos() > 0 {
+		return errors.New("space already has a repo")
+	}
+
+	if _, err := os.Stat(filepath.Join(space.Path, dir)); err == nil {
+		return errors.New("repo dir already exists in space")
 	}
 
 	space = NewSpace(project, path)
+	urls = slices.Compact(urls)
+	urlMap := make(map[string]string)
+	for _, url := range urls {
+		dir := strings.TrimSuffix(filepath.Base(url), ".git")
+		if _, ok := urlMap[dir]; ok {
+			urlMap[dir] = url
+		} else {
+			// TODO: We could ask the user if they want to use a different name for the duplicate
+			return nil, errors.New("duplicate repo name in urls list: " + strings.Join(urls, ","))
+		}
+	}
+
+	getRepoDir := func(dir string) string {
+		if len(urls) == 1 {
+			// single-repo spaces are cloned directly into the space directory
+			// Makes the path shorter for simple projects
+			return path
+		}
+		return filepath.Join(path, dir)
+	}
+
+	// go-git doesn't have a robust ssh-cloning implementation (gits tripped up easily by ssh config, )
+	for dir, url := range urlMap {
+		cmd := exec.Command("git", "clone", url, getRepoDir(dir))
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err = cmd.Run(); err != nil {
+			return nil, err
+		}
+	}
 
 	if err = space.createCodeWorkspaceFile(); err != nil {
 		return nil, err
@@ -65,8 +150,8 @@ func NewSpace(project *ProjectStruct, path string) *SpaceStruct {
 		Path:    path,
 		project: project,
 	}
+	space.Stat = NewSpaceStat(space)
 	space.updateName()
-	space.createCodeWorkspaceFile()
 	return space
 }
 
@@ -150,6 +235,11 @@ func (space *SpaceStruct) deleteCodeWorkspaceFile() (err error) {
 		}
 	}
 	return nil
+}
+
+func (space *SpaceStruct) init() error {
+	// Minimal setup for space, just create the space directory
+	return os.MkdirAll(space.Path, os.ModePerm)
 }
 
 func (space *SpaceStruct) move(moveVerb string, arguments ...string) error {

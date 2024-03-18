@@ -33,7 +33,7 @@ func CreateProject(dir string, url string, numSpaces int) (project *ProjectStruc
 		return nil, err
 	}
 
-	firstSpace, err := CreateSpaceFromUrl(project, url, project.getEmptySleeperPath())
+	firstSpace, err := CreateSpaceFromUrls(project, url, project.getEmptySleeperPath())
 	if err != nil {
 		return nil, err
 	}
