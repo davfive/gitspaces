@@ -9,11 +9,11 @@ fi
 
 function check_version() {
     if [[ "$VERSION" = *-dirty ]]; then
-        echo "Cannot publish with modified (dirty) working directory: "$version
+        echo "Cannot publish with modified (dirty) working directory: "$VERSION
         echo "Please commit or stash your changes"
         exit 1
     elif ! [[ "$VERSION" = *-0-* ]]; then
-        echo "Cannot publish tag with later commits: "$version
+        echo "Cannot publish tag with later commits: "$VERSION
         echo "Please create/push a new tag"
         exit 1
     fi
