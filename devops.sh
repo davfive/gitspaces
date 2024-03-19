@@ -29,7 +29,7 @@ function check_version() {
 }
 
 function gorun() {
-    (set -x; GOFLAGS="$GOFLAGS" go "$@")
+    (set -x; go "$@" $GOFLAGS)
 }
 
 case "$1" in
