@@ -11,17 +11,17 @@ function check_version() {
     local branch=$(git branch --show-current)
     local majver=$(echo $VERSION | cut -d. -f1)
 
-    if [[ "$VERSION" = *-dirty ]]; then
+    if ! [[ "$branch" = $majver.* ]]; then
+        echo "Cannot publish $VERSION from branch $branch"
+        echo "Please check $VERSION version release branch: $majver"
+        exit 1
+    elif [[ "$VERSION" = *-dirty ]]; then
         echo "Cannot publish with modified (dirty) working directory: $VERSION"
         echo "Please commit or stash your changes"
         exit 1
     elif ! [[ "$VERSION" = *-0-* ]]; then
         echo "Cannot publish tag with later commits: $VERSION"
         echo "Please create/push a new tag"
-        exit 1
-    elif ! [[ "$branch" = $majver.* ]]; then
-        echo "Cannot publish $VERSION from branch $branch"
-        echo "Please check $VERSION version release branch: $majver"
         exit 1
     fi
 }
