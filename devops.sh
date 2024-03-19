@@ -23,6 +23,7 @@ function check_version() {
         echo "Please commit or stash your changes"
         exit 1
     elif ! [[ "$VERSION" = *-0-* ]]; then
+        # TODO: auto-create next tag when publishing new release
         echo "Cannot publish tag with later commits: $VERSION"
         echo "Please create/push a new tag"
         exit 1

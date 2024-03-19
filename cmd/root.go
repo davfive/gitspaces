@@ -7,13 +7,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// -ldflags "-X cmd.X=..." Build Flags
-var Version string
+// Version string value (priority order)
+// 1. -ldflags "-X cmd.X=..." Build Flags
+// 2. //go:embed manifest.json (needed for go list publishing)
+// 3. default value ""
+var Version string = ""
 
 var rootCmd = &cobra.Command{
-	Use:     "gitspaces",
-	Version: Version,
-	Short:   "Concurrent development manager for a single project",
+	Use:   "gitspaces",
+	Short: "Concurrent development manager for a single project",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		return gitspaces.Init(cmd)
 	},
@@ -30,7 +32,9 @@ func Execute() {
 }
 
 func SetVersion(version string) {
-	rootCmd.Version = version
+	if Version != "" {
+		rootCmd.Version = version
+	}
 }
 
 func setSwitchCommandAsDefault() {
