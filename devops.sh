@@ -11,7 +11,7 @@ function check_version() {
     local branch=$(git branch --show-current)
     local majver=$(echo $VERSION | cut -d. -f1)
 
-    if ! [[ "$branch" = $majver.* ]]; then
+    if [ "$branch" != "$majver" ]; then
         echo "Cannot publish $VERSION from branch $branch"
         echo "Please check $VERSION version release branch: $majver"
         exit 1
