@@ -4,14 +4,12 @@ import (
 	"os"
 
 	"github.com/davfive/gitspaces/v2/gitspaces"
-	"github.com/davfive/gitspaces/v2/helper"
 	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
-	Use:     "gitspaces",
-	Short:   "Concurrent development manager for a single project",
-	Version: helper.GetBuildVersion(),
+	Use:   "gitspaces",
+	Short: "Concurrent development manager for a single project",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		return gitspaces.Init(cmd)
 	},
@@ -25,6 +23,10 @@ func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
+}
+
+func SetVersion(version string) {
+	rootCmd.Version = version
 }
 
 func setSwitchCommandAsDefault() {
