@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+LDFLAGS="-X main.Version=$version"
+
 case "$1" in
     "build")
         version=`git describe --long --tags --dirty`
@@ -24,7 +26,7 @@ case "$1" in
             exit 1
         fi
         
-        # GOPROXY=proxy.golang.org go list -m github.com/davfive/gitspaces/v2@
+        echo GOPROXY=proxy.golang.org go list -m github.com/davfive/gitspaces/v2@ -ldflags "-X main.Version=$version"
         exit 1
         ;;
     *)
