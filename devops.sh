@@ -5,7 +5,8 @@ if [ $? -ne 0 -o -z "${VERSION}" ]; then
     echo "Failed to get version from 'git describe --long --tags --dirty'"
     exit 1
 fi
-#------------------------------------------------------------
+GOFLAGS=-ldflags=-X=main.Version=$VERSION
+#=-----------------------------------------------------------
 
 function check_version() {
     local branch=$(git branch --show-current)
@@ -27,12 +28,12 @@ function check_version() {
 }
 
 function gorun() {
-    (set -x; go "$@" -ldflags "-X main.Version=$VERSION")
+    (set -x; GOFLAGS="$GOFLAGS" go "$@")
 }
 
 case "$1" in
     "build")
-        gorun go build -o build/gitspaces
+        gorun build -o build/gitspaces
         ;;
     "install")
         gorun install
