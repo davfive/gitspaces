@@ -6,7 +6,8 @@ if [ -z "${VERSION}" -o -z "${VERSION_SHORT}" ]; then
     echo "Failed to get version from 'git describe --long --tags --dirty'"
     exit 1
 fi
-GOFLAGS=-ldflags=-X=main.Version=$VERSION
+PACKAGE=github.com/davfive/gitspaces/v2
+GOFLAGS=-ldflags=-X=$PACKAGE/cmd.Version=$VERSION
 #=-----------------------------------------------------------
 
 function check_version() {
@@ -28,20 +29,16 @@ function check_version() {
     fi
 }
 
-function gorun() {
-    (set -x; go "$@" $GOFLAGS)
-}
-
 case "$1" in
     "build")
-        gorun build -o build/gitspaces
+        (set -x; go build $GOFLAGS -o build/gitspaces)
         ;;
     "install")
-        gorun install
+        (set -x; go install $GOFLAGS)
         ;;
     "publish")
         check_version
-        GOPROXY=proxy.golang.org gorun list -m github.com/davfive/gitspaces/v2@$VERSION_SHORT
+        (set -x; GOPROXY=proxy.golang.org go list -m $GOFLAGS $PACKAGE@$VERSION_SHORT)
         exit 1
         ;;
     *)

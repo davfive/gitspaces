@@ -7,9 +7,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// -ldflags "-X cmd.X=..." Build Flags
+var Version string
+
 var rootCmd = &cobra.Command{
-	Use:   "gitspaces",
-	Short: "Concurrent development manager for a single project",
+	Use:     "gitspaces",
+	Version: Version,
+	Short:   "Concurrent development manager for a single project",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		return gitspaces.Init(cmd)
 	},
