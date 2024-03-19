@@ -26,7 +26,7 @@ case "$1" in
             exit 1
         fi
         
-        echo GOPROXY=proxy.golang.org go list -m github.com/davfive/gitspaces/v2@ -ldflags "-X main.Version=$version"
+        echo GOPROXY=proxy.golang.org go list -m github.com/davfive/gitspaces/v2@ -ldflags \"-X main.Version=$version\"
         exit 1
         ;;
     *)
