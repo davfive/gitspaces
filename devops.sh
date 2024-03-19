@@ -20,7 +20,7 @@ function check_version() {
 }
 
 function gorun() {
-    (set -x; go "$@" -ldflags \"-X main.Version=$VERSION\")
+    (set -x; go "$@" -ldflags "-X main.Version=$VERSION")
 }
 
 case "$1" in
