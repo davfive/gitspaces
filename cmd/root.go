@@ -14,8 +14,9 @@ import (
 var Version string = ""
 
 var rootCmd = &cobra.Command{
-	Use:   "gitspaces",
-	Short: "Concurrent development manager for a single project",
+	Use:     "gitspaces",
+	Version: Version,
+	Short:   "Concurrent development manager for a single project",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		return gitspaces.Init(cmd)
 	},
@@ -32,7 +33,7 @@ func Execute() {
 }
 
 func SetVersion(version string) {
-	if Version != "" {
+	if Version == "" {
 		rootCmd.Version = version
 	}
 }
