@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #------------------------------------------------------------
-VERSION=`git describe --long --tags --dirty`
-if [ $? -ne 0 -o -z "${VERSION}" ]; then
+VERSION=`git describe --long --tags --dirty 2>/dev/null`
+VERSION_SHORT=`git describe --tags --abbrev=0 2>/dev/null`
+if [ -z "${VERSION}" -o -z "${VERSION_SHORT}" ]; then
     echo "Failed to get version from 'git describe --long --tags --dirty'"
     exit 1
 fi
@@ -40,7 +41,7 @@ case "$1" in
         ;;
     "publish")
         check_version
-        GOPROXY=proxy.golang.org gorun list -m github.com/davfive/gitspaces/v2@$VERSION
+        GOPROXY=proxy.golang.org gorun list -m github.com/davfive/gitspaces/v2@$VERSION_SHORT
         exit 1
         ;;
     *)
