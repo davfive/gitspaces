@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #------------------------------------------------------------
 VERSION=`git describe --long --tags --dirty`
-if [[ $? -ne 0 -o -z "${version}" ]]; then
+if [ $? -ne 0 -o -z "${VERSION}" ]; then
     echo "Failed to get version from 'git describe --long --tags --dirty'"
     exit 1
 fi
