@@ -1,6 +1,7 @@
 package gitspaces
 
 import (
+	_ "embed"
 	"fmt"
 	"os"
 	"os/exec"
@@ -14,12 +15,24 @@ import (
 	"github.com/spf13/viper"
 )
 
+//go:embed files/gitspaces.sh
+var bashShellFile []byte
+
+//go:embed files/gitspaces.ps1
+var ps1File []byte
+
+type shellFileStruct struct {
+	name  string
+	path  string
+	bytes []byte
+}
+
 type userStruct struct {
 	config       *viper.Viper
 	dotDir       string
 	ppid         int
 	projectPaths []string
-	shellFiles   map[string]string
+	shellFiles   []shellFileStruct
 }
 
 func (user *userStruct) OpenConfigFile() (err error) {
@@ -59,36 +72,32 @@ func initUser() (user *userStruct, err error) {
 		return nil, err
 	}
 
-	user.shellFiles = map[string]string{}
-	if err = user.createBashrcFile(); err != nil {
-		return nil, err
-	}
-
 	return user, nil
 }
 
-func (user *userStruct) createBashrcFile() (err error) {
-	user.shellFiles["bashrc"] = filepath.Join(user.dotDir, "bashrc")
-	if helper.PathIsFile(user.shellFiles["bashrc"]) {
-		return nil // already exists (should we check for content/version?)
+func (user *userStruct) createShellFiles() error {
+	user.shellFiles = []shellFileStruct{
+		{
+			name:  "bashrc",
+			path:  filepath.Join(user.dotDir, "gitspaces.sh"),
+			bytes: bashShellFile,
+		},
+		{
+			name:  "ps1",
+			path:  filepath.Join(user.dotDir, "gitspaces.ps1"),
+			bytes: ps1File,
+		},
+	}
+	for _, shellFile := range user.shellFiles {
+		if helper.PathIsFile(shellFile.path) {
+			continue
+		}
+		if err := os.WriteFile(shellFile.path, shellFile.bytes, os.FileMode(0o644)); err != nil {
+			return err
+		}
 	}
 
-	var file *os.File
-	if file, err = os.Create(user.shellFiles["bashrc"]); err != nil {
-		return err
-	}
-	defer file.Close()
-
-	_, err = file.WriteString(fmt.Sprintf(`function gitspaces() {
-	$(go env GOPATH)/bin/gitspaces --ppid $$ "$@"
-	cdtofile=~/%s/cdto.$$
-	if [ -f $cdtofile ]; then
-		[ $? -eq 0 ] && cd $(cat $cdtofile)
-		rm -f $cdtofile
-	fi
-}`, GsDotDir))
-
-	return err
+	return nil
 }
 
 func (user *userStruct) initConfig() error {
