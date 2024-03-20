@@ -24,8 +24,11 @@ var rootCmd = &cobra.Command{
 
 func Execute() {
 	rootCmd.Root().CompletionOptions.DisableDefaultCmd = true
-	rootCmd.PersistentFlags().IntP("ppid", "", -1, "path to parent pid for communication")
+	rootCmd.PersistentFlags().Int("ppid", -1, "path to parent pid for communication")
 	rootCmd.PersistentFlags().MarkHidden("ppid")
+	rootCmd.PersistentFlags().String("pterm", "", "`uname -o` (parent terminal). Used for prompt support)")
+	rootCmd.PersistentFlags().MarkHidden("pterm")
+
 	setSwitchCommandAsDefault()
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

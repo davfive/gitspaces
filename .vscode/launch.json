@@ -10,7 +10,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}",
-      "cwd": "/Users/davidmay/code/davfive/testarea",
+      "cwd": "/Users/davidmay/code/testarea",
       "args": [
         "create",
         "https://github.com/davfive/gitspaces.git",
@@ -25,7 +25,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}",
-      "cwd": "/Users/davidmay/code/davfive/testarea",
+      "cwd": "/Users/davidmay/code/testarea",
       "args": [
         "create",
         "git@github.com:davfive/gitspaces.git",
@@ -40,7 +40,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}",
-      "cwd": "/Users/davidmay/code/davfive",
+      "cwd": "/Users/davidmay/code/testarea",
       "args": ["switch"],
       "console": "integratedTerminal"
     },
@@ -50,7 +50,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}",
-      "cwd": "/Users/davidmay/code/davfive/testarea",
+      "cwd": "/Users/davidmay/code/testarea",
       "args": [],
       "console": "integratedTerminal"
     }

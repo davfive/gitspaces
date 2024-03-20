@@ -38,7 +38,7 @@ var createCmd = &cobra.Command{
 
 		console.Println("\nCreated GitSpace project at '%s' with %d spaces", project.Path, numClones)
 
-		gitspaces.User.WriteCdToPath(space.Path)
+		gitspaces.User.WriteChdirPath(space.Path)
 		return nil
 	},
 }

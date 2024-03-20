@@ -21,6 +21,9 @@ var bashShellFile []byte
 //go:embed files/gitspaces.ps1
 var ps1File []byte
 
+//go:embed files/gitspaces.scriptblock.ps1
+var ps1ScriptBlockFile []byte
+
 type shellFileStruct struct {
 	name  string
 	path  string
@@ -31,6 +34,7 @@ type userStruct struct {
 	config       *viper.Viper
 	dotDir       string
 	ppid         int
+	pterm        string // Parent os stdout type (uname -o/-s)
 	projectPaths []string
 	shellFiles   []shellFileStruct
 }
@@ -72,20 +76,26 @@ func initUser() (user *userStruct, err error) {
 		return nil, err
 	}
 
+	if err = user.createShellFiles(); err != nil {
+		return nil, err
+	}
+
 	return user, nil
 }
 
 func (user *userStruct) createShellFiles() error {
 	user.shellFiles = []shellFileStruct{
 		{
-			name:  "bashrc",
 			path:  filepath.Join(user.dotDir, "gitspaces.sh"),
 			bytes: bashShellFile,
 		},
 		{
-			name:  "ps1",
 			path:  filepath.Join(user.dotDir, "gitspaces.ps1"),
 			bytes: ps1File,
+		},
+		{
+			path:  filepath.Join(user.dotDir, "gitspaces.scriptblock.ps1"),
+			bytes: ps1ScriptBlockFile,
 		},
 	}
 	for _, shellFile := range user.shellFiles {
@@ -151,12 +161,23 @@ func (user *userStruct) SetParentPid(ppid int) {
 	}
 }
 
-func (user *userStruct) WriteCdToPath(cdtopath string) {
+func (user *userStruct) GetParentTerminal() string {
+	return user.pterm
+}
+
+func (user *userStruct) SetParentTerminal(pterm string) {
+	// from uname -o/-s (OS implementation for std output)
+	if pterm != "" {
+		user.pterm = pterm
+	}
+}
+
+func (user *userStruct) WriteChdirPath(newdir string) {
 	if user.ppid <= 0 {
 		return
 	}
-	notePath := filepath.Join(user.dotDir, "cdto."+strconv.Itoa(user.ppid))
-	if err := os.WriteFile(notePath, []byte(cdtopath), os.FileMode(0o644)); err != nil {
-		console.Errorln("auto cd failed. cd to %s", cdtopath)
+	notePath := filepath.Join(user.dotDir, "chdir."+strconv.Itoa(user.ppid))
+	if err := os.WriteFile(notePath, []byte(newdir), os.FileMode(0o644)); err != nil {
+		console.Errorln("auto chdir failed. cd to %s", newdir)
 	}
 }

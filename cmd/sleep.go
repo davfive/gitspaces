@@ -30,7 +30,7 @@ var sleepCmd = &cobra.Command{
 			return console.Errorln("Failed to choose new space to use")
 		}
 
-		gitspaces.User.WriteCdToPath(space.Path)
+		gitspaces.User.WriteChdirPath(space.Path)
 		return nil
 	},
 }

@@ -1,13 +1,15 @@
-$cdToFile=$HOME + "/.gitspaces/cdto." + $PID
-& gitspaces --ppid $PID $args
+$gobin = (& go env GOPATH | Out-String) + "/bin"
+& $gobin/gitspaces --ppid $PID $args
 $gsExitCode=$LASTEXITCODE
+
 if ($gsExitCode -eq 0) {
-    if ($cdTofile -and (Test-Path $cdToFile)) {
-        $cdToDir=Get-Content -Path $cdToFile
-        if ($cdToDir) {
-            Set-Location $cdToDir
+    $chdirFile=$HOME + "/.gitspaces/chdir." + $PID
+    if ($chdirFile -and (Test-Path $chdirFile)) {
+        $chdir=Get-Content -Path $chdirFile
+        if ($chdir) {
+            Set-Location $chdir
         }
-        Remove-Item $cdToFile
+        Remove-Item $chdir
     }
 }
 Exit $gsExitCode
