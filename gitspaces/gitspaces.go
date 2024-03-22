@@ -22,5 +22,10 @@ func Init(cmd *cobra.Command) (err error) {
 		User.SetParentPid(ppid)
 	}
 
+	pterm, _ := cmd.Flags().GetString("pterm")
+	if pterm != "" {
+		User.SetParentTerminal(pterm)
+	}
+
 	return nil
 }

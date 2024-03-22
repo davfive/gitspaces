@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/davfive/gitspaces/v2/console"
 	"github.com/davfive/gitspaces/v2/gitspaces"
-	"github.com/davfive/gitspaces/v2/helper"
+	"github.com/davfive/gitspaces/v2/utils"
 
 	"github.com/spf13/cobra"
 )
@@ -22,7 +22,7 @@ var createCmd = &cobra.Command{
 	Aliases: []string{"c"},
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		url := args[0]
-		dir := helper.GetStringAtIndex(args, 1, "")
+		dir := utils.GetIndex(args, 1, "")
 		numClones, _ := cmd.Flags().GetInt("num_spaces")
 
 		var project *gitspaces.ProjectStruct
@@ -38,7 +38,7 @@ var createCmd = &cobra.Command{
 
 		console.Println("\nCreated GitSpace project at '%s' with %d spaces", project.Path, numClones)
 
-		gitspaces.User.WriteCdToPath(space.Path)
+		gitspaces.User.WriteChdirPath(space.Path)
 		return nil
 	},
 }

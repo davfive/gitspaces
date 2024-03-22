@@ -20,7 +20,7 @@ var switchCmd = &cobra.Command{
 			return err
 		}
 
-		gitspaces.User.WriteCdToPath(space.Path)
+		gitspaces.User.WriteChdirPath(space.Path)
 		return nil
 	},
 }

@@ -14,9 +14,11 @@ import (
 var Version string = ""
 
 var rootCmd = &cobra.Command{
-	Use:     "gitspaces",
-	Version: Version,
-	Short:   "Concurrent development manager for a single project",
+	Use:           "gitspaces",
+	Version:       Version,
+	Short:         "Concurrent development manager for git projects",
+	SilenceUsage:  true,
+	SilenceErrors: true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		return gitspaces.Init(cmd)
 	},
@@ -24,8 +26,11 @@ var rootCmd = &cobra.Command{
 
 func Execute() {
 	rootCmd.Root().CompletionOptions.DisableDefaultCmd = true
-	rootCmd.PersistentFlags().IntP("ppid", "", -1, "path to parent pid for communication")
+	rootCmd.PersistentFlags().Int("ppid", -1, "path to parent pid for communication")
 	rootCmd.PersistentFlags().MarkHidden("ppid")
+	rootCmd.PersistentFlags().String("pterm", "", "`uname -o` (parent terminal). Used for prompt support)")
+	rootCmd.PersistentFlags().MarkHidden("pterm")
+
 	setSwitchCommandAsDefault()
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

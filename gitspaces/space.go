@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/davfive/gitspaces/v2/console"
-	"github.com/davfive/gitspaces/v2/helper"
+	"github.com/davfive/gitspaces/v2/utils"
 
 	cp "github.com/otiai10/copy"
 )
@@ -56,7 +56,7 @@ func GetSpaceFromPath(path string) (*SpaceStruct, error) {
 }
 
 func GetSpace() (*SpaceStruct, error) {
-	return GetSpaceFromPath(helper.Getwd())
+	return GetSpaceFromPath(utils.Getwd())
 }
 
 // NewSpace creates a new Space struct
@@ -143,7 +143,7 @@ func (space *SpaceStruct) createCodeWorkspaceFile() (err error) {
 }
 
 func (space *SpaceStruct) deleteCodeWorkspaceFile() (err error) {
-	if helper.PathExists(space.codeWsFile) {
+	if utils.PathExists(space.codeWsFile) {
 		if err = os.Remove(space.codeWsFile); err != nil {
 			fmt.Fprintln(os.Stderr, "Failed to remove "+space.codeWsFile)
 			return err
@@ -153,26 +153,26 @@ func (space *SpaceStruct) deleteCodeWorkspaceFile() (err error) {
 }
 
 func (space *SpaceStruct) move(moveVerb string, arguments ...string) error {
-	var newName string // pining for default args and/or a ternary operator :/
+	var newName string // wishing for default args and/or a ternary operator :/
 	if len(arguments) > 0 {
 		newName = arguments[0]
 	}
-	name, err := console.GetUserInputWithValidation(
-		fmt.Sprintf("%s space as", moveVerb),
-		newName,
-		console.MakeDirnameAvailableValidator(space.project.Path),
-	)
+	err := console.NewInput().
+		Prompt(fmt.Sprintf("%s space as: ", moveVerb)).
+		Validate(utils.MakeDirnameAvailableValidator(space.project.Path)).
+		Value(&newName).
+		Run()
 	if err != nil {
 		return err
 	}
 
-	newPath := filepath.Join(space.project.Path, name)
+	newPath := filepath.Join(space.project.Path, newName)
 	space.deleteCodeWorkspaceFile()
 	if err = os.Rename(space.Path, newPath); err != nil {
 		return err
 	}
 	space.Path = newPath
-	space.Name = name
+	space.Name = newName
 	if err = space.createCodeWorkspaceFile(); err != nil {
 		fmt.Fprintln(os.Stderr, "Failed to create code workspace file")
 	}

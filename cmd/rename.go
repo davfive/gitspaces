@@ -33,7 +33,7 @@ var renameCmd = &cobra.Command{
 
 		console.Println("\nGitSpace renamed. Reopen any open IDEs from the new path")
 		console.Println("or files saved in the IDE will save to the old GitSpace path.")
-		gitspaces.User.WriteCdToPath(space.Path)
+		gitspaces.User.WriteChdirPath(space.Path)
 		return nil
 	},
 }

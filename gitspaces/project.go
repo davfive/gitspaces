@@ -8,7 +8,7 @@ import (
 	"slices"
 
 	"github.com/davfive/gitspaces/v2/console"
-	"github.com/davfive/gitspaces/v2/helper"
+	"github.com/davfive/gitspaces/v2/utils"
 )
 
 type ProjectStruct struct {
@@ -50,15 +50,15 @@ func CreateProject(dir string, url string, numSpaces int) (project *ProjectStruc
 func GetProjectFromPath(path string) (*ProjectStruct, error) {
 	switch {
 	case path == "":
-	case !helper.PathExists(path):
+	case !utils.PathExists(path):
 		return nil, errors.New("path not found")
-	case helper.PathIsFile(path):
+	case utils.PathIsFile(path):
 		path = filepath.Dir(path)
 	}
 
 	var prevPath string
 	for currPath := path; currPath != prevPath; currPath = filepath.Dir(currPath) {
-		if helper.PathExists(filepath.Join(currPath, GsProjectFile)) {
+		if utils.PathExists(filepath.Join(currPath, GsProjectFile)) {
 			return NewProject(currPath), nil
 		}
 		prevPath = currPath
@@ -68,7 +68,7 @@ func GetProjectFromPath(path string) (*ProjectStruct, error) {
 }
 
 func GetProject() (*ProjectStruct, error) {
-	return GetProjectFromPath(helper.Getwd())
+	return GetProjectFromPath(utils.Getwd())
 }
 
 func NewProject(path string) (project *ProjectStruct) {
@@ -93,7 +93,12 @@ func ChooseProject() (project *ProjectStruct, err error) {
 	}
 	slices.Sort(projectPaths)
 
-	_, projectPath, err := console.GetUserChoice("project", projectPaths)
+	var projectPath string
+	err = console.NewSelect[string]().
+		Title("Choose a project").
+		Options(projectPaths).
+		Value(&projectPath).
+		Run()
 	if err != nil {
 		return nil, err
 	}
@@ -119,25 +124,30 @@ func SwitchSpace() (space *SpaceStruct, err error) {
 }
 
 func getNewProjectPath(dir string, url string) (projectPath string, err error) {
-	parentDir := helper.Getwd()
+	projectsDir := utils.Getwd()
 
 	// Let user chose which ProjectPaths to put the new project in
-	_, parentDir, err = console.GetUserChoice("Choose a project root", User.projectPaths)
+	err = console.NewSelect[string]().
+		Title("Create project in:").
+		Options(User.projectPaths).
+		Value(&projectsDir).
+		Run()
 	if err != nil {
 		return "", err
 	}
 
 	// Get this project directory name
 	if dir == "" {
-		dir = helper.FileBase(url, ".git")
+		dir = utils.FileBase(url, ".git")
 	}
-	dir, err = console.GetUserInputWithValidation(
-		"Project Directory",
-		dir,
-		console.MakeDirnameAvailableValidator(parentDir),
-	)
 
-	return filepath.Join(parentDir, dir), nil
+	err = console.NewInput().
+		Prompt("Project Directory: ").
+		Validate(utils.MakeDirnameAvailableValidator(projectsDir)).
+		Value(&dir).
+		Run()
+
+	return filepath.Join(projectsDir, dir), nil
 }
 
 func switchProject() (space *SpaceStruct, err error) {
@@ -166,11 +176,17 @@ func (project *ProjectStruct) ChooseSpace() (space *SpaceStruct, err error) {
 		spaceNames = append(spaceNames, fmt.Sprintf("[Wakeup] (%d)", numSleepers))
 	}
 
-	idx, _, err := console.GetUserChoice("space", spaceNames)
+	var spaceName string
+	err = console.NewSelect[string]().
+		Title("Choose a Space").
+		Options(spaceNames).
+		Value(&spaceName).
+		Run()
 	if err != nil {
 		return nil, err
 	}
 
+	idx := slices.Index(spaceNames, spaceName)
 	if idx == 0 {
 		return switchProject()
 	} else if numSleepers > 0 && idx == len(spaceNames)-1 {
@@ -194,12 +210,12 @@ func (project *ProjectStruct) WakeupSpace() (space *SpaceStruct, err error) {
 
 func (project *ProjectStruct) getSleeperSpacePaths() []string {
 	paths, _ := filepath.Glob(filepath.Join(project.zzzdir, "zzz-*"))
-	return helper.FilterDirectories(paths)
+	return utils.FilterDirectories(paths)
 }
 
 func (project *ProjectStruct) getWorkerSpacePaths() []string {
 	paths, _ := filepath.Glob(filepath.Join(project.Path, "[^.]*"))
-	return helper.FilterDirectories(paths)
+	return utils.FilterDirectories(paths)
 }
 
 func (project *ProjectStruct) getWorkerSpaces() (spaces []*SpaceStruct) {
@@ -216,7 +232,7 @@ func (project *ProjectStruct) getLastSleeperSpace() (space *SpaceStruct, err err
 	}
 
 	lastSpacePath := filepath.Join(project.zzzdir, fmt.Sprintf("zzz-%d", len(sleepers)-1))
-	if !helper.PathExists(lastSpacePath) {
+	if !utils.PathExists(lastSpacePath) {
 		return nil, errors.New("no sleeper found at " + lastSpacePath)
 	}
 	return NewSpace(project, lastSpacePath), nil
@@ -228,7 +244,7 @@ func (project *ProjectStruct) getEmptySleeperPath() string {
 }
 
 func (project *ProjectStruct) init() error {
-	if helper.PathExists(project.Path) {
+	if utils.PathExists(project.Path) {
 		return errors.New("GitSpaces Project path already exists")
 	}
 
@@ -240,7 +256,7 @@ func (project *ProjectStruct) init() error {
 	}
 
 	// Create blank Project config
-	err := helper.CreateEmptyFile(filepath.Join(project.Path, GsProjectFile))
+	err := utils.CreateEmptyFile(filepath.Join(project.Path, GsProjectFile))
 	if err != nil {
 		return err
 	}
@@ -250,7 +266,7 @@ func (project *ProjectStruct) init() error {
 
 func (project *ProjectStruct) isWellFormed() bool {
 	for _, path := range []string{project.Path, project.zzzdir, project.codeWsDir} {
-		if !helper.PathIsDir(path) {
+		if !utils.PathIsDir(path) {
 			return false
 		}
 	}

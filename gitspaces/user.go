@@ -1,6 +1,7 @@
 package gitspaces
 
 import (
+	_ "embed"
 	"fmt"
 	"os"
 	"os/exec"
@@ -9,7 +10,7 @@ import (
 	"strconv"
 
 	"github.com/davfive/gitspaces/v2/console"
-	"github.com/davfive/gitspaces/v2/helper"
+	"github.com/davfive/gitspaces/v2/utils"
 
 	"github.com/spf13/viper"
 )
@@ -18,8 +19,8 @@ type userStruct struct {
 	config       *viper.Viper
 	dotDir       string
 	ppid         int
+	pterm        string // Parent os stdout type (uname -o/-s)
 	projectPaths []string
-	shellFiles   map[string]string
 }
 
 func (user *userStruct) OpenConfigFile() (err error) {
@@ -59,36 +60,10 @@ func initUser() (user *userStruct, err error) {
 		return nil, err
 	}
 
-	user.shellFiles = map[string]string{}
-	if err = user.createBashrcFile(); err != nil {
-		return nil, err
-	}
+	// ignore Update result (tells if updated or write errors - not fatal)
+	user.updateShellFiles()
 
 	return user, nil
-}
-
-func (user *userStruct) createBashrcFile() (err error) {
-	user.shellFiles["bashrc"] = filepath.Join(user.dotDir, "bashrc")
-	if helper.PathIsFile(user.shellFiles["bashrc"]) {
-		return nil // already exists (should we check for content/version?)
-	}
-
-	var file *os.File
-	if file, err = os.Create(user.shellFiles["bashrc"]); err != nil {
-		return err
-	}
-	defer file.Close()
-
-	_, err = file.WriteString(fmt.Sprintf(`function gitspaces() {
-	$(go env GOPATH)/bin/gitspaces --ppid $$ "$@"
-	cdtofile=~/%s/cdto.$$
-	if [ -f $cdtofile ]; then
-		[ $? -eq 0 ] && cd $(cat $cdtofile)
-		rm -f $cdtofile
-	fi
-}`, GsDotDir))
-
-	return err
 }
 
 func (user *userStruct) initConfig() error {
@@ -116,7 +91,7 @@ func (user *userStruct) checkProjectPaths() (err error) {
 				continue
 			}
 
-			if !helper.PathExists(path) {
+			if !utils.PathExists(path) {
 				configErrors = append(configErrors, fmt.Sprintf("ProjectPath does not exist: %s", path))
 				continue
 			}
@@ -142,12 +117,23 @@ func (user *userStruct) SetParentPid(ppid int) {
 	}
 }
 
-func (user *userStruct) WriteCdToPath(cdtopath string) {
+func (user *userStruct) GetParentTerminal() string {
+	return user.pterm
+}
+
+func (user *userStruct) SetParentTerminal(pterm string) {
+	// from uname -o/-s (OS implementation for std output)
+	if pterm != "" {
+		user.pterm = pterm
+	}
+}
+
+func (user *userStruct) WriteChdirPath(newdir string) {
 	if user.ppid <= 0 {
 		return
 	}
-	notePath := filepath.Join(user.dotDir, "cdto."+strconv.Itoa(user.ppid))
-	if err := os.WriteFile(notePath, []byte(cdtopath), os.FileMode(0o644)); err != nil {
-		console.Errorln("auto cd failed. cd to %s", cdtopath)
+	notePath := filepath.Join(user.dotDir, "chdir."+strconv.Itoa(user.ppid))
+	if err := os.WriteFile(notePath, []byte(newdir), os.FileMode(0o644)); err != nil {
+		console.Errorln("auto chdir failed. cd to %s", newdir)
 	}
 }
