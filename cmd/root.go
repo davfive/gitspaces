@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/davfive/gitspaces/v2/gitspaces"
@@ -14,9 +15,11 @@ import (
 var Version string = ""
 
 var rootCmd = &cobra.Command{
-	Use:     "gitspaces",
-	Version: Version,
-	Short:   "Concurrent development manager for a single project",
+	Use:           "gitspaces",
+	Version:       Version,
+	Short:         "Concurrent development manager for git projects",
+	SilenceUsage:  true,
+	SilenceErrors: true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		return gitspaces.Init(cmd)
 	},
@@ -42,6 +45,7 @@ func SetVersion(version string) {
 }
 
 func setSwitchCommandAsDefault() {
+	fmt.Println(os.Args)
 	switch len(os.Args[1:]) {
 	case 0:
 		rootCmd.SetArgs([]string{"switch"})

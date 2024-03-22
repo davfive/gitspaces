@@ -1,6 +1,6 @@
 new-module -scriptblock {
     function gitspaces {
-        . $HOME/.gitspaces/gitspaces.ps1
+        . {{ .ps1ScriptPath }}
         return $LASTEXITCODE
     }
 } -name gitspaces-scriptblock -force -export

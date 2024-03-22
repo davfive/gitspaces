@@ -1,5 +1,5 @@
-PACKAGE:=github.com/davfive/gitspaces/v2
-GOFLAGS:=-ldflags=-X=${PACKAGE}/cmd.Version=${VERSION}
+PACKAGE=github.com/davfive/gitspaces/v2
+GOFLAGS=-ldflags=-X=${PACKAGE}/cmd.Version=${VERSION}
 VERSION:=$(shell git describe --long --tags --dirty)
 VERSION_SHORT:=$(shell git describe --tags --abbrev=0)
 BRANCH:=$(shell git branch --show-current)

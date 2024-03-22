@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"slices"
 
-	"github.com/davfive/gitspaces/v2/console"
+	"github.com/charmbracelet/huh"
 	"github.com/davfive/gitspaces/v2/helper"
 )
 
@@ -93,7 +93,12 @@ func ChooseProject() (project *ProjectStruct, err error) {
 	}
 	slices.Sort(projectPaths)
 
-	_, projectPath, err := console.GetUserChoice("project", projectPaths)
+	var projectPath string
+	err = huh.NewSelect[string]().
+		Title("Choose a project").
+		Options(huh.NewOptions(projectPaths...)...).
+		Value(&projectPath).
+		Run()
 	if err != nil {
 		return nil, err
 	}
@@ -119,10 +124,14 @@ func SwitchSpace() (space *SpaceStruct, err error) {
 }
 
 func getNewProjectPath(dir string, url string) (projectPath string, err error) {
-	parentDir := helper.Getwd()
+	projectsDir := helper.Getwd()
 
 	// Let user chose which ProjectPaths to put the new project in
-	_, parentDir, err = console.GetUserChoice("Choose a project root", User.projectPaths)
+	err = huh.NewSelect[string]().
+		Title("Choose a ProjectsPath for your new GitSpace project").
+		Options(huh.NewOptions(User.projectPaths...)...).
+		Value(&projectsDir).
+		Run()
 	if err != nil {
 		return "", err
 	}
@@ -131,13 +140,14 @@ func getNewProjectPath(dir string, url string) (projectPath string, err error) {
 	if dir == "" {
 		dir = helper.FileBase(url, ".git")
 	}
-	dir, err = console.GetUserInputWithValidation(
-		"Project Directory",
-		dir,
-		console.MakeDirnameAvailableValidator(parentDir),
-	)
 
-	return filepath.Join(parentDir, dir), nil
+	err = huh.NewInput().
+		Prompt("Project Directory: ").
+		Validate(helper.MakeDirnameAvailableValidator(projectsDir)).
+		Value(&dir).
+		Run()
+
+	return filepath.Join(projectsDir, dir), nil
 }
 
 func switchProject() (space *SpaceStruct, err error) {
@@ -166,11 +176,17 @@ func (project *ProjectStruct) ChooseSpace() (space *SpaceStruct, err error) {
 		spaceNames = append(spaceNames, fmt.Sprintf("[Wakeup] (%d)", numSleepers))
 	}
 
-	idx, _, err := console.GetUserChoice("space", spaceNames)
+	var spaceName string
+	err = huh.NewSelect[string]().
+		Title("Choose a Space").
+		Options(huh.NewOptions(spaceNames...)...).
+		Value(&spaceName).
+		Run()
 	if err != nil {
 		return nil, err
 	}
 
+	idx := slices.Index(spaceNames, spaceName)
 	if idx == 0 {
 		return switchProject()
 	} else if numSleepers > 0 && idx == len(spaceNames)-1 {

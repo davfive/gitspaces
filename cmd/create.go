@@ -22,7 +22,7 @@ var createCmd = &cobra.Command{
 	Aliases: []string{"c"},
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		url := args[0]
-		dir := helper.GetStringAtIndex(args, 1, "")
+		dir := helper.GetIndex(args, 1, "")
 		numClones, _ := cmd.Flags().GetInt("num_spaces")
 
 		var project *gitspaces.ProjectStruct

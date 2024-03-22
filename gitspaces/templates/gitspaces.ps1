@@ -1,15 +1,14 @@
-$gobin = (& go env GOPATH | Out-String) + "/bin"
-& $gobin/gitspaces --ppid $PID $args
+& "{{ .exePath }}" --ppid $PID $args
 $gsExitCode=$LASTEXITCODE
 
 if ($gsExitCode -eq 0) {
-    $chdirFile=$HOME + "/.gitspaces/chdir." + $PID
+    $chdirFile="{{ .userDotDir }}/chdir." + $PID
     if ($chdirFile -and (Test-Path $chdirFile)) {
         $chdir=Get-Content -Path $chdirFile
         if ($chdir) {
             Set-Location $chdir
         }
-        Remove-Item $chdir
+        Remove-Item $chdirFile
     }
 }
 Exit $gsExitCode

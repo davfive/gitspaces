@@ -15,28 +15,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-//go:embed files/gitspaces.sh
-var bashShellFile []byte
-
-//go:embed files/gitspaces.ps1
-var ps1File []byte
-
-//go:embed files/gitspaces.scriptblock.ps1
-var ps1ScriptBlockFile []byte
-
-type shellFileStruct struct {
-	name  string
-	path  string
-	bytes []byte
-}
-
 type userStruct struct {
 	config       *viper.Viper
 	dotDir       string
 	ppid         int
 	pterm        string // Parent os stdout type (uname -o/-s)
 	projectPaths []string
-	shellFiles   []shellFileStruct
 }
 
 func (user *userStruct) OpenConfigFile() (err error) {
@@ -76,38 +60,10 @@ func initUser() (user *userStruct, err error) {
 		return nil, err
 	}
 
-	if err = user.createShellFiles(); err != nil {
-		return nil, err
-	}
+	// ignore Update result (tells if updated or write errors - not fatal)
+	user.updateShellFiles()
 
 	return user, nil
-}
-
-func (user *userStruct) createShellFiles() error {
-	user.shellFiles = []shellFileStruct{
-		{
-			path:  filepath.Join(user.dotDir, "gitspaces.sh"),
-			bytes: bashShellFile,
-		},
-		{
-			path:  filepath.Join(user.dotDir, "gitspaces.ps1"),
-			bytes: ps1File,
-		},
-		{
-			path:  filepath.Join(user.dotDir, "gitspaces.scriptblock.ps1"),
-			bytes: ps1ScriptBlockFile,
-		},
-	}
-	for _, shellFile := range user.shellFiles {
-		if helper.PathIsFile(shellFile.path) {
-			continue
-		}
-		if err := os.WriteFile(shellFile.path, shellFile.bytes, os.FileMode(0o644)); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func (user *userStruct) initConfig() error {
