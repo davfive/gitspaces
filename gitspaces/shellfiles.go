@@ -4,6 +4,9 @@ import (
 	_ "embed"
 	"os"
 	"path/filepath"
+	"regexp"
+	"runtime"
+	"strings"
 	"text/template"
 
 	"github.com/davfive/gitspaces/v2/console"
@@ -13,6 +16,9 @@ import (
 //go:embed templates/gitspaces.sh
 var bashShellTmpl []byte
 
+//go:embed templates/gitspaces.cygwin.sh
+var cygwinShellTmpl []byte
+
 //go:embed templates/gitspaces.ps1
 var ps1Tmpl []byte
 
@@ -20,11 +26,12 @@ var ps1Tmpl []byte
 var ps1ScriptBlockTmpl []byte
 
 type shellFileStruct struct {
-	name string
-	dir  string
-	path string
-	tmpl string
-	vars map[string]interface{}
+	name  string
+	dir   string
+	path  string
+	tmpl  string
+	vars  map[string]interface{}
+	funcs template.FuncMap
 }
 
 func (user *userStruct) updateShellFiles() bool {
@@ -40,6 +47,13 @@ func (user *userStruct) updateShellFiles() bool {
 		user.NewShellFile("ps1ScriptBlock").
 			File("gitspaces.scriptblock.ps1").
 			Template(string(ps1ScriptBlockTmpl)),
+	}
+	if runtime.GOOS == "windows" {
+		shellFiles = append(shellFiles,
+			user.NewShellFile("cygwinScript").
+				File("gitspaces.cygwin.sh").
+				Template(string(cygwinShellTmpl)),
+		)
 	}
 
 	tmplVars := map[string]interface{}{
@@ -68,6 +82,14 @@ func (user *userStruct) NewShellFile(name string) *shellFileStruct {
 		path: "",
 		tmpl: "",
 		vars: map[string]interface{}{},
+		funcs: template.FuncMap{
+			"cygwinizePath": func(path string) string {
+				driveRe := regexp.MustCompile("^(?P<drive>[A-z]+):")
+				path = driveRe.ReplaceAllString(path, "/${drive}")
+				path = strings.Replace(path, "\\", "/", -1)
+				return path
+			},
+		},
 	}
 }
 
@@ -89,8 +111,11 @@ func (shellFile *shellFileStruct) Vars(vars map[string]interface{}) *shellFileSt
 }
 
 func (shellFile *shellFileStruct) Save() (err error) {
-	var tmpl *template.Template
-	if tmpl, err = template.New(shellFile.name).Parse(shellFile.tmpl); err != nil {
+	tmpl, err := template.
+		New(shellFile.name).
+		Funcs(shellFile.funcs).
+		Parse(shellFile.tmpl)
+	if err != nil {
 		return err
 	}
 
