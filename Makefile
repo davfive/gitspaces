@@ -13,7 +13,7 @@ build: checkbuild
 	@echo "[$@] Building ${VERSION} version"
 	go build ${GOFLAGS} -o build/gitspaces
 
-install: checkinstall
+install: checkinstall build
 	@echo "[$@] Installing ${VERSION} version"
 	go install ${GOFLAGS}
 
