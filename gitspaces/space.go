@@ -119,11 +119,11 @@ func (space *SpaceStruct) Wakeup() (err error) {
 func (space *SpaceStruct) createCodeWorkspaceFile() (err error) {
 	var file *os.File
 
-	// Ensure it has the correct name
-	space.codeWsFile = filepath.Join(
+	// Ensure it has the correct name (and vscode on windows requires forward slashes in the path)
+	space.codeWsFile = strings.Replace(filepath.Join(
 		space.project.codeWsDir,
 		fmt.Sprintf("%s~%s.code-workspace", space.project.Name, space.Name),
-	)
+	), string(filepath.Separator), "/", -1)
 
 	if file, err = os.Create(space.codeWsFile); err != nil {
 		return err
@@ -131,13 +131,13 @@ func (space *SpaceStruct) createCodeWorkspaceFile() (err error) {
 	defer file.Close()
 
 	_, err = file.WriteString(fmt.Sprintf(`{
-		"folders": [
-			{
-				"path": "%s"
-			}
-		],
-		"settings": {}
-	}`, space.Path))
+    "folders": [
+        {
+            "path": "%s"
+        }
+    ],
+    "settings": {}
+}`, space.Path))
 
 	return err
 }
