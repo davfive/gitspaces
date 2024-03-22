@@ -19,9 +19,8 @@ install: checkinstall
 
 newtag:
 	@echo "[$@] Creating new tag for ${VERSION_SHORT} version"
-	@echo "v2.0.0" | grep -qE "v2\.\d+\.\d+"
-	if [ $? != 0 ]; then echo "Invalid tag: $(tag)"; exit 1; fi
-	echo "{ \"version\": \"${VERSION_SHORT}\" }" > manifext.json
+	echo "$(tag)" | grep -qE "v2\.\d+\.\d+" # check tag format
+	echo "{ \"version\": \"${VERSION_SHORT}\" }" > manifest.json
 	git commit -am "Release ${VERSION_SHORT}"
 	git push
 	git tag -a ${VERSION_SHORT} -m "Release ${VERSION_SHORT}"
