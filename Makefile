@@ -20,11 +20,11 @@ install: checkinstall
 newtag:
 	@echo "[$@] Creating new tag for ${VERSION_SHORT} version"
 	echo "$(tag)" | grep -qE "v2\.\d+\.\d+" # check tag format
-	echo "{ \"version\": \"${VERSION_SHORT}\" }" > manifest.json
-	git commit -am "Release ${VERSION_SHORT}"
+	echo "{ \"version\": \"$(tag)\" }" > manifest.json
+	git commit -am "Release $(tag)"
 	git push
-	git tag -a ${VERSION_SHORT} -m "Release ${VERSION_SHORT}"
-	git push origin ${VERSION_SHORT}
+	git tag -a $(tag) -m "Release $(tag)"
+	git push origin $(tag)
 
 publish: checkpublish
 	@echo "[$@] Publishing ${VERSION_SHORT} version"
