@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"slices"
 
-	"github.com/charmbracelet/huh"
+	"github.com/davfive/gitspaces/v2/console"
 	"github.com/davfive/gitspaces/v2/helper"
 )
 
@@ -94,9 +94,9 @@ func ChooseProject() (project *ProjectStruct, err error) {
 	slices.Sort(projectPaths)
 
 	var projectPath string
-	err = huh.NewSelect[string]().
+	err = console.NewSelect[string]().
 		Title("Choose a project").
-		Options(huh.NewOptions(projectPaths...)...).
+		Options(projectPaths).
 		Value(&projectPath).
 		Run()
 	if err != nil {
@@ -127,9 +127,9 @@ func getNewProjectPath(dir string, url string) (projectPath string, err error) {
 	projectsDir := helper.Getwd()
 
 	// Let user chose which ProjectPaths to put the new project in
-	err = huh.NewSelect[string]().
+	err = console.NewSelect[string]().
 		Title("Choose a ProjectsPath for your new GitSpace project").
-		Options(huh.NewOptions(User.projectPaths...)...).
+		Options(User.projectPaths).
 		Value(&projectsDir).
 		Run()
 	if err != nil {
@@ -141,7 +141,7 @@ func getNewProjectPath(dir string, url string) (projectPath string, err error) {
 		dir = helper.FileBase(url, ".git")
 	}
 
-	err = huh.NewInput().
+	err = console.NewInput().
 		Prompt("Project Directory: ").
 		Validate(helper.MakeDirnameAvailableValidator(projectsDir)).
 		Value(&dir).
@@ -177,9 +177,9 @@ func (project *ProjectStruct) ChooseSpace() (space *SpaceStruct, err error) {
 	}
 
 	var spaceName string
-	err = huh.NewSelect[string]().
+	err = console.NewSelect[string]().
 		Title("Choose a Space").
-		Options(huh.NewOptions(spaceNames...)...).
+		Options(spaceNames).
 		Value(&spaceName).
 		Run()
 	if err != nil {

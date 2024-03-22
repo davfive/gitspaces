@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/charmbracelet/huh"
+	"github.com/davfive/gitspaces/v2/console"
 	"github.com/davfive/gitspaces/v2/helper"
 
 	cp "github.com/otiai10/copy"
@@ -157,7 +157,7 @@ func (space *SpaceStruct) move(moveVerb string, arguments ...string) error {
 	if len(arguments) > 0 {
 		newName = arguments[0]
 	}
-	err := huh.NewInput().
+	err := console.NewInput().
 		Prompt(fmt.Sprintf("%s space as: ", moveVerb)).
 		Validate(helper.MakeDirnameAvailableValidator(space.project.Path)).
 		Value(&newName).
