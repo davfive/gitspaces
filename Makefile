@@ -7,7 +7,7 @@ MAJVER:=$(shell echo ${VERSION} | cut -d. -f1)
 #=-----------------------------------------------------------
 .PHONY: checkbranch checkdirty checkpending checkversion
 .PHONY: checkbuild checkinstall checkpublish
-.PHONY: build install publish
+.PHONY: build install newtag publish
 #=-----------------------------------------------------------
 build: checkbuild
 	@echo "[$@] Building ${VERSION} version"
@@ -16,6 +16,16 @@ build: checkbuild
 install: checkinstall
 	@echo "[$@] Installing ${VERSION} version"
 	go install ${GOFLAGS}
+
+newtag:
+	@echo "[$@] Creating new tag for ${VERSION_SHORT} version"
+	@echo "v2.0.0" | grep -qE "v2\.\d+\.\d+"
+	if [ $? != 0 ]; then echo "Invalid tag: $(tag)"; exit 1; fi
+	echo "{ \"version\": \"${VERSION_SHORT}\" }" > manifext.json
+	git commit -am "Release ${VERSION_SHORT}"
+	git push
+	git tag -a ${VERSION_SHORT} -m "Release ${VERSION_SHORT}"
+	git push origin ${VERSION_SHORT}
 
 publish: checkpublish
 	@echo "[$@] Publishing ${VERSION_SHORT} version"
