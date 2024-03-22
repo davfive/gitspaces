@@ -1,4 +1,4 @@
-package helper
+package utils
 
 import (
 	"errors"
@@ -12,6 +12,15 @@ func GetIndex[S ~[]E, E any](s S, index int, fallback E) E {
 		return s[index]
 	}
 	return fallback
+}
+
+func Get[E comparable](v E, fallback E) E {
+	var zero E
+	if v != zero {
+		return v
+	} else {
+		return fallback
+	}
 }
 
 func MakeDirnameAvailableValidator(parentDir string) func(string) error {

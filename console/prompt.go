@@ -1,10 +1,16 @@
 package console
 
 import (
+	"bufio"
+	"errors"
 	"fmt"
+	"os"
 	"runtime"
+	"strconv"
+	"strings"
 
 	"github.com/charmbracelet/huh"
+	"github.com/davfive/gitspaces/v2/utils"
 )
 
 // Windows (powershell, cygwin, git bash) aren't propertly
@@ -30,13 +36,12 @@ type Select[T comparable] struct {
 	rawOptions []T
 	options    []Option[T]
 	value      *T
-	validate   func(T) error
 }
 
 func NewInput() *Input {
 	return &Input{
 		value:    new(string),
-		validate: func(string) error { return nil },
+		validate: func(s string) error { return nil },
 	}
 }
 
@@ -46,9 +51,8 @@ func NewOption[T comparable](title string, value T) Option[T] {
 
 func NewSelect[T comparable]() *Select[T] {
 	return &Select[T]{
-		options:  []Option[T]{},
-		value:    new(T),
-		validate: func(T) error { return nil },
+		options: []Option[T]{},
+		value:   new(T),
 	}
 }
 
@@ -63,7 +67,11 @@ func (i *Input) Title(title string) *Input {
 }
 
 func (i *Input) Validate(validate func(string) error) *Input {
-	i.validate = validate
+	if validate == nil {
+		i.validate = func(s string) error { return nil }
+	} else {
+		i.validate = validate
+	}
 	return i
 }
 
@@ -95,11 +103,6 @@ func (s *Select[T]) Value(value *T) *Select[T] {
 	return s
 }
 
-func (s *Select[T]) Validate(validate func(T) error) *Select[T] {
-	s.validate = validate
-	return s
-}
-
 func (i *Input) Run() error {
 	if UsePrettyPrompts {
 		return huh.NewInput().
@@ -109,6 +112,21 @@ func (i *Input) Run() error {
 			Validate(i.validate).
 			Run()
 	}
+
+	// For Dumb Terminals that Go prompt libraries don't support
+	// e.g., Windows Powershell, Git Bash, Cygwin
+	r := bufio.NewReader(os.Stdin)
+
+	if i.title != "" {
+		fmt.Fprintln(os.Stderr, i.title)
+	}
+	input := ""
+	for i.validate(input) != nil {
+		fmt.Fprintf(os.Stderr, "%s ", i.prompt)
+		input, _ = r.ReadString('\n')
+		input = strings.TrimSpace(input)
+	}
+	*i.value = input
 	return nil
 }
 
@@ -118,8 +136,32 @@ func (s *Select[T]) Run() error {
 			Title(s.title).
 			Options(huh.NewOptions(s.rawOptions...)...).
 			Value(s.value).
-			Validate(s.validate).
 			Run()
 	}
-	return nil
+
+	// For Dumb Terminals that Go prompt libraries don't support
+	// e.g., Windows Powershell, Git Bash, Cygwin
+
+	fmt.Fprintf(os.Stderr, "\n")
+	if s.title != "" {
+		fmt.Fprintln(os.Stderr, s.title)
+	}
+	for i, option := range s.options {
+		fmt.Fprintf(os.Stderr, "%2d: %s\n", i+1, option.Title)
+	}
+
+	input := NewInput().
+		Prompt(utils.Get(s.prompt, "#?")).
+		Validate(func(input string) error {
+			if i, err := strconv.Atoi(input); err != nil || i < 1 || i > len(s.options) {
+				return errors.New("invalid choice")
+			}
+			return nil
+		})
+	err := input.Run()
+	if err == nil {
+		optidx, _ := strconv.Atoi(*input.value)
+		*s.value = s.options[optidx-1].Value
+	}
+	return err
 }

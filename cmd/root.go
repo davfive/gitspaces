@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/davfive/gitspaces/v2/gitspaces"
@@ -45,7 +44,6 @@ func SetVersion(version string) {
 }
 
 func setSwitchCommandAsDefault() {
-	fmt.Println(os.Args)
 	switch len(os.Args[1:]) {
 	case 0:
 		rootCmd.SetArgs([]string{"switch"})

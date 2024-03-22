@@ -10,7 +10,7 @@ import (
 	"strconv"
 
 	"github.com/davfive/gitspaces/v2/console"
-	"github.com/davfive/gitspaces/v2/helper"
+	"github.com/davfive/gitspaces/v2/utils"
 
 	"github.com/spf13/viper"
 )
@@ -91,7 +91,7 @@ func (user *userStruct) checkProjectPaths() (err error) {
 				continue
 			}
 
-			if !helper.PathExists(path) {
+			if !utils.PathExists(path) {
 				configErrors = append(configErrors, fmt.Sprintf("ProjectPath does not exist: %s", path))
 				continue
 			}

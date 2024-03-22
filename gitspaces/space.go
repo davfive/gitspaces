@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/davfive/gitspaces/v2/console"
-	"github.com/davfive/gitspaces/v2/helper"
+	"github.com/davfive/gitspaces/v2/utils"
 
 	cp "github.com/otiai10/copy"
 )
@@ -56,7 +56,7 @@ func GetSpaceFromPath(path string) (*SpaceStruct, error) {
 }
 
 func GetSpace() (*SpaceStruct, error) {
-	return GetSpaceFromPath(helper.Getwd())
+	return GetSpaceFromPath(utils.Getwd())
 }
 
 // NewSpace creates a new Space struct
@@ -143,7 +143,7 @@ func (space *SpaceStruct) createCodeWorkspaceFile() (err error) {
 }
 
 func (space *SpaceStruct) deleteCodeWorkspaceFile() (err error) {
-	if helper.PathExists(space.codeWsFile) {
+	if utils.PathExists(space.codeWsFile) {
 		if err = os.Remove(space.codeWsFile); err != nil {
 			fmt.Fprintln(os.Stderr, "Failed to remove "+space.codeWsFile)
 			return err
@@ -159,7 +159,7 @@ func (space *SpaceStruct) move(moveVerb string, arguments ...string) error {
 	}
 	err := console.NewInput().
 		Prompt(fmt.Sprintf("%s space as: ", moveVerb)).
-		Validate(helper.MakeDirnameAvailableValidator(space.project.Path)).
+		Validate(utils.MakeDirnameAvailableValidator(space.project.Path)).
 		Value(&newName).
 		Run()
 	if err != nil {

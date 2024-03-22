@@ -7,7 +7,7 @@ import (
 	"text/template"
 
 	"github.com/davfive/gitspaces/v2/console"
-	"github.com/davfive/gitspaces/v2/helper"
+	"github.com/davfive/gitspaces/v2/utils"
 )
 
 //go:embed templates/gitspaces.sh
@@ -43,7 +43,7 @@ func (user *userStruct) updateShellFiles() bool {
 	}
 
 	tmplVars := map[string]interface{}{
-		"exePath":    helper.Executable(),
+		"exePath":    utils.Executable(),
 		"userDotDir": user.dotDir,
 	}
 	for _, shellFile := range shellFiles {
