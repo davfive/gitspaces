@@ -29,6 +29,7 @@ newtag:
 publish: checkpublish
 	@echo "[$@] Publishing ${VERSION_SHORT} version"
 	GOPROXY=proxy.golang.org go list -m ${GOFLAGS} ${PACKAGE}@${VERSION_SHORT}
+
 #=-----------------------------------------------------------
 checkbuild: checkversion
 checkinstall: checkversion
@@ -51,11 +52,8 @@ checkdirty:
 	fi
 
 checkpending:
-	@echo
 	@echo "[$@] Checking that the tag is on the latest commit"
-	@echo
 	@if ! [[ "${VERSION}" = *-0-* ]]; then \
-		# TODO: auto-create next tag when publishing new release; \
 		echo "Cannot publish tag with later commits: ${VERSION}"; \
 		echo "Please create/push a new tag"; \
 		exit 1; \
