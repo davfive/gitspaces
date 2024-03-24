@@ -168,11 +168,16 @@ func (space *SpaceStruct) move(moveVerb string, arguments ...string) error {
 
 	newPath := filepath.Join(space.project.Path, newName)
 	space.deleteCodeWorkspaceFile()
+	os.Chdir(space.project.Path)
 	if err = os.Rename(space.Path, newPath); err != nil {
+		os.Chdir(space.Path)
 		return err
 	}
+
 	space.Path = newPath
 	space.Name = newName
+	os.Chdir(space.Path)
+
 	if err = space.createCodeWorkspaceFile(); err != nil {
 		fmt.Fprintln(os.Stderr, "Failed to create code workspace file")
 	}
