@@ -7,8 +7,9 @@ import (
 	"path/filepath"
 	"slices"
 
-	"github.com/davfive/gitspaces/v2/console"
-	"github.com/davfive/gitspaces/v2/utils"
+	"github.com/davfive/gitspaces/v2/internal/config"
+	"github.com/davfive/gitspaces/v2/internal/console"
+	"github.com/davfive/gitspaces/v2/internal/utils"
 )
 
 type ProjectStruct struct {
@@ -58,7 +59,7 @@ func GetProjectFromPath(path string) (*ProjectStruct, error) {
 
 	var prevPath string
 	for currPath := path; currPath != prevPath; currPath = filepath.Dir(currPath) {
-		if utils.PathExists(filepath.Join(currPath, GsProjectFile)) {
+		if utils.PathExists(filepath.Join(currPath, config.GsProjectFile)) {
 			return NewProject(currPath), nil
 		}
 		prevPath = currPath
@@ -75,17 +76,17 @@ func NewProject(path string) (project *ProjectStruct) {
 	project = &ProjectStruct{
 		Path:      path,
 		Name:      filepath.Base(path),
-		codeWsDir: filepath.Join(path, GsVsCodeWsDir),
-		dotfile:   filepath.Join(path, GsProjectFile),
-		zzzdir:    filepath.Join(path, GsSleeperDir),
+		codeWsDir: filepath.Join(path, config.GsVsCodeWsDir),
+		dotfile:   filepath.Join(path, config.GsProjectFile),
+		zzzdir:    filepath.Join(path, config.GsSleeperDir),
 	}
 	return project
 }
 
 func ChooseProject() (project *ProjectStruct, err error) {
 	projectPaths := []string{}
-	for _, path := range User.projectPaths {
-		paths, _ := filepath.Glob(filepath.Join(path, "*", GsProjectFile))
+	for _, path := range config.ProjectPaths() {
+		paths, _ := filepath.Glob(filepath.Join(path, "*", config.GsProjectFile))
 		for i := range paths {
 			paths[i] = filepath.Dir(paths[i])
 		}
@@ -129,7 +130,7 @@ func getNewProjectPath(dir string, url string) (projectPath string, err error) {
 	// Let user chose which ProjectPaths to put the new project in
 	err = console.NewSelect[string]().
 		Title("Create project in:").
-		Options(User.projectPaths).
+		Options(config.ProjectPaths()).
 		Value(&projectsDir).
 		Run()
 	if err != nil {
@@ -256,7 +257,7 @@ func (project *ProjectStruct) init() error {
 	}
 
 	// Create blank Project config
-	err := utils.CreateEmptyFile(filepath.Join(project.Path, GsProjectFile))
+	err := utils.CreateEmptyFile(filepath.Join(project.Path, config.GsProjectFile))
 	if err != nil {
 		return err
 	}

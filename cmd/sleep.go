@@ -4,9 +4,9 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"github.com/davfive/gitspaces/v2/console"
-	"github.com/davfive/gitspaces/v2/gitspaces"
-
+	"github.com/davfive/gitspaces/v2/internal/config"
+	"github.com/davfive/gitspaces/v2/internal/console"
+	"github.com/davfive/gitspaces/v2/internal/gitspaces"
 	"github.com/spf13/cobra"
 )
 
@@ -30,7 +30,7 @@ var sleepCmd = &cobra.Command{
 			return console.Errorln("Failed to choose new space to use")
 		}
 
-		gitspaces.User.WriteChdirPath(space.Path)
+		config.User.WriteChdirPath(space.Path)
 		return nil
 	},
 }

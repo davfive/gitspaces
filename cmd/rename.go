@@ -4,9 +4,9 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"github.com/davfive/gitspaces/v2/console"
-	"github.com/davfive/gitspaces/v2/gitspaces"
-
+	"github.com/davfive/gitspaces/v2/internal/config"
+	"github.com/davfive/gitspaces/v2/internal/console"
+	"github.com/davfive/gitspaces/v2/internal/gitspaces"
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +33,7 @@ var renameCmd = &cobra.Command{
 
 		console.Println("\nGitSpace renamed. Reopen any open IDEs from the new path")
 		console.Println("or files saved in the IDE will save to the old GitSpace path.")
-		gitspaces.User.WriteChdirPath(space.Path)
+		config.User.WriteChdirPath(space.Path)
 		return nil
 	},
 }

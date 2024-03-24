@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/davfive/gitspaces/v2/console"
-	"github.com/davfive/gitspaces/v2/utils"
+	"github.com/davfive/gitspaces/v2/internal/console"
+	"github.com/davfive/gitspaces/v2/internal/utils"
 
 	cp "github.com/otiai10/copy"
 )

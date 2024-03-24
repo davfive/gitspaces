@@ -3,7 +3,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/davfive/gitspaces/v2/gitspaces"
+	"github.com/davfive/gitspaces/v2/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -20,7 +20,7 @@ var rootCmd = &cobra.Command{
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		return gitspaces.Init(cmd)
+		return config.Init(cmd)
 	},
 }
 
