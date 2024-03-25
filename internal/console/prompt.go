@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/huh"
-	"github.com/davfive/gitspaces/v2/utils"
+	"github.com/davfive/gitspaces/v2/internal/utils"
 )
 
 // Windows (powershell, cygwin, git bash) aren't propertly

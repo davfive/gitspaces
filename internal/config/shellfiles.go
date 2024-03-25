@@ -1,4 +1,4 @@
-package gitspaces
+package config
 
 import (
 	_ "embed"
@@ -9,8 +9,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/davfive/gitspaces/v2/console"
-	"github.com/davfive/gitspaces/v2/utils"
+	"github.com/davfive/gitspaces/v2/internal/console"
+	"github.com/davfive/gitspaces/v2/internal/utils"
 )
 
 //go:embed templates/gitspaces.sh

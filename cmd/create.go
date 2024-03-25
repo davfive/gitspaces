@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"github.com/davfive/gitspaces/v2/console"
-	"github.com/davfive/gitspaces/v2/gitspaces"
-	"github.com/davfive/gitspaces/v2/utils"
-
+	"github.com/davfive/gitspaces/v2/internal/config"
+	"github.com/davfive/gitspaces/v2/internal/console"
+	"github.com/davfive/gitspaces/v2/internal/gitspaces"
+	"github.com/davfive/gitspaces/v2/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -38,7 +38,7 @@ var createCmd = &cobra.Command{
 
 		console.Println("\nCreated GitSpace project at '%s' with %d spaces", project.Path, numClones)
 
-		gitspaces.User.WriteChdirPath(space.Path)
+		config.User.WriteChdirPath(space.Path)
 		return nil
 	},
 }

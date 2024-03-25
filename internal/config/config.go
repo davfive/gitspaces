@@ -1,4 +1,4 @@
-package gitspaces
+package config
 
 import (
 	"github.com/spf13/cobra"
@@ -28,4 +28,8 @@ func Init(cmd *cobra.Command) (err error) {
 	}
 
 	return nil
+}
+
+func ProjectPaths() []string {
+	return User.projectPaths
 }

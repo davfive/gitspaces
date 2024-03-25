@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/davfive/gitspaces/v2/console"
-	"github.com/davfive/gitspaces/v2/utils"
+	"github.com/davfive/gitspaces/v2/internal/console"
+	"github.com/davfive/gitspaces/v2/internal/utils"
 
 	cp "github.com/otiai10/copy"
 )
@@ -120,10 +120,10 @@ func (space *SpaceStruct) createCodeWorkspaceFile() (err error) {
 	var file *os.File
 
 	// Ensure it has the correct name (and vscode on windows requires forward slashes in the path)
-	space.codeWsFile = strings.Replace(filepath.Join(
+	space.codeWsFile = filepath.Join(
 		space.project.codeWsDir,
 		fmt.Sprintf("%s~%s.code-workspace", space.project.Name, space.Name),
-	), string(filepath.Separator), "/", -1)
+	)
 
 	if file, err = os.Create(space.codeWsFile); err != nil {
 		return err
@@ -137,7 +137,7 @@ func (space *SpaceStruct) createCodeWorkspaceFile() (err error) {
         }
     ],
     "settings": {}
-}`, space.Path))
+}`, strings.Replace(space.Path, "\\", "/", -1)))
 
 	return err
 }
@@ -168,11 +168,16 @@ func (space *SpaceStruct) move(moveVerb string, arguments ...string) error {
 
 	newPath := filepath.Join(space.project.Path, newName)
 	space.deleteCodeWorkspaceFile()
+	os.Chdir(space.project.Path)
 	if err = os.Rename(space.Path, newPath); err != nil {
+		os.Chdir(space.Path)
 		return err
 	}
+
 	space.Path = newPath
 	space.Name = newName
+	os.Chdir(space.Path)
+
 	if err = space.createCodeWorkspaceFile(); err != nil {
 		fmt.Fprintln(os.Stderr, "Failed to create code workspace file")
 	}

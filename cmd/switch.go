@@ -4,8 +4,8 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"github.com/davfive/gitspaces/v2/gitspaces"
-
+	"github.com/davfive/gitspaces/v2/internal/config"
+	"github.com/davfive/gitspaces/v2/internal/gitspaces"
 	"github.com/spf13/cobra"
 )
 
@@ -20,7 +20,7 @@ var switchCmd = &cobra.Command{
 			return err
 		}
 
-		gitspaces.User.WriteChdirPath(space.Path)
+		config.User.WriteChdirPath(space.Path)
 		return nil
 	},
 }
