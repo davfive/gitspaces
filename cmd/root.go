@@ -61,7 +61,8 @@ func runCommand() {
 	if cmd, err := rootCmd.ExecuteC(); err != nil {
 		skipErrors := []string{"user aborted"}
 		if !slices.Contains(skipErrors, err.Error()) {
-			utils.PanicIfFalse(!rootCmd.SilenceErrors || !rootCmd.SilenceUsage, "Silence required for alternate error messaging")
+			utils.PanicIfFalse(rootCmd.SilenceErrors, "SilenceErrors required for alternate error messaging")
+			utils.PanicIfFalse(rootCmd.SilenceUsage, "SilenceUsage required for alternate error messaging")
 			cmd.PrintErrln(cmd.ErrPrefix(), err.Error())
 			cmd.PrintErrf("Run '%v -h' for usage.\n", cmd.CommandPath())
 		}
