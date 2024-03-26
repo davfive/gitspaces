@@ -48,16 +48,7 @@ func Execute() {
 		// TODO: setDefaultCommandIfNonePresent("setup")
 		setDefaultCommandIfNonePresent("switch")
 	}
-	runCommand()
-}
 
-func SetVersion(version string) {
-	if Version == "" {
-		rootCmd.Version = version
-	}
-}
-
-func runCommand() {
 	if cmd, err := rootCmd.ExecuteC(); err != nil {
 		skipErrors := []string{"user aborted"}
 		if !slices.Contains(skipErrors, err.Error()) {
@@ -70,17 +61,35 @@ func runCommand() {
 	}
 }
 
+func SetVersion(version string) {
+	if Version == "" {
+		rootCmd.Version = version
+	}
+}
+
+func flagsContain(flags []string, contains ...string) bool {
+	for _, flag := range contains {
+		if slices.Contains(flags, flag) {
+			return true
+		}
+	}
+	return false
+}
+
 func setDefaultCommandIfNonePresent(defaultCommand string) {
-	// Stolen from cobra source code in command.go::ExecuteC()
+	// Taken from cobra source code in command.go::ExecuteC()
 	var cmd *cobra.Command
 	var err error
+	var flags []string
 	if rootCmd.TraverseChildren {
-		cmd, _, err = rootCmd.Traverse(os.Args[1:])
+		cmd, flags, err = rootCmd.Traverse(os.Args[1:])
 	} else {
-		cmd, _, err = rootCmd.Find(os.Args[1:])
+		cmd, flags, err = rootCmd.Find(os.Args[1:])
 	}
 
 	if err != nil || cmd.Use == rootCmd.Use {
-		rootCmd.SetArgs(append(os.Args[1:], defaultCommand))
+		if !flagsContain(flags, "-v", "-h", "--version", "--help") {
+			rootCmd.SetArgs(append(os.Args[1:], defaultCommand))
+		}
 	}
 }

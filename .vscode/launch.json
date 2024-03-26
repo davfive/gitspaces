@@ -45,6 +45,26 @@
       "console": "integratedTerminal"
     },
     {
+      "name": "gitspaces -v",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}",
+      "cwd": "${workspaceFolder}",
+      "args": ["-v"],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "gitspaces -h",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}",
+      "cwd": "${workspaceFolder}",
+      "args": ["-h"],
+      "console": "integratedTerminal"
+    },
+    {
       "name": "gitspaces <empty>",
       "type": "go",
       "request": "launch",
