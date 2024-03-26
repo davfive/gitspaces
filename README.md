@@ -13,11 +13,7 @@ For those of you with experience using, ahem, the ClearCase vcs, you're familiar
 
 A GitSpace is an isolated workspace that has all of your project code where you can work on ONE THING. A GitSpace project is a collection of spaces (think independent clones) for the project. If you are asked to fix a bug or something else in parallel, you just open a new space and work there.
 
-## Project Roadmap
-
-See [GitSpaces v2 Roadmap](https://github.com/users/davfive/projects/5/views/2)
-
-## Getting Started
+## Installation
 
 gitspaces is implemented in Go, so
 
@@ -28,11 +24,21 @@ gitspaces is implemented in Go, so
    ```
    $ go install github.com/davfive/gitspaces/v2@latest
      -> installs to ~/go/bin/gitspaces
+
+   $ gitspaces -v # to be change to gitspaces setup
+     -> run once to install config and shell wrapper files to ~/.gitspaces/ (or C:/Users/<user>/.gitspaces/
    ```
-4. Run GitSpaces setup
-   ```
-   $ gitspaces setup
-     -> creates ~/.gitspaces/...
+4. Setup gitspaces command wrapper
+   Some gitspaces commands change the current working directory of the user. To accomplish this, gitspaces is run through a shell (bash / powershell) wrapper.
+
+   * MacOS
+      * bash
+        ```
+        $ echo ". ~/.gitspaces/gitspaces.sh" >> ~/.bashrc   # main wrapper
+        $ echo "alias gs=gitspaces" >> ~/.bashrc            # optional alias
+        ```
+      * PowerShell
+        $ open 
    $ vim ~/.gitspaces/config.yaml
      -> update ProjectPaths list
    $ vim ~/.bashrc (or ~/.zshrc)
@@ -50,7 +56,7 @@ gitspaces is implemented in Go, so
 
 6. Start using GitSpaces
 
-## Documentation
+## Commands
 
 ### The `gitspaces` command 
 #### USAGE
@@ -65,12 +71,9 @@ COMMAND  | Description
 `sleep`  | Archive a gitspace and wakes up another one
 `code`   | Launches Visual Studio Code Workspace for the space
 
-### Examples
 
+## GitSpace Project Structure
 
-## GitSpace Structure
-
-### GitSpace Project Layout
 ```
 ~/.../projects
  └── project-a
@@ -95,9 +98,10 @@ COMMAND  | Description
 # Created first time gitspaces is run
 ~/.gitspaces/
  ├── config.yaml (must be filled in before use)
- └── shells
-     ├──  bashrc (bash wrapper function)
-     └──  zshrc  (zsh wra...)
+ ├── gitspaces.sh
+ ├── gitspaces.cygwin.sh
+ ├── gitspaces.ps1
+ └── gitspaces.scriptblock.ps1
 ```
 
 #### config.yaml
