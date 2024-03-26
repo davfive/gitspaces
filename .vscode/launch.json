@@ -40,7 +40,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}",
-      "cwd": "/Users/davidmay/code/testarea",
+      "cwd": "${workspaceFolder}",
       "args": ["switch"],
       "console": "integratedTerminal"
     },
@@ -50,7 +50,7 @@
       "request": "launch",
       "mode": "auto",
       "program": "${workspaceFolder}",
-      "cwd": "/Users/davidmay/code/testarea",
+      "cwd": "${workspaceFolder}",
       "args": [],
       "console": "integratedTerminal"
     }

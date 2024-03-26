@@ -35,6 +35,12 @@ func CreateFile(path string) (err error) {
 	return nil
 }
 
+func GetUserHomeDir() string {
+	userHomeDir, err := os.UserHomeDir()
+	PanicIfError(err)
+	return userHomeDir
+}
+
 func PathExists(filename string) bool {
 	_, err := os.Stat(filename)
 	return !errors.Is(err, os.ErrNotExist)
