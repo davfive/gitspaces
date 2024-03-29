@@ -45,6 +45,16 @@
       "console": "integratedTerminal"
     },
     {
+      "name": "gitspaces setup",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}",
+      "cwd": "${workspaceFolder}",
+      "args": ["setup"],
+      "console": "integratedTerminal"
+    },
+    {
       "name": "gitspaces -v",
       "type": "go",
       "request": "launch",

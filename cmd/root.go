@@ -46,7 +46,7 @@ func Execute() {
 		setDefaultCommandIfNonePresent("switch")
 	} else {
 		// TODO: setDefaultCommandIfNonePresent("setup")
-		setDefaultCommandIfNonePresent("switch")
+		setDefaultCommandIfNonePresent("setup")
 	}
 
 	if cmd, err := rootCmd.ExecuteC(); err != nil {

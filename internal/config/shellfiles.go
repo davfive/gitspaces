@@ -2,7 +2,6 @@ package config
 
 import (
 	_ "embed"
-	"os"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -34,28 +33,30 @@ type shellFileStruct struct {
 	funcs template.FuncMap
 }
 
-func (user *userStruct) updateShellFiles() bool {
-	// TODO: Update only if first-run with new version of gitspaces (via config file)
-	requiredUpdate := true
-	shellFiles := []*shellFileStruct{
-		user.NewShellFile("bashScript").
+func GetShellFiles() map[string]*shellFileStruct {
+	shellFiles := map[string]*shellFileStruct{
+		"bashScript": NewShellFile("bashScript").
 			File("gitspaces.sh").
 			Template(string(bashShellTmpl)),
-		user.NewShellFile("ps1Script").
+		"ps1Script": NewShellFile("ps1Script").
 			File("gitspaces.ps1").
 			Template(string(ps1Tmpl)),
-		user.NewShellFile("ps1ScriptBlock").
+		"ps1ScriptBlock": NewShellFile("ps1ScriptBlock").
 			File("gitspaces.scriptblock.ps1").
 			Template(string(ps1ScriptBlockTmpl)),
 	}
 	if runtime.GOOS == "windows" {
-		shellFiles = append(shellFiles,
-			user.NewShellFile("cygwinScript").
-				File("gitspaces.cygwin.sh").
-				Template(string(cygwinShellTmpl)),
-		)
+		shellFiles["cygwinScript"] = NewShellFile("cygwinScript").
+			File("gitspaces.cygwin.sh").
+			Template(string(cygwinShellTmpl))
 	}
+	return shellFiles
+}
 
+func (user *userStruct) updateShellFiles() bool {
+	// TODO: Update only if first-run with new version of gitspaces (via config file)
+	requiredUpdate := true
+	shellFiles := GetShellFiles()
 	tmplVars := map[string]interface{}{
 		"exePath":    utils.Executable(),
 		"userDotDir": user.dotDir,
@@ -75,10 +76,10 @@ func (user *userStruct) updateShellFiles() bool {
 	return requiredUpdate
 }
 
-func (user *userStruct) NewShellFile(name string) *shellFileStruct {
+func NewShellFile(name string) *shellFileStruct {
 	return &shellFileStruct{
 		name: name,
-		dir:  user.dotDir,
+		dir:  GetUserDotDir(),
 		path: "",
 		tmpl: "",
 		vars: map[string]interface{}{},
@@ -119,12 +120,5 @@ func (shellFile *shellFileStruct) Save() (err error) {
 		return err
 	}
 
-	var f *os.File
-	if f, err = os.Create(shellFile.path); err != nil {
-		return err
-	}
-
-	err = tmpl.Execute(f, shellFile.vars)
-	f.Close()
-	return err
+	return utils.WriteTemplateToFile(tmpl, shellFile.path, shellFile.vars)
 }

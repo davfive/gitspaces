@@ -4,16 +4,18 @@ import (
 	_ "embed"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strconv"
+	"text/template"
 
 	"github.com/davfive/gitspaces/v2/internal/console"
 	"github.com/davfive/gitspaces/v2/internal/utils"
 
 	"github.com/spf13/viper"
 )
+
+//go:embed templates/config.yaml.tmpl
+var defaultConfigYaml []byte
 
 type userStruct struct {
 	config       *viper.Viper
@@ -23,30 +25,40 @@ type userStruct struct {
 	projectPaths []string
 }
 
-func (user *userStruct) OpenConfigFile() (err error) {
-	configFile := user.config.ConfigFileUsed()
-	if configFile == "" {
-		return fmt.Errorf("No config file found")
-	}
+func (user *userStruct) GetConfigFile() string {
+	return user.config.ConfigFileUsed()
+}
 
-	switch runtime.GOOS {
-	case "windows":
-		return exec.Command("cmd", "/c", configFile).Start()
-	case "darwin":
-		return exec.Command("open", configFile).Start()
-	default:
-		return fmt.Errorf("unsupported OS: %s", runtime.GOOS)
+func GetUserDotDir() string {
+	return filepath.Join(utils.GetUserHomeDir(), GsDotDir)
+}
+
+func Setup() {
+	console.PrintSeparateln("Configuring GitSpaces for %s", utils.GetUserHomeDir())
+
+	user, err := initUser()
+	if err != nil {
+		console.Errorln("User setup failed: %s", err)
+		return
+	}
+	shellFiles := GetShellFiles()
+
+	console.Println("GitSpaces generated configuration files:")
+	console.Println("  %s", user.config.ConfigFileUsed())
+	for _, key := range utils.SortKeys(shellFiles) {
+		console.Println("  %s", shellFiles[key].path)
+	}
+	console.Println("")
+	if console.NewConfirm().Prompt("Edit config file?").Run() == true {
+		if err = utils.OpenFileInDefaultApp(user.GetConfigFile()); err != nil {
+			console.Errorln("EditConfigFile failed: %s", err)
+		}
 	}
 }
 
 func initUser() (user *userStruct, err error) {
-	userHomeDir, err := os.UserHomeDir()
-	if err != nil {
-		return nil, err
-	}
-
 	user = &userStruct{
-		dotDir: filepath.Join(userHomeDir, GsDotDir),
+		dotDir: GetUserDotDir(),
 		ppid:   -1,
 	}
 
@@ -66,11 +78,26 @@ func initUser() (user *userStruct, err error) {
 	return user, nil
 }
 
+func (user *userStruct) writeDefaultConfig() error {
+	tmpl, err := template.New("config").Parse(string(defaultConfigYaml))
+	if err != nil {
+		return err
+	}
+
+	return utils.WriteTemplateToFile(tmpl, user.config.ConfigFileUsed(), map[string]interface{}{
+		"HomeDir": utils.GetUserHomeDir(),
+	})
+}
+
 func (user *userStruct) initConfig() error {
 	user.config = viper.New()
-	user.config.SetConfigName("config.yaml")
+	user.config.SetConfigFile(filepath.Join(user.dotDir, "config.yaml"))
 	user.config.SetConfigType("yaml")
-	user.config.AddConfigPath(user.dotDir)
+	if !utils.PathExists(user.config.ConfigFileUsed()) {
+		user.writeDefaultConfig()
+	}
+
+	user.config.ReadInConfig()
 
 	user.config.ReadInConfig()
 	user.projectPaths = user.config.GetStringSlice("ProjectPaths")

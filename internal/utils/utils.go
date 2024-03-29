@@ -1,10 +1,18 @@
 package utils
 
 import (
+	"cmp"
 	"errors"
+	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
+	"slices"
 	"strings"
+	"text/template"
+
+	"golang.org/x/exp/maps"
 )
 
 func GetIndex[S ~[]E, E any](s S, index int, fallback E) E {
@@ -14,12 +22,17 @@ func GetIndex[S ~[]E, E any](s S, index int, fallback E) E {
 	return fallback
 }
 
-func Get[E comparable](v E, fallback E) E {
+func Get[E comparable](v E, fallbacks ...E) E {
 	var zero E
 	if v != zero {
 		return v
 	} else {
-		return fallback
+		for _, f := range fallbacks {
+			if f != zero {
+				return f
+			}
+		}
+		return zero
 	}
 }
 
@@ -32,6 +45,23 @@ func MakeDirnameAvailableValidator(parentDir string) func(string) error {
 	}
 }
 
+func OpenFileInDefaultApp(path string) error {
+	switch runtime.GOOS {
+	case "windows":
+		return exec.Command("cmd", "/c", path).Start()
+	case "darwin":
+		return exec.Command("open", path).Start()
+	default:
+		return fmt.Errorf("unsupported OS: %s", runtime.GOOS)
+	}
+}
+
+func SortKeys[M ~map[K]V, K cmp.Ordered, V any](m M) []K {
+	keys := maps.Keys(m)
+	slices.Sort(keys)
+	return keys
+}
+
 func Executable() (exe string) {
 	var err error
 
@@ -41,4 +71,27 @@ func Executable() (exe string) {
 		}
 	}
 	return os.Args[0]
+}
+
+func SafeWriteTemplateToFile(t *template.Template, path string, vars map[string]interface{}) (err error) {
+	if PathExists(path) {
+		return errors.New("template path already exists: " + path)
+	}
+
+	return WriteTemplateToFile(t, path, vars)
+}
+
+func WriteTemplateToFile(tmpl *template.Template, path string, vars map[string]interface{}) (err error) {
+	if err = os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+
+	var f *os.File
+	if f, err = os.Create(path); err != nil {
+		return err
+	}
+
+	err = tmpl.Execute(f, vars)
+	f.Close()
+	return err
 }
