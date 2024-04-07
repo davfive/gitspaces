@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"slices"
 	"strings"
@@ -14,6 +15,13 @@ import (
 
 	"golang.org/x/exp/maps"
 )
+
+func CygwinizePath(path string) string {
+	driveRe := regexp.MustCompile("^(?P<drive>[A-z]+):")
+	path = driveRe.ReplaceAllString(path, "/${drive}")
+	path = strings.Replace(path, "\\", "/", -1)
+	return path
+}
 
 func GetIndex[S ~[]E, E any](s S, index int, fallback E) E {
 	if index < len(s) {
@@ -79,6 +87,12 @@ func SafeWriteTemplateToFile(t *template.Template, path string, vars map[string]
 	}
 
 	return WriteTemplateToFile(t, path, vars)
+}
+
+func WriteTemplateToString(tmpl *template.Template, vars map[string]interface{}) (string, error) {
+	var s strings.Builder
+	err := tmpl.Execute(&s, vars)
+	return s.String(), err
 }
 
 func WriteTemplateToFile(tmpl *template.Template, path string, vars map[string]interface{}) (err error) {

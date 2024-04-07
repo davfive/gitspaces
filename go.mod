@@ -4,6 +4,7 @@ go 1.22.0
 
 require (
 	github.com/charmbracelet/huh v0.3.0
+	github.com/mitchellh/go-ps v1.0.0
 	github.com/otiai10/copy v1.14.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2

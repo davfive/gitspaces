@@ -11,12 +11,7 @@ import (
 // setupCmd represents the setup command
 var setupCmd = &cobra.Command{
 	Use:   "setup",
-	Short: "Run gitspaces initial seteup",
-	Long: `Run gitspaces initial seteup
-- Create ~/.gitspaces directory
-- Create ~/.gitspaces/config.yaml file
-- Create ~/.gitspaces/gitspaces*.sh/.ps1 wrapper scripts
-- Walk user through setting up envorinment.`,
+	Short: "Run gitspaces setup wizard",
 	Run: func(cmd *cobra.Command, args []string) {
 		config.Setup()
 	},

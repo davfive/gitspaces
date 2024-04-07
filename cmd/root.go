@@ -37,7 +37,7 @@ func Execute() {
 	rootCmd.Root().CompletionOptions.DisableDefaultCmd = true
 	rootCmd.PersistentFlags().Int("ppid", -1, "path to parent pid for communication")
 	rootCmd.PersistentFlags().MarkHidden("ppid")
-	rootCmd.PersistentFlags().String("pterm", "", "`uname -o` (parent terminal). Used for prompt support)")
+	rootCmd.PersistentFlags().String("pterm", "", "parent terminal type. Used for prompt support and setup instructions.")
 	rootCmd.PersistentFlags().MarkHidden("pterm")
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Add additional debugging information")
 	rootCmd.PersistentFlags().MarkHidden("debug")

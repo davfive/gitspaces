@@ -3,4 +3,3 @@ new-module -scriptblock {
         . {{ .ps1ScriptPath }} $args
     }
 } -name gitspaces-scriptblock -force -export
-

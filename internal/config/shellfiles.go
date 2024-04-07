@@ -3,25 +3,19 @@ package config
 import (
 	_ "embed"
 	"path/filepath"
-	"regexp"
-	"runtime"
-	"strings"
 	"text/template"
 
 	"github.com/davfive/gitspaces/v2/internal/console"
 	"github.com/davfive/gitspaces/v2/internal/utils"
 )
 
-//go:embed templates/gitspaces.sh
-var bashShellTmpl []byte
+//go:embed templates/gitspaces.tmpl.sh
+var shellTmpl []byte
 
-//go:embed templates/gitspaces.cygwin.sh
-var cygwinShellTmpl []byte
-
-//go:embed templates/gitspaces.ps1
+//go:embed templates/gitspaces.tmpl.ps1
 var ps1Tmpl []byte
 
-//go:embed templates/gitspaces.scriptblock.ps1
+//go:embed templates/gitspaces.scriptblock.tmpl.ps1
 var ps1ScriptBlockTmpl []byte
 
 type shellFileStruct struct {
@@ -35,9 +29,9 @@ type shellFileStruct struct {
 
 func GetShellFiles() map[string]*shellFileStruct {
 	shellFiles := map[string]*shellFileStruct{
-		"bashScript": NewShellFile("bashScript").
+		"shellScript": NewShellFile("Shell").
 			File("gitspaces.sh").
-			Template(string(bashShellTmpl)),
+			Template(string(shellTmpl)),
 		"ps1Script": NewShellFile("ps1Script").
 			File("gitspaces.ps1").
 			Template(string(ps1Tmpl)),
@@ -45,51 +39,16 @@ func GetShellFiles() map[string]*shellFileStruct {
 			File("gitspaces.scriptblock.ps1").
 			Template(string(ps1ScriptBlockTmpl)),
 	}
-	if runtime.GOOS == "windows" {
-		shellFiles["cygwinScript"] = NewShellFile("cygwinScript").
-			File("gitspaces.cygwin.sh").
-			Template(string(cygwinShellTmpl))
-	}
 	return shellFiles
-}
-
-func (user *userStruct) updateShellFiles() bool {
-	// TODO: Update only if first-run with new version of gitspaces (via config file)
-	requiredUpdate := true
-	shellFiles := GetShellFiles()
-	tmplVars := map[string]interface{}{
-		"exePath":    utils.Executable(),
-		"userDotDir": user.dotDir,
-	}
-	for _, shellFile := range shellFiles {
-		tmplVars[shellFile.name+"Path"] = shellFile.path
-	}
-
-	for _, shellFile := range shellFiles {
-		shellFile.Vars(tmplVars)
-		if err := shellFile.Save(); err != nil {
-			console.Errorln("failed to save shell file: %s", shellFile.path)
-			console.Errorln(err.Error())
-			continue // not fatal, user just won't have shell file to use
-		}
-	}
-	return requiredUpdate
 }
 
 func NewShellFile(name string) *shellFileStruct {
 	return &shellFileStruct{
 		name: name,
 		dir:  GetUserDotDir(),
-		path: "",
-		tmpl: "",
 		vars: map[string]interface{}{},
 		funcs: template.FuncMap{
-			"cygwinizePath": func(path string) string {
-				driveRe := regexp.MustCompile("^(?P<drive>[A-z]+):")
-				path = driveRe.ReplaceAllString(path, "/${drive}")
-				path = strings.Replace(path, "\\", "/", -1)
-				return path
-			},
+			"cygwinizePath": utils.CygwinizePath,
 		},
 	}
 }
@@ -121,4 +80,21 @@ func (shellFile *shellFileStruct) Save() (err error) {
 	}
 
 	return utils.WriteTemplateToFile(tmpl, shellFile.path, shellFile.vars)
+}
+
+func (user *userStruct) updateShellFiles() bool {
+	// TODO: Update only if first-run with new version of gitspaces (via config file)
+	requiredUpdate := true
+	shellFiles := GetShellFiles()
+	tmplVars := user.getShellTmplVars(shellFiles)
+
+	for _, shellFile := range shellFiles {
+		shellFile.Vars(tmplVars)
+		if err := shellFile.Save(); err != nil {
+			console.Errorln("failed to save shell file: %s", shellFile.path)
+			console.Errorln(err.Error())
+			continue // not fatal, user just won't have shell file to use
+		}
+	}
+	return requiredUpdate
 }

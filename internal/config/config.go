@@ -14,20 +14,13 @@ const (
 )
 
 func Init(cmd *cobra.Command) (err error) {
-	if User, err = initUser(); err != nil {
-		return err
+	var ppidFlag int
+	if ppidFlag, err = cmd.Flags().GetInt("ppid"); err != nil {
+		User, err = initUser(ppidFlag)
+	} else {
+		User, err = initUser(-1)
 	}
-	ppid, _ := cmd.Flags().GetInt("ppid")
-	if ppid > 0 {
-		User.SetParentPid(ppid)
-	}
-
-	pterm, _ := cmd.Flags().GetString("pterm")
-	if pterm != "" {
-		User.SetParentTerminal(pterm)
-	}
-
-	return nil
+	return err
 }
 
 func ProjectPaths() []string {
