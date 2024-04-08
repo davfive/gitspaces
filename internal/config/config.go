@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/davfive/gitspaces/v2/internal/console"
@@ -33,10 +32,6 @@ func Init(cmd *cobra.Command) (err error) {
 	if debug, err := cmd.Flags().GetBool("debug"); err == nil {
 		Debug = debug
 		console.SetDebug(Debug)
-	}
-
-	if User.wrapped == false && cmd.Name() != "setup" {
-		err = fmt.Errorf("GitSpaces not run from wrapper. Run 'gitspaces setup' to initialize GitSpaces. For more information, see README at https://github.com/davfive/gitspaces.")
 	}
 
 	return err

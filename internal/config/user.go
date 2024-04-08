@@ -37,72 +37,6 @@ func GetUserDotDir() string {
 	return filepath.Join(utils.GetUserHomeDir(), GsDotDir)
 }
 
-func Setup() {
-	console.Println(`
-** Setup Action 1/2
-** Add ProjectPaths to %s
-
-GitSpaces will use these paths to find your projects
-`, User.config.ConfigFileUsed())
-
-	if console.NewConfirm().Prompt("Edit config file?").Run() == true {
-		if err := utils.OpenFileInDefaultApp(User.GetConfigFile()); err != nil {
-			console.Errorln("Editing config file failed: %s", err)
-		}
-	}
-
-	console.Println(`
-** Setup Action 2/2
-** Update shell profile for %s ...
-
-GitSpaces requires a wrapper function in your shell profile/rc file because
-some commands change the current working directory. The wrapper handles this.
-
-The following wrapper files were created:`, User.pterm)
-	shellFiles := GetShellFiles()
-	for _, key := range utils.SortKeys(shellFiles) {
-		console.Println("      %s", shellFiles[key].path)
-	}
-
-	shellrc := User.getShellRcFile()
-	if User.pterm == "pwsh" {
-		console.Println(`
-Add the following lines to your PowerShell $PROFILE file:
-. %s
-Set-Alias -Name gs -Value gitspaces # optional
-
-Your PowerShell profile is located at: %s
-For more information on your PowerShell profile, see https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_profiles?view=powershell-7.4#the-profile-variable
-
-`, shellFiles["ps1Script"].path, shellrc)
-		if console.NewConfirm().Prompt("Edit PowerShell $PROFILE?").Run() == true {
-			if err := utils.OpenFileInDefaultApp(shellrc); err != nil {
-				console.Errorln("Editing PowerShell $PROFILE failed: %s", err)
-			}
-		}
-	} else if shellrc != "" {
-		console.Println(`
-Add the following lines to your current shell rc file:
-. %s/gitspaces.sh
-alias gs=gitspaces
-
-Your shell rc file is located at: %s", 
-`, utils.CygwinizePath(User.dotDir), shellrc)
-		if console.NewConfirm().Prompt("Edit shell rc file?").Run() == true {
-			if err := utils.OpenFileInDefaultApp(shellrc); err != nil {
-				console.Errorln("Editing shell rc file failed: %s", err)
-			}
-		}
-	} else {
-		console.Println(`
-Unable to determine your current shell rc file. Assuming *nix-style, add")
-the following lines to your shell rc file:
-. %s/gitspaces.sh
-alias gs=gitspaces
-`, utils.CygwinizePath(User.dotDir))
-	}
-}
-
 func initUser(ppidFlag int) (user *userStruct, err error) {
 	user = &userStruct{dotDir: GetUserDotDir()}
 	user.SetParentProperties(ppidFlag)
@@ -161,12 +95,8 @@ func (user *userStruct) initConfig() error {
 
 func (user *userStruct) checkProjectPaths() (err error) {
 	configErrors := []string{}
-	if len(user.projectPaths) == 0 {
-		configErrors = append(
-			configErrors,
-			fmt.Sprintf("No 'ProjectPaths' section in %s", user.config.ConfigFileUsed()),
-		)
-	} else {
+	// An empty project paths file is handled by the RunUserEnvironmentChecks(), not here
+	if len(user.projectPaths) > 0 {
 		for i, path := range user.projectPaths {
 			if path, err = filepath.Abs(path); err != nil {
 				configErrors = append(configErrors, fmt.Sprintf("ProjectPath error: %s", err))
@@ -199,7 +129,8 @@ func (user *userStruct) getShellRcFile() string {
 	}
 
 	if user.pterm == "pwsh" {
-		return os.Getenv("PROFILE")
+		// return os.Getenv("PROFILE") // For some reason this doesn't work (pwsh> $PROFILE)
+		return filepath.Join(utils.GetUserHomeDir(), ".config", "powershell", "Microsoft.PowerShell_profile.ps1")
 	}
 
 	return ""

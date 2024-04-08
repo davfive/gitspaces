@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"os"
-	"path/filepath"
 	"slices"
 
 	"github.com/davfive/gitspaces/v2/internal/config"
@@ -29,7 +28,14 @@ var rootCmd = &cobra.Command{
 			console.Println("%v", os.Args)
 		}
 
-		return config.Init(cmd)
+		if err := config.Init(cmd); err != nil {
+			return err
+		}
+
+		if config.RunUserEnvironmentCheck() == true {
+			os.Exit(1) // User asked to update environment.
+		}
+		return nil
 	},
 }
 
@@ -70,7 +76,7 @@ func flagsContain(flags []string, contains ...string) bool {
 	return false
 }
 
-func setDefaultCommandIfNonePresent() {
+func prefetchCommandAndFlags() (*cobra.Command, []string, error) {
 	// Taken from cobra source code in command.go::ExecuteC()
 	var cmd *cobra.Command
 	var err error
@@ -81,17 +87,15 @@ func setDefaultCommandIfNonePresent() {
 		cmd, flags, err = rootCmd.Find(os.Args[1:])
 	}
 
+	return cmd, flags, err
+}
+
+func setDefaultCommandIfNonePresent() {
+	cmd, flags, err := prefetchCommandAndFlags()
 	if err != nil || cmd.Use == rootCmd.Use {
 		if !flagsContain(flags, "-v", "-h", "--version", "--help") {
-			firstRun := !utils.PathExists(filepath.Join(utils.GetUserHomeDir(), ".gitspaces"))
-
-			if firstRun || !flagsContain(flags, "--ppid") {
-				// Not setup or not setup correctly (not using wrapper)
-				rootCmd.SetArgs([]string{"setup"})
-			} else {
-				// Run w/o commands, default to switching projects/spaces
-				rootCmd.SetArgs(append(os.Args[1:], "switch"))
-			}
+			// Run w/o commands, default to switching projects/spaces
+			rootCmd.SetArgs(append(os.Args[1:], "switch"))
 		}
 	}
 }
