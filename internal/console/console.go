@@ -5,6 +5,18 @@ import (
 	"os"
 )
 
+var debug bool = false
+
+func SetDebug(debugFlag bool) {
+	debug = debugFlag
+}
+
+func Debugln(format string, a ...any) {
+	if debug {
+		Println(format, a...)
+	}
+}
+
 func Println(format string, a ...any) {
 	fmt.Printf(format, a...)
 	fmt.Println()

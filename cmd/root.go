@@ -42,13 +42,7 @@ func Execute() {
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Add additional debugging information")
 	rootCmd.PersistentFlags().MarkHidden("debug")
 
-	if utils.PathExists(filepath.Join(utils.GetUserHomeDir(), ".gitspaces")) {
-		setDefaultCommandIfNonePresent("switch")
-	} else {
-		// TODO: setDefaultCommandIfNonePresent("setup")
-		setDefaultCommandIfNonePresent("setup")
-	}
-
+	setDefaultCommandIfNonePresent()
 	if cmd, err := rootCmd.ExecuteC(); err != nil {
 		skipErrors := []string{"user aborted"}
 		if !slices.Contains(skipErrors, err.Error()) {
@@ -76,7 +70,7 @@ func flagsContain(flags []string, contains ...string) bool {
 	return false
 }
 
-func setDefaultCommandIfNonePresent(defaultCommand string) {
+func setDefaultCommandIfNonePresent() {
 	// Taken from cobra source code in command.go::ExecuteC()
 	var cmd *cobra.Command
 	var err error
@@ -89,7 +83,15 @@ func setDefaultCommandIfNonePresent(defaultCommand string) {
 
 	if err != nil || cmd.Use == rootCmd.Use {
 		if !flagsContain(flags, "-v", "-h", "--version", "--help") {
-			rootCmd.SetArgs(append(os.Args[1:], defaultCommand))
+			firstRun := !utils.PathExists(filepath.Join(utils.GetUserHomeDir(), ".gitspaces"))
+
+			if firstRun || !flagsContain(flags, "--ppid") {
+				// Not setup or not setup correctly (not using wrapper)
+				rootCmd.SetArgs([]string{"setup"})
+			} else {
+				// Run w/o commands, default to switching projects/spaces
+				rootCmd.SetArgs(append(os.Args[1:], "switch"))
+			}
 		}
 	}
 }

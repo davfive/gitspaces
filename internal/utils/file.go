@@ -21,18 +21,12 @@ func CreateEmptyFile(path string) (err error) {
 	return nil
 }
 
-func CreateFile(path string) (err error) {
-	if err = os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
-		return err
+func CreateEmptyFileIfNotExists(path string) (err error) {
+	if PathExists(path) {
+		return nil
 	}
 
-	var file *os.File
-	if file, err = os.Create(path); err != nil {
-		return err
-	}
-
-	defer file.Close()
-	return nil
+	return CreateEmptyFile(path)
 }
 
 func GetUserHomeDir() string {

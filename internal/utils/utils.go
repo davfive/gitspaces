@@ -44,6 +44,24 @@ func Get[E comparable](v E, fallbacks ...E) E {
 	}
 }
 
+// GetCygpathHomeDir returns the user's ~/ dir from the cygpath command.
+// If cygpath doesn't exist (either not on Windows or Cygwin is not installed)
+// then the normal $USERPROFILE or /Users/<username> is returned. This
+// method is only used to determine the location of the user's rc file for
+// setup, in all other cases the user's home dir is the normal one.
+func GetCygpathHomeDir() string {
+	if runtime.GOOS != "windows" {
+		return GetUserHomeDir()
+	}
+
+	cmd := exec.Command("cygpath", "-m", "~")
+	out, err := cmd.Output()
+	if err != nil {
+		return GetUserHomeDir()
+	}
+	return strings.TrimSpace(string(out)) // Already Cygwinized
+}
+
 func MakeDirnameAvailableValidator(parentDir string) func(string) error {
 	return func(dirname string) error {
 		if strings.HasPrefix(dirname, ".") || PathExists(filepath.Join(parentDir, dirname)) {
@@ -54,6 +72,10 @@ func MakeDirnameAvailableValidator(parentDir string) func(string) error {
 }
 
 func OpenFileInDefaultApp(path string) error {
+	if err := CreateEmptyFileIfNotExists(path); err != nil {
+		return err
+	}
+
 	switch runtime.GOOS {
 	case "windows":
 		return exec.Command("cmd", "/c", path).Start()

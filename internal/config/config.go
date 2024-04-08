@@ -1,8 +1,14 @@
 package config
 
 import (
+	"fmt"
+	"os"
+
+	"github.com/davfive/gitspaces/v2/internal/console"
 	"github.com/spf13/cobra"
 )
+
+var Debug bool = false
 
 var User *userStruct
 
@@ -16,10 +22,23 @@ const (
 func Init(cmd *cobra.Command) (err error) {
 	var ppidFlag int
 	if ppidFlag, err = cmd.Flags().GetInt("ppid"); err != nil {
-		User, err = initUser(ppidFlag)
-	} else {
-		User, err = initUser(-1)
+		ppidFlag = -1
 	}
+	if ppidFlag == 0 { // 0 is the debugging pid to autoselect parent pid
+		ppidFlag = os.Getppid()
+	}
+
+	User, err = initUser(ppidFlag)
+
+	if debug, err := cmd.Flags().GetBool("debug"); err == nil {
+		Debug = debug
+		console.SetDebug(Debug)
+	}
+
+	if User.wrapped == false && cmd.Name() != "setup" {
+		err = fmt.Errorf("GitSpaces not run from wrapper. Run 'gitspaces setup' to initialize GitSpaces. For more information, see README at https://github.com/davfive/gitspaces.")
+	}
+
 	return err
 }
 

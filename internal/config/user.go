@@ -20,15 +20,12 @@ import (
 //go:embed templates/config.yaml.tmpl
 var defaultConfigYaml []byte
 
-//go:embed templates/gitspaces.setup.go.tmpl
-var shellSetupInstructions []byte
-
 type userStruct struct {
 	config       *viper.Viper
 	dotDir       string
 	ppid         int
 	pterm        string // Parent os stdout type (uname -o/-s)
-	wrapped      bool
+	wrapped      bool   // exe called from gitspaces wrapper
 	projectPaths []string
 }
 
@@ -43,8 +40,9 @@ func GetUserDotDir() string {
 func Setup() {
 	console.Println(`
 ** Setup Action 1/2
-   Add ProjectPaths to %s
-   GitSpaces will use these paths to find your projects
+** Add ProjectPaths to %s
+
+GitSpaces will use these paths to find your projects
 `, User.config.ConfigFileUsed())
 
 	if console.NewConfirm().Prompt("Edit config file?").Run() == true {
@@ -53,71 +51,64 @@ func Setup() {
 		}
 	}
 
-	shellrc := User.getShellRcFile()
 	console.Println(`
 ** Setup Action 2/2
-   Update shell profile for %s ...
-   GitSpaces requires a wrapper function in your shell profile/rc file because
-   some commands change the current working directory. The wrapper handles this.`, User.pterm)
-	console.Println("\nThe following wrapper files were created:")
+** Update shell profile for %s ...
+
+GitSpaces requires a wrapper function in your shell profile/rc file because
+some commands change the current working directory. The wrapper handles this.
+
+The following wrapper files were created:`, User.pterm)
 	shellFiles := GetShellFiles()
 	for _, key := range utils.SortKeys(shellFiles) {
-		console.Println("  %s", shellFiles[key].path)
+		console.Println("      %s", shellFiles[key].path)
 	}
-	console.Println("")
 
+	shellrc := User.getShellRcFile()
 	if User.pterm == "pwsh" {
-		console.Println("Add the following lines to your PowerShell $PROFILE file:")
-		console.Println(". %s", utils.CygwinizePath(shellFiles["ps1Script"].path))
-		console.Println("Set-Alias -Name gs -Value gitspaces # optional")
-		console.Println("")
-		console.Println("Your PowerShell profile is located at: %s", shellrc)
-		console.Println("For more information on your PowerShell profile, see https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_profiles?view=powershell-7.4#the-profile-variable")
+		console.Println(`
+Add the following lines to your PowerShell $PROFILE file:
+. %s
+Set-Alias -Name gs -Value gitspaces # optional
+
+Your PowerShell profile is located at: %s
+For more information on your PowerShell profile, see https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_profiles?view=powershell-7.4#the-profile-variable
+
+`, shellFiles["ps1Script"].path, shellrc)
+		if console.NewConfirm().Prompt("Edit PowerShell $PROFILE?").Run() == true {
+			if err := utils.OpenFileInDefaultApp(shellrc); err != nil {
+				console.Errorln("Editing PowerShell $PROFILE failed: %s", err)
+			}
+		}
 	} else if shellrc != "" {
-		console.Println("Add the following lines to your shell rc file: %s", shellrc)
-		console.Println(". %s/gitspaces.sh", utils.CygwinizePath(User.dotDir))
-		console.Println("alias gs=gitspaces")
-		console.Println("")
-		console.Println("Your shell rc file is located at: %s", shellrc)
+		console.Println(`
+Add the following lines to your current shell rc file:
+. %s/gitspaces.sh
+alias gs=gitspaces
+
+Your shell rc file is located at: %s", 
+`, utils.CygwinizePath(User.dotDir), shellrc)
+		if console.NewConfirm().Prompt("Edit shell rc file?").Run() == true {
+			if err := utils.OpenFileInDefaultApp(shellrc); err != nil {
+				console.Errorln("Editing shell rc file failed: %s", err)
+			}
+		}
 	} else {
-		console.Println("Unable to determine your shell. Assuming *nix-style, add")
-		console.Println("the following lines to your shell rc file")
-		console.Println(". %s/gitspaces.sh", utils.CygwinizePath(User.dotDir))
-		console.Println("alias gs=gitspaces")
+		console.Println(`
+Unable to determine your current shell rc file. Assuming *nix-style, add")
+the following lines to your shell rc file:
+. %s/gitspaces.sh
+alias gs=gitspaces
+`, utils.CygwinizePath(User.dotDir))
 	}
-}
-
-func (user *userStruct) writeShellWrapperSetupHelpFile() error {
-	shellFiles := GetShellFiles()
-	shellTmplVars := user.getShellTmplVars(shellFiles)
-
-	tmpl, err := template.
-		New("SetupHelp").
-		Funcs(template.FuncMap{"cygwinizePath": utils.CygwinizePath}).
-		Parse(string(shellSetupInstructions))
-	if err != nil {
-		return err
-	}
-
-	help, err := utils.WriteTemplateToString(tmpl, shellTmplVars)
-	if err != nil {
-		return err
-	}
-	console.Println(help)
-	return nil
 }
 
 func initUser(ppidFlag int) (user *userStruct, err error) {
-	user = &userStruct{
-		dotDir:  GetUserDotDir(),
-		wrapped: ppidFlag > 0, // ppid flag was passed on cmdline
-	}
+	user = &userStruct{dotDir: GetUserDotDir()}
 	user.SetParentProperties(ppidFlag)
 
-	for _, path := range []string{user.dotDir} {
-		if err := os.MkdirAll(path, os.ModePerm); err != nil {
-			return nil, err
-		}
+	if err := os.MkdirAll(user.dotDir, os.ModePerm); err != nil {
+		return nil, err
 	}
 
 	if err = user.initConfig(); err != nil {
@@ -211,36 +202,32 @@ func (user *userStruct) getShellRcFile() string {
 		return os.Getenv("PROFILE")
 	}
 
-	return "~/.<shell>rc"
+	return ""
 }
 
 func (user *userStruct) SetParentProperties(ppid int) {
-	if ppid > 0 {
+	realppid := os.Getppid()
+	if ppid > 0 && ppid == realppid {
 		user.ppid = ppid
+		user.wrapped = true
 	} else {
+		user.wrapped = false
 		user.ppid = os.Getppid()
 	}
-	if parentps, err := ps.FindProcess(user.ppid); err == nil {
+
+	if parentps, _ := ps.FindProcess(user.ppid); parentps != nil {
 		user.pterm = strings.ToLower(filepath.Base(parentps.Executable()))
 	} else {
-		console.Errorln("Parent process name not found: %s", err)
+		console.Debugln("Parent process name not found. Continuing without knowing parent shell type.")
 		user.pterm = ""
 	}
 
-	console.Println("Parent pid: %d", user.ppid)
-	console.Println("Parent terminal: %s", user.pterm)
+	console.Debugln("Parent pid: %d", user.ppid)
+	console.Debugln("Parent terminal: %s", user.pterm)
 }
 
 func (user *userStruct) GetParentTerminal() string {
 	return user.pterm
-}
-
-func (user *userStruct) RanFromWrapper(wrapped bool) bool {
-	return user.wrapped
-}
-
-func (user *userStruct) SetRunFromWrapper(wrapped bool) {
-	user.wrapped = wrapped
 }
 
 func (user *userStruct) WriteChdirPath(newdir string) {

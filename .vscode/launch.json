@@ -12,6 +12,7 @@
       "program": "${workspaceFolder}",
       "cwd": "/Users/davidmay/code/testarea",
       "args": [
+        "--ppid", "0",
         "create",
         "https://github.com/davfive/gitspaces.git",
         "-n",
@@ -27,6 +28,7 @@
       "program": "${workspaceFolder}",
       "cwd": "/Users/davidmay/code/testarea",
       "args": [
+        "--ppid", "0",
         "create",
         "git@github.com:davfive/gitspaces.git",
         "-n",
@@ -41,7 +43,7 @@
       "mode": "auto",
       "program": "${workspaceFolder}",
       "cwd": "${workspaceFolder}",
-      "args": ["switch"],
+      "args": ["--ppid", "0", "switch"],
       "console": "integratedTerminal"
     },
     {
@@ -72,6 +74,16 @@
       "program": "${workspaceFolder}",
       "cwd": "${workspaceFolder}",
       "args": ["-h"],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "gitspaces --ppid=0 <empty>",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}",
+      "cwd": "${workspaceFolder}",
+      "args": ["--ppid", "0"],
       "console": "integratedTerminal"
     },
     {
