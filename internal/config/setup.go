@@ -20,11 +20,13 @@ func RunUserEnvironmentCheck() (checkFailed bool) {
 		checkFailed = true
 	}
 
-	console.Println("\nYou are ready to use GitSpaces (assuming you followed the instructions).")
-	if shellUpdated {
-		console.Println("Open a new shell and rerun 'gitspaces' (the shell wrapper) to start using GitSpaces.")
-	} else {
-		console.Println("Rerun 'gitspaces' (the shell wrapper) to start using GitSpaces.")
+	if checkFailed {
+		console.Println("\nYou are ready to use GitSpaces (assuming you followed the instructions).")
+		if shellUpdated {
+			console.Println("Open a new shell and rerun 'gitspaces' (the shell wrapper) to start using GitSpaces.")
+		} else {
+			console.Println("Rerun 'gitspaces' (the shell wrapper) to start using GitSpaces.")
+		}
 	}
 	return checkFailed
 }
