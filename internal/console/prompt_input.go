@@ -64,11 +64,15 @@ func (i *Input) Run() error {
 	if i.title != "" {
 		fmt.Fprintln(os.Stderr, i.title)
 	}
+
 	input := ""
-	for i.validate(input) != nil {
+	for {
 		fmt.Fprintf(os.Stderr, "%s ", i.prompt)
 		input, _ = r.ReadString('\n')
 		input = strings.TrimSpace(input)
+		if err := i.validate(input); err == nil {
+			break
+		}
 	}
 	*i.value = input
 	return nil
