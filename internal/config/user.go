@@ -4,7 +4,6 @@ import (
 	_ "embed"
 	"fmt"
 	"os"
-	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
@@ -34,7 +33,7 @@ func (user *userStruct) GetConfigFile() string {
 }
 
 func GetUserDotDir() string {
-	return filepath.Join(utils.GetUserHomeDir(), GsDotDir)
+	return utils.Join(utils.GetUserHomeDir(), GsDotDir)
 }
 
 func initUser(ppidFlag int) (user *userStruct, err error) {
@@ -81,7 +80,7 @@ func (user *userStruct) writeDefaultConfig() error {
 
 func (user *userStruct) initConfig() error {
 	user.config = viper.New()
-	user.config.SetConfigFile(filepath.Join(user.dotDir, "config.yaml"))
+	user.config.SetConfigFile(utils.Join(user.dotDir, "config.yaml"))
 	user.config.SetConfigType("yaml")
 	if !utils.PathExists(user.config.ConfigFileUsed()) {
 		user.writeDefaultConfig()
@@ -99,7 +98,7 @@ func (user *userStruct) checkProjectPaths() (err error) {
 	// An empty project paths file is handled by the RunUserEnvironmentChecks(), not here
 	if len(user.projectPaths) > 0 {
 		for i, path := range user.projectPaths {
-			if path, err = filepath.Abs(path); err != nil {
+			if path, err = utils.Abs(path); err != nil {
 				configErrors = append(configErrors, fmt.Sprintf("ProjectPath error: %s", err))
 				continue
 			}
@@ -126,12 +125,12 @@ func (user *userStruct) checkProjectPaths() (err error) {
 
 func (user *userStruct) getShellRcFile() string {
 	if slices.Contains([]string{"bash", "zsh"}, user.pterm) {
-		return filepath.Join(utils.GetUserHomeDir(), fmt.Sprintf(".%src", user.pterm))
+		return utils.Join(utils.GetUserHomeDir(), fmt.Sprintf(".%src", user.pterm))
 	}
 
 	if user.pterm == "pwsh" {
 		// return os.Getenv("PROFILE") // For some reason this doesn't work (pwsh> $PROFILE)
-		return filepath.Join(utils.GetUserHomeDir(), ".config", "powershell", "Microsoft.PowerShell_profile.ps1")
+		return utils.Join(utils.GetUserHomeDir(), ".config", "powershell", "Microsoft.PowerShell_profile.ps1")
 	}
 
 	return ""
@@ -148,7 +147,7 @@ func (user *userStruct) SetParentProperties(ppid int) {
 	}
 
 	if parentps, _ := ps.FindProcess(user.ppid); parentps != nil {
-		user.pterm = strings.ToLower(filepath.Base(parentps.Executable()))
+		user.pterm = strings.ToLower(utils.Basename(parentps.Executable(), ".exe"))
 	} else {
 		console.Debugln("Parent process name not found. Continuing without knowing parent shell type.")
 		user.pterm = ""
@@ -166,7 +165,7 @@ func (user *userStruct) WriteChdirPath(newdir string) {
 	if user.ppid <= 0 {
 		return
 	}
-	notePath := filepath.Join(user.dotDir, "chdir."+strconv.Itoa(user.ppid))
+	notePath := utils.Join(user.dotDir, "chdir."+strconv.Itoa(user.ppid))
 	if err := os.WriteFile(notePath, []byte(newdir), os.FileMode(0o644)); err != nil {
 		console.Errorln("auto chdir failed. cd to %s", newdir)
 	}
