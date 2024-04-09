@@ -41,24 +41,19 @@ func GetUserDotDir() string {
 }
 
 func (user *userStruct) SetParentProperties(ppid int) {
-	realppid := os.Getppid()
-	if ppid > 0 && ppid == realppid {
-		user.ppid = ppid
-		user.wrapped = true
-	} else {
-		user.wrapped = false
-		user.ppid = os.Getppid()
+	console.Println("original ppid: %v", ppid)
+	user.wrapped = ppid >= 0 // 0 = Debug (vscode launcher) mode
+	if ppid <= 0 {
+		ppid = os.Getppid() // , pass ppid=0
 	}
+	user.ppid = ppid
 
-	if parentps, _ := ps.FindProcess(user.ppid); parentps != nil {
+	// Parent process id is not necesarily the user process id (e.g., on windows), there may be layers
+	if parentps, _ := ps.FindProcess(os.Getppid()); parentps != nil {
 		user.pterm = strings.ToLower(utils.Basename(parentps.Executable(), ".exe"))
 	} else {
-		console.Debugln("Parent process name not found. Continuing without knowing parent shell type.")
 		user.pterm = ""
 	}
-
-	console.Debugln("Parent pid: %d", user.ppid)
-	console.Debugln("Parent terminal: %s", user.pterm)
 }
 
 func (user *userStruct) WriteChdirPath(newdir string) {
