@@ -98,16 +98,25 @@ func prefetchCommandAndFlags() (*cobra.Command, []string, error) {
 	} else {
 		cmd, flags, err = rootCmd.Find(os.Args[1:])
 	}
-
 	return cmd, flags, err
+}
+
+func setArgs(args []string) {
+	// PowerShell annoyingly converts extra spaces to os.Args empty values, remove them
+	var newArgs []string
+	for _, arg := range args {
+		if arg != "" {
+			newArgs = append(newArgs, arg)
+		}
+	}
+	rootCmd.SetArgs(newArgs)
 }
 
 func setDefaultCommandIfNonePresent() {
 	cmd, flags, err := prefetchCommandAndFlags()
 	if err != nil || cmd.Use == rootCmd.Use {
 		if !flagsContain(flags, "-v", "-h", "--version", "--help") {
-			// Run w/o commands, default to switching projects/spaces
-			rootCmd.SetArgs(append(os.Args[1:], "switch"))
+			setArgs(append(os.Args[1:], "switch"))
 		}
 	}
 }
