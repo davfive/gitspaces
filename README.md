@@ -1,4 +1,8 @@
-<img width="100" src="./docs/files/gitspaces.light.png#gh-dark-mode-only"><img width="100" src="./docs/files/gitspaces.dark.png#gh-light-mode-only">
+<picture>
+   <source media="(prefers-color-scheme: dark)" srcset="./docs/files/gitspaces.dark.png">
+   <img alt="Light and Dark logos" src="./docs/files/gitspaces.light.png">
+</picture>
+
 # gitspaces - A git development workspace manager
 
 > Coming in Spring 2024
