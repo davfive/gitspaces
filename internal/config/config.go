@@ -3,7 +3,6 @@ package config
 import (
 	"os"
 
-	"github.com/davfive/gitspaces/v2/internal/console"
 	"github.com/spf13/cobra"
 )
 
@@ -28,11 +27,6 @@ func Init(cmd *cobra.Command) (err error) {
 	}
 
 	User, err = initUser(ppidFlag)
-
-	if debug, err := cmd.Flags().GetBool("debug"); err == nil {
-		Debug = debug
-		console.SetDebug(Debug)
-	}
 
 	return err
 }

@@ -32,8 +32,43 @@ func (user *userStruct) GetConfigFile() string {
 	return user.config.ConfigFileUsed()
 }
 
+func (user *userStruct) GetParentTerminal() string {
+	return user.pterm
+}
+
 func GetUserDotDir() string {
 	return utils.Join(utils.GetUserHomeDir(), GsDotDir)
+}
+
+func (user *userStruct) SetParentProperties(ppid int) {
+	realppid := os.Getppid()
+	if ppid > 0 && ppid == realppid {
+		user.ppid = ppid
+		user.wrapped = true
+	} else {
+		user.wrapped = false
+		user.ppid = os.Getppid()
+	}
+
+	if parentps, _ := ps.FindProcess(user.ppid); parentps != nil {
+		user.pterm = strings.ToLower(utils.Basename(parentps.Executable(), ".exe"))
+	} else {
+		console.Debugln("Parent process name not found. Continuing without knowing parent shell type.")
+		user.pterm = ""
+	}
+
+	console.Debugln("Parent pid: %d", user.ppid)
+	console.Debugln("Parent terminal: %s", user.pterm)
+}
+
+func (user *userStruct) WriteChdirPath(newdir string) {
+	if user.ppid <= 0 {
+		return
+	}
+	notePath := utils.Join(user.dotDir, "chdir."+strconv.Itoa(user.ppid))
+	if err := os.WriteFile(notePath, []byte(newdir), os.FileMode(0o644)); err != nil {
+		console.Errorln("auto chdir failed. cd to %s", newdir)
+	}
 }
 
 func initUser(ppidFlag int) (user *userStruct, err error) {
@@ -54,43 +89,21 @@ func initUser(ppidFlag int) (user *userStruct, err error) {
 	return user, nil
 }
 
-func (user *userStruct) getShellTmplVars(shellFiles map[string]*shellFileStruct) map[string]interface{} {
-	tmplVars := map[string]interface{}{
+func (user *userStruct) getTemplateVariables() map[string]interface{} {
+	return map[string]interface{}{
 		"exePath":    utils.Executable(),
 		"homeDir":    utils.GetUserHomeDir(),
 		"userDotDir": GetUserDotDir(),
 	}
+}
+
+func (user *userStruct) getShellTmplVars(shellFiles map[string]*shellFileStruct) map[string]interface{} {
+	tmplVars := user.getTemplateVariables()
 	for _, shellFile := range shellFiles {
 		tmplVars[shellFile.name+"Path"] = shellFile.path
 	}
 
 	return tmplVars
-}
-
-func (user *userStruct) writeDefaultConfig() error {
-	tmpl, err := template.New("config").Parse(string(defaultConfigYaml))
-	if err != nil {
-		return err
-	}
-
-	return utils.WriteTemplateToFile(tmpl, user.config.ConfigFileUsed(), map[string]interface{}{
-		"HomeDir": utils.GetUserHomeDir(),
-	})
-}
-
-func (user *userStruct) initConfig() error {
-	user.config = viper.New()
-	user.config.SetConfigFile(utils.Join(user.dotDir, "config.yaml"))
-	user.config.SetConfigType("yaml")
-	if !utils.PathExists(user.config.ConfigFileUsed()) {
-		user.writeDefaultConfig()
-	}
-
-	user.config.ReadInConfig()
-
-	user.config.ReadInConfig()
-	user.projectPaths = user.config.GetStringSlice("ProjectPaths")
-	return user.checkProjectPaths()
 }
 
 func (user *userStruct) checkProjectPaths() (err error) {
@@ -143,37 +156,26 @@ func (user *userStruct) getShellRcFile() string {
 	return ""
 }
 
-func (user *userStruct) SetParentProperties(ppid int) {
-	realppid := os.Getppid()
-	if ppid > 0 && ppid == realppid {
-		user.ppid = ppid
-		user.wrapped = true
-	} else {
-		user.wrapped = false
-		user.ppid = os.Getppid()
+func (user *userStruct) initConfig() error {
+	user.config = viper.New()
+	user.config.SetConfigFile(utils.Join(user.dotDir, "config.yaml"))
+	user.config.SetConfigType("yaml")
+	if !utils.PathExists(user.config.ConfigFileUsed()) {
+		user.writeDefaultConfig()
 	}
 
-	if parentps, _ := ps.FindProcess(user.ppid); parentps != nil {
-		user.pterm = strings.ToLower(utils.Basename(parentps.Executable(), ".exe"))
-	} else {
-		console.Debugln("Parent process name not found. Continuing without knowing parent shell type.")
-		user.pterm = ""
-	}
+	user.config.ReadInConfig()
 
-	console.Debugln("Parent pid: %d", user.ppid)
-	console.Debugln("Parent terminal: %s", user.pterm)
+	user.config.ReadInConfig()
+	user.projectPaths = user.config.GetStringSlice("ProjectPaths")
+	return user.checkProjectPaths()
 }
 
-func (user *userStruct) GetParentTerminal() string {
-	return user.pterm
-}
+func (user *userStruct) writeDefaultConfig() error {
+	tmpl, err := template.New("config").Parse(string(defaultConfigYaml))
+	if err != nil {
+		return err
+	}
 
-func (user *userStruct) WriteChdirPath(newdir string) {
-	if user.ppid <= 0 {
-		return
-	}
-	notePath := utils.Join(user.dotDir, "chdir."+strconv.Itoa(user.ppid))
-	if err := os.WriteFile(notePath, []byte(newdir), os.FileMode(0o644)); err != nil {
-		console.Errorln("auto chdir failed. cd to %s", newdir)
-	}
+	return utils.WriteTemplateToFile(tmpl, user.config.ConfigFileUsed(), user.getTemplateVariables())
 }
