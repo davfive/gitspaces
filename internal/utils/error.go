@@ -5,6 +5,13 @@ import (
 	"os"
 )
 
+func ErrorIf(condition bool, message string) error {
+	if condition {
+		return fmt.Errorf("error: %s", message)
+	}
+	return nil
+}
+
 func PanicIfError(err error) {
 	if err != nil {
 		panic(fmt.Errorf("error: %w", err))

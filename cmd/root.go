@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"os"
-	"path/filepath"
 	"slices"
 
 	"github.com/davfive/gitspaces/v2/internal/config"
@@ -24,12 +23,26 @@ var rootCmd = &cobra.Command{
 	SilenceUsage:  true, // handle these below in Execute() call
 	SilenceErrors: true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		debug, _ := cmd.Flags().GetBool("debug")
-		if debug {
+		if debug, _ := cmd.Flags().GetBool("debug"); debug {
 			console.Println("%v", os.Args)
 		}
 
-		return config.Init(cmd)
+		if plain, _ := cmd.Flags().GetBool("plain"); plain {
+			console.SetUsePrettyPrompts(false)
+		}
+
+		if pretty, _ := cmd.Flags().GetBool("pretty"); pretty {
+			console.SetUsePrettyPrompts(true)
+		}
+
+		if err := config.Init(cmd); err != nil {
+			return err
+		}
+
+		if config.RunUserEnvironmentChecks() == true {
+			os.Exit(1) // User asked to update environment.
+		}
+		return nil
 	},
 }
 
@@ -37,18 +50,17 @@ func Execute() {
 	rootCmd.Root().CompletionOptions.DisableDefaultCmd = true
 	rootCmd.PersistentFlags().Int("ppid", -1, "path to parent pid for communication")
 	rootCmd.PersistentFlags().MarkHidden("ppid")
-	rootCmd.PersistentFlags().String("pterm", "", "`uname -o` (parent terminal). Used for prompt support)")
+	rootCmd.PersistentFlags().String("pterm", "", "parent terminal type. Used for prompt support and setup instructions.")
 	rootCmd.PersistentFlags().MarkHidden("pterm")
+	rootCmd.PersistentFlags().BoolP("plain", "p", false, "Only use plain prompts")
+	rootCmd.PersistentFlags().MarkHidden("plain")
+	rootCmd.PersistentFlags().BoolP("pretty", "P", false, "Only use pretty prompts")
+	rootCmd.PersistentFlags().MarkHidden("pretty")
+	rootCmd.MarkFlagsMutuallyExclusive("plain", "pretty")
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Add additional debugging information")
 	rootCmd.PersistentFlags().MarkHidden("debug")
 
-	if utils.PathExists(filepath.Join(utils.GetUserHomeDir(), ".gitspaces")) {
-		setDefaultCommandIfNonePresent("switch")
-	} else {
-		// TODO: setDefaultCommandIfNonePresent("setup")
-		setDefaultCommandIfNonePresent("switch")
-	}
-
+	setDefaultCommandIfNonePresent()
 	if cmd, err := rootCmd.ExecuteC(); err != nil {
 		skipErrors := []string{"user aborted"}
 		if !slices.Contains(skipErrors, err.Error()) {
@@ -76,7 +88,7 @@ func flagsContain(flags []string, contains ...string) bool {
 	return false
 }
 
-func setDefaultCommandIfNonePresent(defaultCommand string) {
+func prefetchCommandAndFlags() (*cobra.Command, []string, error) {
 	// Taken from cobra source code in command.go::ExecuteC()
 	var cmd *cobra.Command
 	var err error
@@ -87,9 +99,15 @@ func setDefaultCommandIfNonePresent(defaultCommand string) {
 		cmd, flags, err = rootCmd.Find(os.Args[1:])
 	}
 
+	return cmd, flags, err
+}
+
+func setDefaultCommandIfNonePresent() {
+	cmd, flags, err := prefetchCommandAndFlags()
 	if err != nil || cmd.Use == rootCmd.Use {
 		if !flagsContain(flags, "-v", "-h", "--version", "--help") {
-			rootCmd.SetArgs(append(os.Args[1:], defaultCommand))
+			// Run w/o commands, default to switching projects/spaces
+			rootCmd.SetArgs(append(os.Args[1:], "switch"))
 		}
 	}
 }

@@ -1,8 +1,13 @@
 package config
 
 import (
+	"os"
+
+	"github.com/davfive/gitspaces/v2/internal/console"
 	"github.com/spf13/cobra"
 )
+
+var Debug bool = false
 
 var User *userStruct
 
@@ -14,20 +19,22 @@ const (
 )
 
 func Init(cmd *cobra.Command) (err error) {
-	if User, err = initUser(); err != nil {
-		return err
+	var ppidFlag int
+	if ppidFlag, err = cmd.Flags().GetInt("ppid"); err != nil {
+		ppidFlag = -1
 	}
-	ppid, _ := cmd.Flags().GetInt("ppid")
-	if ppid > 0 {
-		User.SetParentPid(ppid)
-	}
-
-	pterm, _ := cmd.Flags().GetString("pterm")
-	if pterm != "" {
-		User.SetParentTerminal(pterm)
+	if ppidFlag == 0 { // 0 is the debugging pid to autoselect parent pid
+		ppidFlag = os.Getppid()
 	}
 
-	return nil
+	User, err = initUser(ppidFlag)
+
+	if debug, err := cmd.Flags().GetBool("debug"); err == nil {
+		Debug = debug
+		console.SetDebug(Debug)
+	}
+
+	return err
 }
 
 func ProjectPaths() []string {

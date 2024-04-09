@@ -1,6 +1,5 @@
 new-module -scriptblock {
     function gitspaces {
-        . {{ .ps1ScriptPath }} $args
+        . {{ .ps1CmdletPath }} $args
     }
 } -name gitspaces-scriptblock -force -export
-
