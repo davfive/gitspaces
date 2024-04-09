@@ -1,10 +1,6 @@
 function gitspaces() {
-	local exePath="{{ .exePath }}"
-	local dotDir="{{ .userDotDir }}"
-	if [ `uname -o` = "Cygwin" ]; then
-		exePath="{{ cygwinizePath .exePath }}"
-		dotDir="{{ cygwinizePath .userDotDir }}"
-	fi
+	local exePath="{{ cygwinizePath .exePath }}"
+	local dotDir="{{ cygwinizePath .userDotDir }}"
 	"$exePath" --wrapid $$ "$@"
 	chdirFile="$dotDir/chdir.$$"
 	if [ -f $chdirFile ]; then

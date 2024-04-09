@@ -39,7 +39,6 @@ func GetUserDotDir() string {
 }
 
 func (user *userStruct) SetParentProperties(wrapId int) {
-	console.Println("original wrapId: %v", wrapId)
 	user.wrapId = wrapId // 0 = Debug (vscode launcher) mode
 	user.pterm = utils.GetTerminalType()
 }
