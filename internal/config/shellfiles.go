@@ -2,7 +2,6 @@ package config
 
 import (
 	_ "embed"
-	"path/filepath"
 	"text/template"
 
 	"github.com/davfive/gitspaces/v2/internal/console"
@@ -54,7 +53,7 @@ func NewShellFile(name string) *shellFileStruct {
 }
 
 func (shellFile *shellFileStruct) File(file string) *shellFileStruct {
-	shellFile.path = filepath.Join(shellFile.dir, file)
+	shellFile.path = utils.Join(shellFile.dir, file)
 	return shellFile
 }
 

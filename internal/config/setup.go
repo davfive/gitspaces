@@ -74,7 +74,7 @@ func runProjectPathsCheck(force bool) bool {
 // runProjectPathsCheck() prompts the user to set project paths in the config file
 // if they are not already set. Returns true if user asked to update paths.
 func runShellWrapperCheck(force bool) bool {
-	if !force && User.wrapped {
+	if !force && User.HasWrapId() {
 		return false
 	}
 
@@ -83,7 +83,7 @@ func runShellWrapperCheck(force bool) bool {
 	console.Println("The wrapper handles when a 'gitspaces <command>' needs to 'cd' to a new directory.")
 	console.Println("")
 
-	if !User.wrapped {
+	if !User.HasWrapId() {
 		console.Println("** Warning - GitSpaces not run from shell wrapper **\n")
 	}
 

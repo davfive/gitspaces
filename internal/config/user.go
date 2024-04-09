@@ -4,7 +4,6 @@ import (
 	_ "embed"
 	"fmt"
 	"os"
-	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
@@ -13,7 +12,6 @@ import (
 	"github.com/davfive/gitspaces/v2/internal/console"
 	"github.com/davfive/gitspaces/v2/internal/utils"
 
-	"github.com/mitchellh/go-ps"
 	"github.com/spf13/viper"
 )
 
@@ -23,9 +21,8 @@ var defaultConfigYaml []byte
 type userStruct struct {
 	config       *viper.Viper
 	dotDir       string
-	ppid         int
+	wrapId       int
 	pterm        string // Parent os stdout type (uname -o/-s)
-	wrapped      bool   // exe called from gitspaces wrapper
 	projectPaths []string
 }
 
@@ -33,13 +30,36 @@ func (user *userStruct) GetConfigFile() string {
 	return user.config.ConfigFileUsed()
 }
 
-func GetUserDotDir() string {
-	return filepath.Join(utils.GetUserHomeDir(), GsDotDir)
+func (user *userStruct) GetParentTerminal() string {
+	return user.pterm
 }
 
-func initUser(ppidFlag int) (user *userStruct, err error) {
+func GetUserDotDir() string {
+	return utils.Join(utils.GetUserHomeDir(), GsDotDir)
+}
+
+func (user *userStruct) SetParentProperties(wrapId int) {
+	user.wrapId = wrapId // 0 = Debug (vscode launcher) mode
+	user.pterm = utils.GetTerminalType()
+}
+
+func (user *userStruct) HasWrapId() bool {
+	return user.wrapId >= 0
+}
+
+func (user *userStruct) WriteChdirPath(newdir string) {
+	if user.wrapId <= 0 {
+		return
+	}
+	notePath := utils.Join(user.dotDir, "chdir."+strconv.Itoa(user.wrapId))
+	if err := os.WriteFile(notePath, []byte(newdir), os.FileMode(0o644)); err != nil {
+		console.Errorln("auto chdir failed. cd to %s", newdir)
+	}
+}
+
+func initUser(wrapIdFlag int) (user *userStruct, err error) {
 	user = &userStruct{dotDir: GetUserDotDir()}
-	user.SetParentProperties(ppidFlag)
+	user.SetParentProperties(wrapIdFlag)
 
 	if err := os.MkdirAll(user.dotDir, os.ModePerm); err != nil {
 		return nil, err
@@ -55,12 +75,16 @@ func initUser(ppidFlag int) (user *userStruct, err error) {
 	return user, nil
 }
 
-func (user *userStruct) getShellTmplVars(shellFiles map[string]*shellFileStruct) map[string]interface{} {
-	tmplVars := map[string]interface{}{
+func (user *userStruct) getTemplateVariables() map[string]interface{} {
+	return map[string]interface{}{
 		"exePath":    utils.Executable(),
 		"homeDir":    utils.GetUserHomeDir(),
-		"userDotDir": user.dotDir,
+		"userDotDir": GetUserDotDir(),
 	}
+}
+
+func (user *userStruct) getShellTmplVars(shellFiles map[string]*shellFileStruct) map[string]interface{} {
+	tmplVars := user.getTemplateVariables()
 	for _, shellFile := range shellFiles {
 		tmplVars[shellFile.name+"Path"] = shellFile.path
 	}
@@ -68,20 +92,59 @@ func (user *userStruct) getShellTmplVars(shellFiles map[string]*shellFileStruct)
 	return tmplVars
 }
 
-func (user *userStruct) writeDefaultConfig() error {
-	tmpl, err := template.New("config").Parse(string(defaultConfigYaml))
-	if err != nil {
-		return err
+func (user *userStruct) checkProjectPaths() (err error) {
+	configErrors := []string{}
+	cleanedPaths := []string{}
+	// An empty project paths file is handled by the RunUserEnvironmentChecks(), not here
+	if len(user.projectPaths) > 0 {
+		for _, path := range user.projectPaths {
+			path = strings.TrimSpace(path)
+			if path == "" {
+				continue
+			}
+
+			if path, err = utils.Abs(path); err != nil {
+				configErrors = append(configErrors, fmt.Sprintf("ProjectPath error: %s", err))
+				continue
+			}
+
+			if !utils.PathExists(path) {
+				configErrors = append(configErrors, fmt.Sprintf("ProjectPath does not exist: %s", path))
+				continue
+			}
+
+			cleanedPaths = append(cleanedPaths, path)
+		}
 	}
 
-	return utils.WriteTemplateToFile(tmpl, user.config.ConfigFileUsed(), map[string]interface{}{
-		"HomeDir": utils.GetUserHomeDir(),
-	})
+	if len(configErrors) > 0 {
+		console.Errorln("Config file errors: %s", user.config.ConfigFileUsed())
+		for _, err := range configErrors {
+			console.Errorln(err)
+		}
+		return fmt.Errorf("Config file errors")
+	}
+
+	user.projectPaths = cleanedPaths
+	return nil
+}
+
+func (user *userStruct) getShellRcFile() string {
+	if slices.Contains([]string{"bash", "zsh"}, user.pterm) {
+		return utils.Join(utils.GetUserHomeDir(), fmt.Sprintf(".%src", user.pterm))
+	}
+
+	if user.pterm == "pwsh" {
+		// return os.Getenv("PROFILE") // For some reason this doesn't work (pwsh> $PROFILE)
+		return utils.Join(utils.GetUserHomeDir(), ".config", "powershell", "Microsoft.PowerShell_profile.ps1")
+	}
+
+	return ""
 }
 
 func (user *userStruct) initConfig() error {
 	user.config = viper.New()
-	user.config.SetConfigFile(filepath.Join(user.dotDir, "config.yaml"))
+	user.config.SetConfigFile(utils.Join(user.dotDir, "config.yaml"))
 	user.config.SetConfigType("yaml")
 	if !utils.PathExists(user.config.ConfigFileUsed()) {
 		user.writeDefaultConfig()
@@ -94,80 +157,11 @@ func (user *userStruct) initConfig() error {
 	return user.checkProjectPaths()
 }
 
-func (user *userStruct) checkProjectPaths() (err error) {
-	configErrors := []string{}
-	// An empty project paths file is handled by the RunUserEnvironmentChecks(), not here
-	if len(user.projectPaths) > 0 {
-		for i, path := range user.projectPaths {
-			if path, err = filepath.Abs(path); err != nil {
-				configErrors = append(configErrors, fmt.Sprintf("ProjectPath error: %s", err))
-				continue
-			}
-
-			if !utils.PathExists(path) {
-				configErrors = append(configErrors, fmt.Sprintf("ProjectPath does not exist: %s", path))
-				continue
-			}
-
-			user.projectPaths[i] = path // Abs() path
-		}
+func (user *userStruct) writeDefaultConfig() error {
+	tmpl, err := template.New("config").Parse(string(defaultConfigYaml))
+	if err != nil {
+		return err
 	}
 
-	if len(configErrors) > 0 {
-		console.Errorln("Config file errors: %s", user.config.ConfigFileUsed())
-		for _, err := range configErrors {
-			console.Errorln(err)
-		}
-		return fmt.Errorf("Config file errors")
-	}
-
-	return nil
-}
-
-func (user *userStruct) getShellRcFile() string {
-	if slices.Contains([]string{"bash", "zsh"}, user.pterm) {
-		return filepath.Join(utils.GetUserHomeDir(), fmt.Sprintf(".%src", user.pterm))
-	}
-
-	if user.pterm == "pwsh" {
-		// return os.Getenv("PROFILE") // For some reason this doesn't work (pwsh> $PROFILE)
-		return filepath.Join(utils.GetUserHomeDir(), ".config", "powershell", "Microsoft.PowerShell_profile.ps1")
-	}
-
-	return ""
-}
-
-func (user *userStruct) SetParentProperties(ppid int) {
-	realppid := os.Getppid()
-	if ppid > 0 && ppid == realppid {
-		user.ppid = ppid
-		user.wrapped = true
-	} else {
-		user.wrapped = false
-		user.ppid = os.Getppid()
-	}
-
-	if parentps, _ := ps.FindProcess(user.ppid); parentps != nil {
-		user.pterm = strings.ToLower(filepath.Base(parentps.Executable()))
-	} else {
-		console.Debugln("Parent process name not found. Continuing without knowing parent shell type.")
-		user.pterm = ""
-	}
-
-	console.Debugln("Parent pid: %d", user.ppid)
-	console.Debugln("Parent terminal: %s", user.pterm)
-}
-
-func (user *userStruct) GetParentTerminal() string {
-	return user.pterm
-}
-
-func (user *userStruct) WriteChdirPath(newdir string) {
-	if user.ppid <= 0 {
-		return
-	}
-	notePath := filepath.Join(user.dotDir, "chdir."+strconv.Itoa(user.ppid))
-	if err := os.WriteFile(notePath, []byte(newdir), os.FileMode(0o644)); err != nil {
-		console.Errorln("auto chdir failed. cd to %s", newdir)
-	}
+	return utils.WriteTemplateToFile(tmpl, user.config.ConfigFileUsed(), user.getTemplateVariables())
 }

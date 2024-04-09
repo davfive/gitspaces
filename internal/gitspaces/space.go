@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 
 	"github.com/davfive/gitspaces/v2/internal/console"
@@ -62,7 +61,7 @@ func GetSpace() (*SpaceStruct, error) {
 // NewSpace creates a new Space struct
 func NewSpace(project *ProjectStruct, path string) *SpaceStruct {
 	space := &SpaceStruct{
-		Path:    path,
+		Path:    utils.ToSlash(path),
 		project: project,
 	}
 	space.updateName()
@@ -103,7 +102,7 @@ func (space *SpaceStruct) Sleep() (err error) {
 	space.deleteCodeWorkspaceFile()
 
 	newPath := space.project.getEmptySleeperPath()
-	space.Name = filepath.Base(space.Path)
+	space.Name = utils.Filename(space.Path)
 	if err = os.Rename(space.Path, newPath); err != nil {
 		return err
 	}
@@ -120,7 +119,7 @@ func (space *SpaceStruct) createCodeWorkspaceFile() (err error) {
 	var file *os.File
 
 	// Ensure it has the correct name (and vscode on windows requires forward slashes in the path)
-	space.codeWsFile = filepath.Join(
+	space.codeWsFile = utils.Join(
 		space.project.codeWsDir,
 		fmt.Sprintf("%s~%s.code-workspace", space.project.Name, space.Name),
 	)
@@ -159,14 +158,14 @@ func (space *SpaceStruct) move(moveVerb string, arguments ...string) error {
 	}
 	err := console.NewInput().
 		Prompt(fmt.Sprintf("%s space as: ", moveVerb)).
-		Validate(utils.MakeDirnameAvailableValidator(space.project.Path)).
+		Validate(console.MakeDirnameAvailableValidator(space.project.Path)).
 		Value(&newName).
 		Run()
 	if err != nil {
 		return err
 	}
 
-	newPath := filepath.Join(space.project.Path, newName)
+	newPath := utils.Join(space.project.Path, newName)
 	space.deleteCodeWorkspaceFile()
 	os.Chdir(space.project.Path)
 	if err = os.Rename(space.Path, newPath); err != nil {
@@ -186,8 +185,8 @@ func (space *SpaceStruct) move(moveVerb string, arguments ...string) error {
 }
 
 func (space *SpaceStruct) updateName() {
-	// It would just be filepath.Base(space.path) but we have to account for sleeper spaces (in .zzz dir)
+	// It would just be utils.Filename(space.path) but we have to account for sleeper spaces (in .zzz dir)
 	// The space.Name is used in the code-workspace file name so it can't have any separator characters
-	space.Name = strings.TrimPrefix(space.Path, space.project.Path+string(filepath.Separator))
-	space.Name = strings.ReplaceAll(space.Name, string(filepath.Separator), "~")
+	space.Name, _ = utils.Rel(space.project.Path, space.Path)
+	space.Name = strings.ReplaceAll(space.Name, "/", "~")
 }

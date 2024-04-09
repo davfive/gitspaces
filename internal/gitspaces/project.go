@@ -54,12 +54,12 @@ func GetProjectFromPath(path string) (*ProjectStruct, error) {
 	case !utils.PathExists(path):
 		return nil, errors.New("path not found")
 	case utils.PathIsFile(path):
-		path = filepath.Dir(path)
+		path = utils.Dir(path)
 	}
 
 	var prevPath string
-	for currPath := path; currPath != prevPath; currPath = filepath.Dir(currPath) {
-		if utils.PathExists(filepath.Join(currPath, config.GsProjectFile)) {
+	for currPath := path; currPath != prevPath; currPath = utils.Dir(currPath) {
+		if utils.PathExists(utils.Join(currPath, config.GsProjectFile)) {
 			return NewProject(currPath), nil
 		}
 		prevPath = currPath
@@ -73,12 +73,13 @@ func GetProject() (*ProjectStruct, error) {
 }
 
 func NewProject(path string) (project *ProjectStruct) {
+	path = utils.ToSlash(path)
 	project = &ProjectStruct{
 		Path:      path,
-		Name:      filepath.Base(path),
-		codeWsDir: filepath.Join(path, config.GsVsCodeWsDir),
-		dotfile:   filepath.Join(path, config.GsProjectFile),
-		zzzdir:    filepath.Join(path, config.GsSleeperDir),
+		Name:      utils.Filename(path),
+		codeWsDir: utils.Join(path, config.GsVsCodeWsDir),
+		dotfile:   utils.Join(path, config.GsProjectFile),
+		zzzdir:    utils.Join(path, config.GsSleeperDir),
 	}
 	return project
 }
@@ -86,9 +87,9 @@ func NewProject(path string) (project *ProjectStruct) {
 func ChooseProject() (project *ProjectStruct, err error) {
 	projectPaths := []string{}
 	for _, path := range config.ProjectPaths() {
-		paths, _ := filepath.Glob(filepath.Join(path, "*", config.GsProjectFile))
+		paths, _ := filepath.Glob(utils.Join(path, "*", config.GsProjectFile))
 		for i := range paths {
-			paths[i] = filepath.Dir(paths[i])
+			paths[i] = utils.Dir(paths[i])
 		}
 		projectPaths = append(projectPaths, paths...)
 	}
@@ -139,16 +140,16 @@ func getNewProjectPath(dir string, url string) (projectPath string, err error) {
 
 	// Get this project directory name
 	if dir == "" {
-		dir = utils.FileBase(url, ".git")
+		dir = utils.Basename(url, ".git")
 	}
 
 	err = console.NewInput().
 		Prompt("Project Directory: ").
-		Validate(utils.MakeDirnameAvailableValidator(projectsDir)).
+		Validate(console.MakeDirnameAvailableValidator(projectsDir)).
 		Value(&dir).
 		Run()
 
-	return filepath.Join(projectsDir, dir), nil
+	return utils.Join(projectsDir, dir), nil
 }
 
 func switchProject() (space *SpaceStruct, err error) {
@@ -210,12 +211,12 @@ func (project *ProjectStruct) WakeupSpace() (space *SpaceStruct, err error) {
 }
 
 func (project *ProjectStruct) getSleeperSpacePaths() []string {
-	paths, _ := filepath.Glob(filepath.Join(project.zzzdir, "zzz-*"))
+	paths, _ := filepath.Glob(utils.Join(project.zzzdir, "zzz-*"))
 	return utils.FilterDirectories(paths)
 }
 
 func (project *ProjectStruct) getWorkerSpacePaths() []string {
-	paths, _ := filepath.Glob(filepath.Join(project.Path, "[^.]*"))
+	paths, _ := filepath.Glob(utils.Join(project.Path, "[^.]*"))
 	return utils.FilterDirectories(paths)
 }
 
@@ -232,7 +233,7 @@ func (project *ProjectStruct) getLastSleeperSpace() (space *SpaceStruct, err err
 		return nil, errors.New("no sleeper found")
 	}
 
-	lastSpacePath := filepath.Join(project.zzzdir, fmt.Sprintf("zzz-%d", len(sleepers)-1))
+	lastSpacePath := utils.Join(project.zzzdir, fmt.Sprintf("zzz-%d", len(sleepers)-1))
 	if !utils.PathExists(lastSpacePath) {
 		return nil, errors.New("no sleeper found at " + lastSpacePath)
 	}
@@ -241,7 +242,7 @@ func (project *ProjectStruct) getLastSleeperSpace() (space *SpaceStruct, err err
 
 func (project *ProjectStruct) getEmptySleeperPath() string {
 	sleepers := project.getSleeperSpacePaths()
-	return filepath.Join(project.zzzdir, fmt.Sprintf("zzz-%d", len(sleepers)))
+	return utils.Join(project.zzzdir, fmt.Sprintf("zzz-%d", len(sleepers)))
 }
 
 func (project *ProjectStruct) init() error {
@@ -257,7 +258,7 @@ func (project *ProjectStruct) init() error {
 	}
 
 	// Create blank Project config
-	err := utils.CreateEmptyFile(filepath.Join(project.Path, config.GsProjectFile))
+	err := utils.CreateEmptyFile(utils.Join(project.Path, config.GsProjectFile))
 	if err != nil {
 		return err
 	}
