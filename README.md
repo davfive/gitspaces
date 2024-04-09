@@ -1,6 +1,4 @@
-
-<img src="./docs/files/gitspaces.png" width="100"/>
-
+<img width="100" src="./docs/files/gitspaces.light.png#gh-dark-mode-only"><img width="100" src="./docs/files/gitspaces.dark.png#gh-light-mode-only">
 # gitspaces - A git development workspace manager
 
 > Coming in Spring 2024
