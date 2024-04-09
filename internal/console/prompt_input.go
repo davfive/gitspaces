@@ -23,13 +23,13 @@ func NewInput() *Input {
 	}
 }
 
-func (i *Input) Prompt(prompt string) *Input {
-	i.prompt = prompt
+func (i *Input) Prompt(prompt string, a ...any) *Input {
+	i.prompt = fmt.Sprintf(prompt, a...)
 	return i
 }
 
-func (i *Input) Title(title string) *Input {
-	i.title = title
+func (i *Input) Title(title string, a ...any) *Input {
+	i.title = fmt.Sprintf(title, a...)
 	return i
 }
 

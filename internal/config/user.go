@@ -58,6 +58,7 @@ func initUser(ppidFlag int) (user *userStruct, err error) {
 func (user *userStruct) getShellTmplVars(shellFiles map[string]*shellFileStruct) map[string]interface{} {
 	tmplVars := map[string]interface{}{
 		"exePath":    utils.Executable(),
+		"homeDir":    utils.GetUserHomeDir(),
 		"userDotDir": user.dotDir,
 	}
 	for _, shellFile := range shellFiles {

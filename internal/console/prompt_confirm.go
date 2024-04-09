@@ -42,8 +42,8 @@ func (c *Confirm) Title(title string) *Confirm {
 	return c
 }
 
-func (c *Confirm) Prompt(title string) *Confirm {
-	c.title = title
+func (c *Confirm) Prompt(title string, a ...any) *Confirm {
+	c.title = fmt.Sprintf(title, a...)
 	return c
 }
 

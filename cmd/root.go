@@ -32,7 +32,7 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 
-		if config.RunUserEnvironmentCheck() == true {
+		if config.RunUserEnvironmentChecks() == true {
 			os.Exit(1) // User asked to update environment.
 		}
 		return nil

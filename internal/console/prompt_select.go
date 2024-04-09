@@ -34,13 +34,13 @@ func NewSelect[T comparable]() *Select[T] {
 	}
 }
 
-func (s *Select[T]) Title(title string) *Select[T] {
-	s.title = title
+func (s *Select[T]) Title(title string, a ...any) *Select[T] {
+	s.title = fmt.Sprintf(title, a...)
 	return s
 }
 
-func (s *Select[T]) Prompt(prompt string) *Select[T] {
-	s.prompt = prompt
+func (s *Select[T]) Prompt(prompt string, a ...any) *Select[T] {
+	s.prompt = fmt.Sprintf(prompt, a...)
 	return s
 }
 

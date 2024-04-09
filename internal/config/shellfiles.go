@@ -9,11 +9,11 @@ import (
 	"github.com/davfive/gitspaces/v2/internal/utils"
 )
 
-//go:embed templates/gitspaces.tmpl.sh
-var shellTmpl []byte
+//go:embed templates/gitspaces.function.tmpl.sh
+var shellFunctionTmpl []byte
 
-//go:embed templates/gitspaces.tmpl.ps1
-var ps1Tmpl []byte
+//go:embed templates/gitspaces.cmdlet.tmpl.ps1
+var ps1CmdletTmpl []byte
 
 //go:embed templates/gitspaces.scriptblock.tmpl.ps1
 var ps1ScriptBlockTmpl []byte
@@ -29,12 +29,12 @@ type shellFileStruct struct {
 
 func GetShellFiles() map[string]*shellFileStruct {
 	shellFiles := map[string]*shellFileStruct{
-		"shellScript": NewShellFile("Shell").
-			File("gitspaces.sh").
-			Template(string(shellTmpl)),
-		"ps1Script": NewShellFile("ps1Script").
-			File("gitspaces.ps1").
-			Template(string(ps1Tmpl)),
+		"shellFunction": NewShellFile("shellFunction").
+			File("gitspaces.function.sh").
+			Template(string(shellFunctionTmpl)),
+		"ps1Cmdlet": NewShellFile("ps1Cmdlet").
+			File("gitspaces.cmdlet.ps1").
+			Template(string(ps1CmdletTmpl)),
 		"ps1ScriptBlock": NewShellFile("ps1ScriptBlock").
 			File("gitspaces.scriptblock.ps1").
 			Template(string(ps1ScriptBlockTmpl)),
