@@ -23,9 +23,16 @@ var rootCmd = &cobra.Command{
 	SilenceUsage:  true, // handle these below in Execute() call
 	SilenceErrors: true,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		debug, _ := cmd.Flags().GetBool("debug")
-		if debug {
+		if debug, _ := cmd.Flags().GetBool("debug"); debug {
 			console.Println("%v", os.Args)
+		}
+
+		if plain, _ := cmd.Flags().GetBool("plain"); plain {
+			console.SetUsePrettyPrompts(false)
+		}
+
+		if pretty, _ := cmd.Flags().GetBool("pretty"); pretty {
+			console.SetUsePrettyPrompts(true)
 		}
 
 		if err := config.Init(cmd); err != nil {
@@ -45,6 +52,11 @@ func Execute() {
 	rootCmd.PersistentFlags().MarkHidden("ppid")
 	rootCmd.PersistentFlags().String("pterm", "", "parent terminal type. Used for prompt support and setup instructions.")
 	rootCmd.PersistentFlags().MarkHidden("pterm")
+	rootCmd.PersistentFlags().BoolP("plain", "p", false, "Only use plain prompts")
+	rootCmd.PersistentFlags().MarkHidden("plain")
+	rootCmd.PersistentFlags().BoolP("pretty", "P", false, "Only use pretty prompts")
+	rootCmd.PersistentFlags().MarkHidden("pretty")
+	rootCmd.MarkFlagsMutuallyExclusive("plain", "pretty")
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Add additional debugging information")
 	rootCmd.PersistentFlags().MarkHidden("debug")
 

@@ -58,7 +58,7 @@ func (s *Select[T]) Value(value *T) *Select[T] {
 }
 
 func (s *Select[T]) Run() error {
-	if UsePrettyPrompts {
+	if usePrettyPrompts {
 		return huh.NewSelect[T]().
 			Title(s.title).
 			Options(huh.NewOptions(s.rawOptions...)...).

@@ -54,7 +54,7 @@ func (c *Confirm) Value(value *bool) *Confirm {
 
 func (c *Confirm) Run() bool {
 	prompt := utils.Get(c.prompt, c.title, "Confirm?")
-	if UsePrettyPrompts {
+	if usePrettyPrompts {
 		err := huh.NewConfirm().
 			Title(prompt).
 			Value(c.value).

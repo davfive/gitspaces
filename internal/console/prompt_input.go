@@ -48,7 +48,7 @@ func (i *Input) Value(value *string) *Input {
 }
 
 func (i *Input) Run() error {
-	if UsePrettyPrompts {
+	if usePrettyPrompts {
 		return huh.NewInput().
 			Title(i.title).
 			Prompt(i.prompt).
