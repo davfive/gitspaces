@@ -11,6 +11,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/mitchellh/go-ps"
 	"golang.org/x/exp/maps"
 )
 
@@ -44,6 +45,23 @@ func GetIndex[S ~[]E, E any](s S, index int, fallback E) E {
 		return s[index]
 	}
 	return fallback
+}
+
+func GetTerminalType() string {
+	parentps, _ := ps.FindProcess(os.Getppid())
+	if parentps == nil {
+		return ""
+	}
+
+	parentProcessName := strings.ToLower(Basename(parentps.Executable(), ".exe"))
+	switch parentProcessName {
+	case "pwsh", "powershell":
+		return "pwsh"
+	case "bash", "zsh":
+		return parentProcessName
+	default:
+		return ""
+	}
 }
 
 func OpenFileInDefaultApp(path string) error {

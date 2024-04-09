@@ -5,7 +5,7 @@ function gitspaces() {
 		exePath="{{ cygwinizePath .exePath }}"
 		dotDir="{{ cygwinizePath .userDotDir }}"
 	fi
-	"$exePath" --ppid $$ "$@"
+	"$exePath" --wrapid $$ "$@"
 	chdirFile="$dotDir/chdir.$$"
 	if [ -f $chdirFile ]; then
 		[ $? -eq 0 ] && cd $(cat $chdirFile)

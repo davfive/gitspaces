@@ -12,7 +12,6 @@ import (
 	"github.com/davfive/gitspaces/v2/internal/console"
 	"github.com/davfive/gitspaces/v2/internal/utils"
 
-	"github.com/mitchellh/go-ps"
 	"github.com/spf13/viper"
 )
 
@@ -22,9 +21,8 @@ var defaultConfigYaml []byte
 type userStruct struct {
 	config       *viper.Viper
 	dotDir       string
-	ppid         int
+	wrapId       int
 	pterm        string // Parent os stdout type (uname -o/-s)
-	wrapped      bool   // exe called from gitspaces wrapper
 	projectPaths []string
 }
 
@@ -40,35 +38,29 @@ func GetUserDotDir() string {
 	return utils.Join(utils.GetUserHomeDir(), GsDotDir)
 }
 
-func (user *userStruct) SetParentProperties(ppid int) {
-	console.Println("original ppid: %v", ppid)
-	user.wrapped = ppid >= 0 // 0 = Debug (vscode launcher) mode
-	if ppid <= 0 {
-		ppid = os.Getppid() // , pass ppid=0
-	}
-	user.ppid = ppid
+func (user *userStruct) SetParentProperties(wrapId int) {
+	console.Println("original wrapId: %v", wrapId)
+	user.wrapId = wrapId // 0 = Debug (vscode launcher) mode
+	user.pterm = utils.GetTerminalType()
+}
 
-	// Parent process id is not necesarily the user process id (e.g., on windows), there may be layers
-	if parentps, _ := ps.FindProcess(os.Getppid()); parentps != nil {
-		user.pterm = strings.ToLower(utils.Basename(parentps.Executable(), ".exe"))
-	} else {
-		user.pterm = ""
-	}
+func (user *userStruct) HasWrapId() bool {
+	return user.wrapId >= 0
 }
 
 func (user *userStruct) WriteChdirPath(newdir string) {
-	if user.ppid <= 0 {
+	if user.wrapId <= 0 {
 		return
 	}
-	notePath := utils.Join(user.dotDir, "chdir."+strconv.Itoa(user.ppid))
+	notePath := utils.Join(user.dotDir, "chdir."+strconv.Itoa(user.wrapId))
 	if err := os.WriteFile(notePath, []byte(newdir), os.FileMode(0o644)); err != nil {
 		console.Errorln("auto chdir failed. cd to %s", newdir)
 	}
 }
 
-func initUser(ppidFlag int) (user *userStruct, err error) {
+func initUser(wrapIdFlag int) (user *userStruct, err error) {
 	user = &userStruct{dotDir: GetUserDotDir()}
-	user.SetParentProperties(ppidFlag)
+	user.SetParentProperties(wrapIdFlag)
 
 	if err := os.MkdirAll(user.dotDir, os.ModePerm); err != nil {
 		return nil, err

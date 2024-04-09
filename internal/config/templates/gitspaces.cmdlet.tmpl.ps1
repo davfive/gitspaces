@@ -1,4 +1,4 @@
-& "{{ .exePath }}" --ppid $PID $args
+& "{{ .exePath }}" --wrapid $PID $args
 $gsExitCode=$LASTEXITCODE
 
 if ($gsExitCode -eq 0) {

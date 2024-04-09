@@ -1,8 +1,6 @@
 package config
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 )
 
@@ -18,16 +16,12 @@ const (
 )
 
 func Init(cmd *cobra.Command) (err error) {
-	var ppidFlag int
-	if ppidFlag, err = cmd.Flags().GetInt("ppid"); err != nil {
-		ppidFlag = -1
-	}
-	if ppidFlag == 0 { // 0 is the debugging pid to autoselect parent pid
-		ppidFlag = os.Getppid()
+	var wrapId int
+	if wrapId, err = cmd.Flags().GetInt("wrapid"); err != nil {
+		wrapId = -1
 	}
 
-	User, err = initUser(ppidFlag)
-
+	_, err = initUser(wrapId)
 	return err
 }
 
