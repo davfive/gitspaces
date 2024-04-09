@@ -58,7 +58,7 @@ func (user *userStruct) getShellTmplVars(shellFiles map[string]*shellFileStruct)
 	tmplVars := map[string]interface{}{
 		"exePath":    utils.Executable(),
 		"homeDir":    utils.GetUserHomeDir(),
-		"userDotDir": user.dotDir,
+		"userDotDir": GetUserDotDir(),
 	}
 	for _, shellFile := range shellFiles {
 		tmplVars[shellFile.name+"Path"] = shellFile.path
@@ -95,9 +95,15 @@ func (user *userStruct) initConfig() error {
 
 func (user *userStruct) checkProjectPaths() (err error) {
 	configErrors := []string{}
+	cleanedPaths := []string{}
 	// An empty project paths file is handled by the RunUserEnvironmentChecks(), not here
 	if len(user.projectPaths) > 0 {
-		for i, path := range user.projectPaths {
+		for _, path := range user.projectPaths {
+			path = strings.TrimSpace(path)
+			if path == "" {
+				continue
+			}
+
 			if path, err = utils.Abs(path); err != nil {
 				configErrors = append(configErrors, fmt.Sprintf("ProjectPath error: %s", err))
 				continue
@@ -108,7 +114,7 @@ func (user *userStruct) checkProjectPaths() (err error) {
 				continue
 			}
 
-			user.projectPaths[i] = path // Abs() path
+			cleanedPaths = append(cleanedPaths, path)
 		}
 	}
 
@@ -120,6 +126,7 @@ func (user *userStruct) checkProjectPaths() (err error) {
 		return fmt.Errorf("Config file errors")
 	}
 
+	user.projectPaths = cleanedPaths
 	return nil
 }
 
