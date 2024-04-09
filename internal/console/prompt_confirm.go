@@ -1,7 +1,6 @@
 package console
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"slices"
@@ -52,6 +51,13 @@ func (c *Confirm) Value(value *bool) *Confirm {
 	return c
 }
 
+func fuzzyMatch(a string, b string) (matched bool) {
+	if matched = strings.EqualFold(a, b); !matched && len(a) > 0 && len(b) > 0 {
+		matched = strings.EqualFold(a[0:1], b[0:1])
+	}
+	return matched
+}
+
 func (c *Confirm) Run() bool {
 	prompt := utils.Get(c.prompt, c.title, "Confirm?")
 	if usePrettyPrompts {
@@ -74,26 +80,15 @@ func (c *Confirm) Run() bool {
 	}
 
 	input := NewInput().
-		Prompt(prompt).
+		Prompt("%s [%s/%s]", prompt, c.affirmative, c.negative).
 		Validate(func(input string) error {
-			foundMatch := false
-			if input != "" {
-				slices.ContainsFunc([]string{c.affirmative, c.negative}, func(v string) bool {
-					return strings.EqualFold(v, input) || strings.EqualFold(v[0:1], input[0:1])
-				})
-			}
-			if !foundMatch {
-				return errors.New("invalid choice")
-			}
-			return nil
+			foundMatch := slices.ContainsFunc([]string{c.affirmative, c.negative}, func(v string) bool {
+				return fuzzyMatch(v, input)
+			})
+			return utils.ErrorIf(!foundMatch, "invalid choice")
 		})
-	err := input.Run()
-	if err != nil {
-		if *input.value == c.affirmative {
-			*c.value = true
-		} else {
-			*c.value = false
-		}
+	if err := input.Run(); err == nil {
+		*c.value = fuzzyMatch(*input.value, c.affirmative)
 	}
 	return *c.value
 }
