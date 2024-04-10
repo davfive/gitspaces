@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"os"
+	"runtime"
 	"slices"
 	"strconv"
 	"strings"
@@ -136,7 +137,11 @@ func (user *userStruct) getShellRcFile() string {
 
 	if user.pterm == "pwsh" {
 		// return os.Getenv("PROFILE") // For some reason this doesn't work (pwsh> $PROFILE)
-		return utils.Join(utils.GetUserHomeDir(), ".config", "powershell", "Microsoft.PowerShell_profile.ps1")
+		if runtime.GOOS == "windows" {
+			return utils.Join(utils.GetUserHomeDir(), "Documents", "WindowsPowerShell", "Microsoft.PowerShell_profile.ps1")
+		} else {
+			return utils.Join(utils.GetUserHomeDir(), ".config", "powershell", "Microsoft.PowerShell_profile.ps1")
+		}
 	}
 
 	return ""
