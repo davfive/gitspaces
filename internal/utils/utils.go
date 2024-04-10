@@ -71,7 +71,7 @@ func OpenFileInDefaultApp(path string) error {
 
 	switch runtime.GOOS {
 	case "windows":
-		return exec.Command("cmd", "/c", path).Start()
+		return exec.Command("explorer.exe", path).Start()
 	case "darwin":
 		return exec.Command("open", path).Start()
 	default:
