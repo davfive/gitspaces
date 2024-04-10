@@ -86,8 +86,9 @@ func FilterDirectories(paths []string) []string {
 // then the normal $USERPROFILE or /Users/<username> is returned. This
 // method is only used to determine the location of the user's rc file for
 // setup, in all other cases the user's home dir is the normal one.
-func GetCygpathHomeDir() string {
-	if runtime.GOOS != "windows" {
+// Note: on windows in powershell, this resolves to the cygwin home dir (unexpectedly)
+func GetCygwinAwareHomeDir() string {
+	if runtime.GOOS != "windows" || GetTerminalType() == "pwsh" {
 		return GetUserHomeDir()
 	}
 
@@ -96,13 +97,17 @@ func GetCygpathHomeDir() string {
 	if err != nil {
 		return GetUserHomeDir()
 	}
-	return strings.TrimSpace(string(out)) // Already Cygwinized
+	return ToSlash(strings.TrimSpace(string(out))) // Already Cygwinized
 }
 
 func GetUserHomeDir() string {
 	userHomeDir, err := os.UserHomeDir()
 	PanicIfError(err)
 	return ToSlash(userHomeDir)
+}
+
+func GetShellHomeDir() string {
+	return GetCygwinAwareHomeDir()
 }
 
 func Getwd() string {

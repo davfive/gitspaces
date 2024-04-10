@@ -44,8 +44,8 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 
-		if config.RunUserEnvironmentChecks() == true {
-			os.Exit(1) // User asked to update environment.
+		if config.RunUserEnvironmentChecks() == false {
+			os.Exit(1) // Setup ran and user asked to update environment.
 		}
 		return nil
 	},

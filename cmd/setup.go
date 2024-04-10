@@ -13,7 +13,7 @@ var setupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "(Re)run gitspaces setup wizard",
 	Run: func(cmd *cobra.Command, args []string) {
-		config.ForceUserEnvironmentSetup()
+		config.RunUserEnvironmentSetup()
 	},
 }
 

@@ -30,7 +30,7 @@ func (user *userStruct) GetConfigFile() string {
 	return user.config.ConfigFileUsed()
 }
 
-func (user *userStruct) GetParentTerminal() string {
+func (user *userStruct) GetTerminalType() string {
 	return user.pterm
 }
 
@@ -131,7 +131,7 @@ func (user *userStruct) checkProjectPaths() (err error) {
 
 func (user *userStruct) getShellRcFile() string {
 	if slices.Contains([]string{"bash", "zsh"}, user.pterm) {
-		return utils.Join(utils.GetUserHomeDir(), fmt.Sprintf(".%src", user.pterm))
+		return utils.Join(utils.GetCygwinAwareHomeDir(), fmt.Sprintf(".%src", user.pterm))
 	}
 
 	if user.pterm == "pwsh" {

@@ -5,63 +5,65 @@ import (
 	"github.com/davfive/gitspaces/v2/internal/utils"
 )
 
-func ForceUserEnvironmentSetup() {
-	console.Println("============================")
-	console.Println("== GitSpaces Setup Wizard ==")
-	console.Println("============================")
-	runUserEnvironmentChecks(true)
-}
-
 func RunUserEnvironmentChecks() bool {
-	return runUserEnvironmentChecks(false)
+	checksPassed := runUserEnvironmentChecks()
+	if !checksPassed {
+		runUserEnvironmentSetup(false)
+	}
+	return checksPassed
 }
 
-// runUserEnvironmentChecks() runs a series of checks to ensure the user's environment
-// is properly configured for GitSpaces. Returns true if any checks failed.
-// When a check fails, the user is prompted to update their environment. Once that is
-// done, the user would be able to run the gitspaces command again successfully
-func runUserEnvironmentChecks(force bool) (checkFailed bool) {
-	shellUpdated := false
+func RunUserEnvironmentSetup() {
+	runUserEnvironmentSetup(true)
+}
 
-	if runProjectPathsCheck(force) == true {
-		checkFailed = true
-	}
-	if runShellWrapperCheck(force) == true {
-		shellUpdated = true
-		checkFailed = true
-	}
+func runUserEnvironmentChecks() bool {
+	return runConfigurationCheck() && runShellWrapperCheck()
+}
 
-	if checkFailed {
-		console.Println("\nSee https://github.com/davfive/gitspaces README for full setup and use instructions.")
-		console.Println("You are ready to use GitSpaces (assuming you followed the instructions).")
-		if shellUpdated {
-			console.Println("Open a new shell and run 'gitspaces' (the shell wrapper) to start using GitSpaces.")
-		} else {
-			console.Println("Run 'gitspaces' (the shell wrapper) to start using GitSpaces.")
-		}
+func runConfigurationCheck() bool {
+	return len(User.projectPaths) > 0
+}
+
+func runShellWrapperCheck() bool {
+	return User.HasWrapId()
+}
+
+func runUserEnvironmentSetup(force bool) {
+	console.Println("This will walk you through setting up GitSpaces.")
+	if force {
+		console.Println("It covers setting up some configuration and a shell wrapper.")
 	}
-	return checkFailed
+	console.Println("See https://github.com/davfive/gitspaces README for full setup and use instructions.")
+	console.Println("")
+
+	runConfigurationSetup(force)
+	shellUpdated := runShellWrapperSetup(force)
+
+	console.Println("\nYou are ready to use GitSpaces (assuming you followed the instructions).")
+	if shellUpdated {
+		console.Println("Open a new shell and run 'gitspaces' (the shell wrapper) to start using GitSpaces.")
+	} else {
+		console.Println("Run 'gitspaces' (the shell wrapper) to start using GitSpaces.")
+	}
 }
 
 // runProjectPathsCheck() prompts the user to set project paths in the config file
 // if they are not already set. Returns true if user asked to update paths.
-func runProjectPathsCheck(force bool) bool {
-	if !force && len(User.projectPaths) > 0 {
+func runConfigurationSetup(force bool) bool {
+	if !force && runConfigurationCheck() == true {
 		return false
 	}
 
-	console.PrintSeparateln("== Setup GitSpaces ProjectPaths")
-	console.Println("GitSpaces uses the ProjectPaths field to know where to find your projects.")
+	console.Println("= Project Paths Setup")
+	console.Println("GitSpaces config.yaml file contains a ProjectPaths field.")
+	console.Println("This field defines a list of paths to your project directories.")
 	console.Println("")
-	console.Println("Fill in the ProjectPaths in the GitSpaces config file with something like:")
-	console.Println("ProjectPaths:")
-	console.Println("  - %s/code/projects", utils.GetUserHomeDir())
-	console.Println("  - %s/code/play", utils.GetUserHomeDir())
-	console.Println("")
-	console.Println("The config file is located at: %s", User.GetConfigFile())
+	console.Println("The config.yaml file is located at: %s", User.GetConfigFile())
+	console.Println("Instructions for setting up ProjectPaths field is in the config file.")
 	console.Println("")
 
-	if console.NewConfirm().Prompt("Edit config file?").Run() == true {
+	if console.NewConfirm().Prompt("Edit config file now?").Run() == true {
 		if err := utils.OpenFileInDefaultApp(User.GetConfigFile()); err != nil {
 			console.Errorln("Editing config file failed: %s", err)
 		} else {
@@ -73,50 +75,43 @@ func runProjectPathsCheck(force bool) bool {
 
 // runProjectPathsCheck() prompts the user to set project paths in the config file
 // if they are not already set. Returns true if user asked to update paths.
-func runShellWrapperCheck(force bool) bool {
-	if !force && User.HasWrapId() {
+func runShellWrapperSetup(force bool) bool {
+	if !force && runShellWrapperCheck() == true {
 		return false
 	}
 
-	console.PrintSeparateln("== Setup GitSpaces Shell Wrapper")
-	console.Println("GitSpaces requires a wrapper function in your shell profile/rc file.")
+	console.Println("= Shell Wrapper Setup")
+	console.Println("GitSpaces must be called using a lightweight shell wrapper function.")
 	console.Println("The wrapper handles when a 'gitspaces <command>' needs to 'cd' to a new directory.")
 	console.Println("")
 
-	if !User.HasWrapId() {
-		console.Println("** Warning - GitSpaces not run from shell wrapper **\n")
-	}
-
 	shellFiles := GetShellFiles()
-	if Debug {
-		console.Println("The following wrapper files were created:")
-		for _, key := range utils.SortKeys(shellFiles) {
-			console.Println("      %s", shellFiles[key].path)
-		}
-		console.Println("")
-	}
-
-	console.Println("Shell Wrapper Setup Instructions:")
-	console.Println("1. Copy the following lines:")
+	shellRcFile := User.getShellRcFile()
+	shellName := User.GetTerminalType()
+	askToEdit := false
 	if User.pterm == "pwsh" {
+		console.Println("Your PowerShell $PROFILE file: %s", shellRcFile)
+		console.Println("\nPlease copy the following lines into the $PROFILE file:")
 		console.Println(". %s", shellFiles["ps1ScriptBlock"].path)
 		console.Println("Set-Alias -Name gs -Value gitspaces # optional")
+		askToEdit = true
 	} else {
+		console.Println("Your current shell is: %s", utils.Ternary(shellName == "", "unknown", shellName))
+		if shellName == "bash" || shellName == "zsh" {
+			console.Println("Your shell profile/rc file: %s", shellRcFile)
+			askToEdit = true
+		}
+		console.Println("\nPlease copy the following lines into your shell/rc file:")
 		console.Println(". %s", shellFiles["shellFunction"].path)
 		console.Println("alias gs=gitspaces")
 	}
-	console.Println("2. Paste the lines into your shell profile or rc file.")
-	console.Println("3. Open a new shell and run 'gitspaces' to start using GitSpaces.")
 
-	if User.pterm != "" {
-		shellRcFile := User.getShellRcFile()
-		console.Println("\nYour current shell is: %s", User.pterm)
-		console.Println("Your shell profile/rc file is located at: %s", shellRcFile)
+	if askToEdit {
 		console.Println("")
-		if console.NewConfirm().Prompt("Edit %s?", shellRcFile).Run() == true {
+		if console.NewConfirm().Prompt("Update %s now?", shellRcFile).Run() == true {
 			utils.CreateEmptyFileIfNotExists(shellRcFile)
 			if err := utils.OpenFileInDefaultApp(shellRcFile); err != nil {
-				console.Errorln("Editing shell rc file failed: %s", err)
+				console.Errorln("%s", err)
 			} else {
 				console.NewInput().Prompt("Press <enter> when done editing the file ...").Run()
 			}

@@ -93,6 +93,13 @@ func SortKeys[M ~map[K]V, K cmp.Ordered, V any](m M) []K {
 	return keys
 }
 
+func Ternary[T any](cond bool, a T, b T) T {
+	if cond {
+		return a
+	}
+	return b
+}
+
 func WriteTemplateToFile(tmpl *template.Template, path string, vars map[string]interface{}) (err error) {
 	if err = os.MkdirAll(Dir(path), 0o755); err != nil {
 		return err
