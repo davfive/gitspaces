@@ -6,6 +6,7 @@ require (
 	github.com/charmbracelet/huh v0.3.0
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/otiai10/copy v1.14.0
+	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9

@@ -3,15 +3,13 @@ package utils
 import (
 	"cmp"
 	"errors"
-	"fmt"
 	"os"
-	"os/exec"
-	"runtime"
 	"slices"
 	"strings"
 	"text/template"
 
 	"github.com/mitchellh/go-ps"
+	"github.com/skratchdot/open-golang/open"
 	"golang.org/x/exp/maps"
 )
 
@@ -69,14 +67,7 @@ func OpenFileInDefaultApp(path string) error {
 		return err
 	}
 
-	switch runtime.GOOS {
-	case "windows":
-		return exec.Command("explorer.exe", path).Start()
-	case "darwin":
-		return exec.Command("open", path).Start()
-	default:
-		return fmt.Errorf("unsupported OS: %s", runtime.GOOS)
-	}
+	return open.Start(path)
 }
 
 func SafeWriteTemplateToFile(t *template.Template, path string, vars map[string]interface{}) (err error) {
