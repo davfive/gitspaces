@@ -62,8 +62,12 @@ func GetTerminalType() string {
 	}
 }
 
-func OpenFileInDefaultApp(path string) error {
-	if err := CreateEmptyFileIfNotExists(path); err != nil {
+func OpenFileInDefaultApp(path string) (err error) {
+	if path, err = EvalSymlinks(path); err != nil {
+		return err
+	}
+
+	if err = CreateEmptyFileIfNotExists(path); err != nil {
 		return err
 	}
 
