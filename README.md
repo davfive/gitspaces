@@ -66,8 +66,8 @@ gitspaces is implemented in Go, so
    $ go install github.com/davfive/gitspaces/v2@latest
      -> installs to ~/go/bin/gitspaces
 
-   $ gitspaces -v # to be change to gitspaces setup
-     -> run once to install config and shell wrapper files to ~/.gitspaces/ (or C:/Users/<user>/.gitspaces/
+   $ gitspaces setup
+     -> run once to install .gitspaces config directory and start user setup
    ```
 
 ## Initial Setup and Use
