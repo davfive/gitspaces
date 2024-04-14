@@ -9,11 +9,50 @@
 
 ## What is GitSpaces
 
-GitSpaces is a structured folder/directory system for working concurrently on independent parallel development tasks within and across multiple proects.
+If you're familiar with ClearCase Views, think of GitSpaces as their counterpart for Git projects. If not, you're in for a treat.
 
-For those of you with experience using, ahem, the ClearCase vcs, you're familiar with the concept of ClearCase Views. GitSpaces is clearcase view for git projects.
+GitSpaces manages multiple independent clones of a project for you so you can switch between them as you work on new features or bugs.
 
-A GitSpace is an isolated workspace that has all of your project code where you can work on ONE THING. A GitSpace project is a collection of spaces (think independent clones) for the project. If you are asked to fix a bug or something else in parallel, you just open a new space and work there.
+Instead of using `git clone url/to/repo-abc` use `gitspaces create url/to/repo-abc.git` and you will get
+
+```
+~/.../projects
+ └── repo-abc
+     ├── __GITSPACES_PROJECT__              
+     ├── space-1/
+     │   └── ... repo cloned here
+     ├── space-2-...
+     ├── space-N/
+     └── .zzz         # extra clone copies for different tasks
+         ├── zzz-0/
+         │   └── ... and cloned here
+         ├── zzz-1/
+         │   └── ... and here here
+         ├── zzz-...
+         └── zzz-N/
+```
+
+Where you will be able to work independently on features, bugs, etc
+
+### Commands
+
+The `gitspaces` command 
+
+#### USAGE
+`gitspaces COMMAND`  
+
+or simplify your life with `alias gs=gitspaces`.
+
+#### WHERE
+COMMAND  | Description
+---------|------------------------
+`setup`  | Helps user setup config.yaml and 'cd' shell wrappers.
+`create` | Creates a new GitSpace project from a git repo url
+`switch` | Switch spaces. Default, same as `gitspaces` w/o a command.
+`rename` | Rename a current gitspace
+`sleep`  | Archive a gitspace and wakes up another one
+`code`   | Launches Visual Studio Code Workspace for the space
+
 
 ## Installation
 
@@ -30,89 +69,56 @@ gitspaces is implemented in Go, so
    $ gitspaces -v # to be change to gitspaces setup
      -> run once to install config and shell wrapper files to ~/.gitspaces/ (or C:/Users/<user>/.gitspaces/
    ```
-4. Setup gitspaces command wrapper
-   Some gitspaces commands change the current working directory of the user. To accomplish this, gitspaces is run through a shell (bash / powershell) wrapper.
 
-   * MacOS
-      * bash
-        ```
-        $ echo ". ~/.gitspaces/gitspaces.sh" >> ~/.bashrc   # main wrapper
-        $ echo "alias gs=gitspaces" >> ~/.bashrc            # optional alias
-        ```
-      * PowerShell
-        $ open 
-   $ vim ~/.gitspaces/config.yaml
-     -> update ProjectPaths list
-   $ vim ~/.bashrc (or ~/.zshrc)
-     -> add '. ~/.gitspaces/shellfunction.sh'
-     -> add 'alias gs=gitspaces' (optional)
-   $ . ~/.bashrc (or ~/.zshrc)
-   ```
+## Initial Setup and Use
 
-5. Create a GitSpace project
-   ```
-   $ cd /path/to/one/of/ProjectPaths
-   $ gitspaces create REPO_URL
-     -> creates project and cd's into space
-   ```
+Run `gitspaces setup` to be walked through first-time configuration. 
 
-6. Start using GitSpaces
+If you run any `gitspaces <cmd>` and your environment isn't setup properly, `gitspaces setup` setup will automatically run.
 
-## Commands
+GitSpaces configuration directory is created on first run.
 
-### The `gitspaces` command 
-#### USAGE
-`gitspaces COMMAND`Simplify your life with `alias gs=gitspaces`.
+### Step 1 - Configure where you keep your git projects
 
-#### WHERE
-COMMAND  | Description
----------|------------------------
-`create` | Creates a new GitSpace project from a git repo url
-`switch` | Switch spaces. Default, same as `gitspaces` w/o a command.
-`rename` | Rename a current gitspace
-`sleep`  | Archive a gitspace and wakes up another one
-`code`   | Launches Visual Studio Code Workspace for the space
+GitSpaces config.yaml file contains a ProjectPaths field.
+This field defines a list of paths to your project directories.
 
+Instructions for setting up ProjectPaths field is in the config file.
 
-## GitSpace Project Structure
+**Windows:**
 
-```
-~/.../projects
- └── project-a
-     ├── __GITSPACES_PROJECT__              
-     ├── .code-workspace
-     │   └── project-a~active-1.code-workspace
-     ├── .zzz
-     │   ├── zzz-0/
-     │   │   └──  ... repo cloned here
-     │   ├── zzz-1/
-     │   │   └── ... zzz-0 copied here
-     │   ├── zzz-...
-     │   └── zzz-N/
-     ├── active-1/
-     │   └── ... active repo/space
-     ├── active-...
-     └── active-N/
-```
+    %USERPROFILE%/.gitspaces/config.yaml
 
-### GitSpace User Config
-```
-# Created first time gitspaces is run
-~/.gitspaces/
- ├── config.yaml (must be filled in before use)
- ├── gitspaces.sh
- ├── gitspaces.cygwin.sh
- ├── gitspaces.ps1
- └── gitspaces.scriptblock.ps1
-```
+**Mac/Linux**
 
-#### config.yaml
+    `MacOS:   ~/.gitspaces/config.yaml`
 
-```yaml
-~/.gitspaces/config.yaml
+### Step 2 - Configure the gitspaces shell wrapper
 
-ProjectPaths:
-    - /path/to/a/projects/directory
-    - /path/to/another/directory
-    - ...
-```
+Some gitspaces commands change the current working directory of the user. To accomplish this, gitspaces is run through a shell (bash / powershell) wrapper. Once you've setup your shell wrapper, restart your terminal and start using GitSpaces.
+
+**Bash/Zsh (Mac/Linux/Windows)**
+
+Copy the following lines into your .bashrc or .zshrc file.
+
+    . ~/.gitspaces/gitspaces.function.sh
+    alias gs=gitspaces  # optional
+
+**PowerShell (Mac/Windows)**
+
+Copy the following lines into your PowerShell $PROFILE
+
+For more information, see [PowerShell > About Profiles](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_profiles)
+
+Copy the following to your $PROFILE
+
+    . $HOME/.gitspaces/gitspaces.scriptblock.ps1
+    Set-Alias -Name gs -Value gitspaces           # optional
+
+### Step 3 - Create your first GitSpaces project
+
+Open a terminal and run
+
+   gitspaces create https://github.com/davfive/gitspaces -n 3
+
+This will create a new GitSpaces project with three clones of this gitspaces project. By default all spaces are "asleep". You will be asked to wake one up and give it a name.
