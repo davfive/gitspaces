@@ -1,8 +1,7 @@
 function gitspaces() {
 	local exePath="{{ .exePath }}"
 	local dotDir="{{ .userDotDir }}"
-	SYSTEM_NAME=$(uname -s)
-	if [[ "${SYSTEM_NAME^^}" == *CYGWIN* ]]; then
+	if echo "$(uname -s)" | grep -iq "CYGWIN"; then
 		exePath="$(cygpath -m "$exePath")"
 		dotDir="$(cygpath -m "$dotDir")"
 	fi
