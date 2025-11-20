@@ -2,10 +2,22 @@
 
 This guide will help you reserve the `gitspaces` name on PyPI and TestPyPI, and set up automated publishing via GitHub Actions.
 
+## Quick Reference: What Am I Uploading?
+
+**You are uploading the BUILT PACKAGES, not the source code repository!**
+
+- ✅ Upload: The files in `dist/` folder (`.whl` and `.tar.gz` files)
+- ❌ Don't upload: The git repository or source code directly
+- 📦 What `pip install` downloads: The distribution files from PyPI
+- 🏗️ How to create them: Run `python -m build` in your repository
+
 ## Prerequisites
 
 - Accounts on both PyPI and TestPyPI
 - The package built locally (already done with `python -m build`)
+- The `dist/` folder contains:
+  - `gitspaces-2.0.36-py3-none-any.whl` (wheel file)
+  - `gitspaces-2.0.36.tar.gz` (source tarball)
 
 ## Step 1: Create Accounts
 
@@ -23,30 +35,71 @@ This guide will help you reserve the `gitspaces` name on PyPI and TestPyPI, and 
 
 ### Option A: Manual Upload (Recommended for First Time)
 
-This is the easiest way to claim the name:
+This is the easiest way to claim the name. You'll upload the **built package files** (not the source code repository) to PyPI.
 
-#### For TestPyPI:
-```bash
-# Install twine if not already installed
-pip install twine
+**Important:** You're uploading the distribution packages from the `dist/` folder, NOT the git repository!
 
-# Upload to TestPyPI
-python -m twine upload --repository testpypi dist/*
-```
+#### Step-by-Step Process:
 
-When prompted:
-- Username: Your TestPyPI username
-- Password: Your TestPyPI password (or API token)
+1. **Build the package** (if not already done):
+   ```bash
+   cd /path/to/your/local/gitspaces/clone
+   python -m build
+   ```
+   
+   This creates two files in the `dist/` directory:
+   - `gitspaces-2.0.36-py3-none-any.whl` (wheel file)
+   - `gitspaces-2.0.36.tar.gz` (source distribution)
 
-#### For PyPI:
-```bash
-# Upload to PyPI
-python -m twine upload dist/*
-```
+2. **Install twine** (if not already installed):
+   ```bash
+   pip install twine
+   ```
 
-When prompted:
-- Username: Your PyPI username
-- Password: Your PyPI password (or API token)
+3. **Upload to TestPyPI first** (to test before going to production):
+   ```bash
+   python -m twine upload --repository testpypi dist/*
+   ```
+   
+   When prompted:
+   - Username: Your TestPyPI username (or `__token__` if using API token)
+   - Password: Your TestPyPI password (or paste your API token starting with `pypi-`)
+
+4. **Test the TestPyPI installation**:
+   ```bash
+   # Create a test virtual environment
+   python -m venv test-env
+   source test-env/bin/activate  # On Windows: test-env\Scripts\activate
+   
+   # Install from TestPyPI
+   pip install -i https://test.pypi.org/simple/ gitspaces
+   
+   # Test the command
+   gitspaces --version
+   
+   # Clean up
+   deactivate
+   rm -rf test-env
+   ```
+
+5. **If TestPyPI works, upload to PyPI**:
+   ```bash
+   python -m twine upload dist/*
+   ```
+   
+   When prompted:
+   - Username: Your PyPI username (or `__token__` if using API token)
+   - Password: Your PyPI password (or paste your API token starting with `pypi-`)
+
+**What gets uploaded:**
+- The `.whl` file (wheel) - binary distribution
+- The `.tar.gz` file (sdist) - source distribution
+- NOT the git repository, NOT the source code directly
+
+**What happens:**
+- PyPI/TestPyPI stores these distribution files
+- Users can install with `pip install gitspaces`
+- pip downloads and installs from these distribution files
 
 ### Option B: Create API Tokens (Recommended for GitHub Actions)
 
@@ -127,18 +180,23 @@ GitHub Actions now supports "Trusted Publishing" which is more secure than API t
 
 ### Option 2: Manual First Upload
 
-If you prefer, do a manual upload first:
+If you prefer, do a manual upload first (see Step 2 Option A for detailed instructions):
 
 ```bash
-# Build the package
+# 1. Build the package distribution files
 python -m build
 
-# Upload to TestPyPI first (test)
+# 2. Upload to TestPyPI first (test)
 python -m twine upload --repository testpypi dist/*
 
-# If successful, upload to PyPI
+# 3. Test install from TestPyPI
+pip install -i https://test.pypi.org/simple/ gitspaces
+
+# 4. If successful, upload to PyPI
 python -m twine upload dist/*
 ```
+
+**Remember:** You're uploading the built package files from `dist/`, not the git repository!
 
 ## Step 6: Trigger Automated Publishing
 
@@ -202,10 +260,62 @@ You can't re-upload the same version. Increment the version number in:
 3. Approve the PyPI deployment when prompted
 4. Done! 🎉
 
+## Visual Workflow
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    YOUR LOCAL REPOSITORY                             │
+│                                                                      │
+│  src/gitspaces/         ← Python source code                        │
+│  tests/                 ← Test files                                │
+│  pyproject.toml         ← Package metadata                          │
+│  README.md              ← Documentation                             │
+│                                                                      │
+│  ┌──────────────────────────────────────────────────┐              │
+│  │ $ python -m build                                 │              │
+│  │   (Creates distribution packages)                 │              │
+│  └──────────────────────────────────────────────────┘              │
+│                         │                                            │
+│                         ▼                                            │
+│  ┌──────────────────────────────────────────────────┐              │
+│  │ dist/                                             │              │
+│  │   ├── gitspaces-2.0.36-py3-none-any.whl          │ ◄─ UPLOAD    │
+│  │   └── gitspaces-2.0.36.tar.gz                    │    THESE!    │
+│  └──────────────────────────────────────────────────┘              │
+└─────────────────────────────────────────────────────────────────────┘
+                         │
+                         │ $ twine upload --repository testpypi dist/*
+                         ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                      TEST.PYPI.ORG                                   │
+│  (Testing environment - safe to experiment)                          │
+│                                                                      │
+│  Package: gitspaces                                                  │
+│  Version: 2.0.36                                                     │
+│  Files: .whl + .tar.gz stored on TestPyPI servers                  │
+│                                                                      │
+│  Users can install: pip install -i https://test.pypi.org/... gitspaces │
+└─────────────────────────────────────────────────────────────────────┘
+                         │
+                         │ (After testing works)
+                         │ $ twine upload dist/*
+                         ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                        PYPI.ORG                                      │
+│  (Production - the real deal!)                                       │
+│                                                                      │
+│  Package: gitspaces                                                  │
+│  Version: 2.0.36                                                     │
+│  Files: .whl + .tar.gz stored on PyPI servers                      │
+│                                                                      │
+│  Users can install: pip install gitspaces                           │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
 ## Current Package Status
 
 The package has been built successfully:
 - Source distribution: `dist/gitspaces-2.0.36.tar.gz`
 - Wheel: `dist/gitspaces-2.0.36-py3-none-any.whl`
 
-You can now upload these to reserve the name!
+**These are the files you upload to PyPI/TestPyPI!**
