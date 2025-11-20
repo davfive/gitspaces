@@ -2,6 +2,22 @@
 
 This guide will help you reserve the `gitspaces` name on PyPI and TestPyPI, and set up automated publishing via GitHub Actions.
 
+## Quick Start Checklist
+
+Use this checklist to set up PyPI publishing:
+
+- [ ] **Step 1**: Create PyPI account (https://pypi.org/account/register/)
+- [ ] **Step 1**: Create TestPyPI account (https://test.pypi.org/account/register/)
+- [ ] **Step 2**: Build package locally: `python -m build`
+- [ ] **Step 2**: Upload to TestPyPI: `twine upload --repository testpypi dist/*`
+- [ ] **Step 2**: Test install: `pip install -i https://test.pypi.org/simple/ gitspaces`
+- [ ] **Step 2**: Upload to PyPI: `twine upload dist/*`
+- [ ] **Step 3**: Set up Trusted Publishing on PyPI (or use API tokens)
+- [ ] **Step 4**: Configure GitHub environments (`testpypi` and `pypi`)
+- [ ] **Step 5**: Push a tag to test automated workflow: `git tag v2.0.37 && git push origin v2.0.37`
+
+---
+
 ## Quick Reference: What Am I Uploading?
 
 **You are uploading the BUILT PACKAGES, not the source code repository!**
@@ -136,21 +152,139 @@ After creating your tokens, add them to your GitHub repository:
 
 ## Step 4: Configure GitHub Environments
 
-The workflow uses GitHub environments for approval gates:
+The workflow uses GitHub environments for approval gates. This must be configured in your **repository settings** (not user settings).
 
-1. Go to your GitHub repository settings
-2. Click "Environments"
-3. Create two environments:
+### Accessing GitHub Environments
 
-### TestPyPI Environment
-- Name: `testpypi`
-- No protection rules needed (auto-deploy)
+1. Go to your repository: https://github.com/davfive/gitspaces
+2. Click **"Settings"** (top right, repository settings, not user settings)
+3. In the left sidebar, find the **"Environments"** section
+4. Click **"New environment"** to create each environment
 
-### PyPI Environment (with approval)
-- Name: `pypi`
-- Add protection rules:
-  - ✅ Required reviewers: Add yourself or team members
-  - This creates the approval gate before production deployment
+### Environment 1: TestPyPI (No Approval Needed)
+
+**Configuration:**
+- **Name**: `testpypi` (must match exactly as used in workflow)
+- **Protection rules**: None needed (automatic deployment is fine for testing)
+- **Environment secrets** (if using API tokens instead of Trusted Publishing):
+  - Click "Add secret"
+  - Name: `PYPI_API_TOKEN`
+  - Value: Your TestPyPI API token
+
+**What this does:**
+- Allows automatic deployment to TestPyPI
+- No manual approval required
+- Used for testing before production
+
+### Environment 2: PyPI (With Approval Gate)
+
+**Configuration:**
+- **Name**: `pypi` (must match exactly as used in workflow)
+- **Protection rules**: 
+  - ✅ Enable **"Required reviewers"**
+  - Add reviewers: 
+    - Add yourself: `@davfive`
+    - Or add team members who can approve releases
+  - Optionally set **"Wait timer"**: 0 minutes (or add delay if desired)
+- **Environment secrets** (if using API tokens instead of Trusted Publishing):
+  - Click "Add secret"
+  - Name: `PYPI_API_TOKEN`
+  - Value: Your PyPI API token
+
+**What this does:**
+- Requires manual approval before deploying to production PyPI
+- Prevents accidental releases
+- Creates a notification for reviewers to approve/reject
+
+### Visual Guide to GitHub Environments Setup
+
+```
+GitHub Repository Settings
+├── Settings (tab)
+    ├── Secrets and variables
+    │   └── Actions
+    │       ├── Repository secrets (used by all workflows)
+    │       │   ├── PYPI_API_TOKEN (optional if using Trusted Publishing)
+    │       │   └── TEST_PYPI_API_TOKEN (optional if using Trusted Publishing)
+    │       └── Environment secrets (used by specific environments)
+    │
+    └── Environments
+        ├── testpypi
+        │   ├── Protection rules: None
+        │   └── Secrets: (none needed if using Trusted Publishing)
+        │
+        └── pypi
+            ├── Protection rules:
+            │   └── Required reviewers: [@davfive]
+            └── Secrets: (none needed if using Trusted Publishing)
+```
+
+### Step-by-Step Environment Creation
+
+#### Creating the `testpypi` Environment:
+
+1. Go to: https://github.com/davfive/gitspaces/settings/environments
+2. Click **"New environment"**
+3. Enter name: `testpypi`
+4. Click **"Configure environment"**
+5. **Don't add any protection rules** (leave it open for automatic deployment)
+6. Click **"Save protection rules"**
+7. Done!
+
+#### Creating the `pypi` Environment:
+
+1. Go to: https://github.com/davfive/gitspaces/settings/environments
+2. Click **"New environment"**
+3. Enter name: `pypi`
+4. Click **"Configure environment"**
+5. **Add protection rules:**
+   - Check ✅ **"Required reviewers"**
+   - In the search box, type your username or team name
+   - Select yourself: `davfive`
+   - Click outside the box to confirm
+6. Click **"Save protection rules"**
+7. Done!
+
+### How Approval Works
+
+When you push a tag:
+
+1. ✅ **Tests run** automatically
+2. ✅ **Build completes** automatically  
+3. ✅ **TestPyPI deployment** happens automatically
+4. ⏸️ **GitHub creates an approval request** for PyPI environment
+5. 📧 **You receive a notification** (email/GitHub)
+6. 👀 **You review the deployment request** in GitHub Actions
+7. ✅ **You click "Review deployments"** and approve/reject
+8. ✅ **If approved, PyPI deployment** proceeds
+9. ✅ **GitHub Release** is created with assets
+
+### Verifying Environment Setup
+
+After creating both environments, verify:
+
+```bash
+# Check your environments are configured
+# Go to: https://github.com/davfive/gitspaces/settings/environments
+
+# You should see:
+# - testpypi (No protection rules)
+# - pypi (Required reviewers: davfive)
+```
+
+### Common Issues
+
+**"Environment not found" error in workflow:**
+- Make sure environment names are exactly `testpypi` and `pypi` (lowercase, no spaces)
+- Environments must be created before running the workflow
+
+**"Approval not triggering":**
+- Make sure you added yourself as a required reviewer in the `pypi` environment
+- Check that you have the correct permissions (admin or maintainer)
+
+**"Can't create environments":**
+- Environments are only available on public repos, or private repos with GitHub Pro/Enterprise
+- Make sure you're in the repository settings, not user settings
 
 ## Step 5: Test the Workflow
 
