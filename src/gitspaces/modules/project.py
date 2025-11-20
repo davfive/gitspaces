@@ -107,9 +107,8 @@ class Project:
         
         # List active spaces (top-level directories, excluding special ones)
         for item in self.path.iterdir():
-            if item.is_dir() and item.name not in [self.ZZZ_DIR, '.vscode'] and not item.name.startswith('.'):
-                if item.name != self.DOTFILE:
-                    spaces.append(item.name)
+            if item.is_dir() and item.name not in [self.ZZZ_DIR, '.vscode', self.DOTFILE] and not item.name.startswith('.'):
+                spaces.append(item.name)
         
         # List sleeping spaces
         if self.zzz_dir.exists():
