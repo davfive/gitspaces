@@ -196,6 +196,10 @@ gitspaces config project_paths /path/to/projects
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
+## 📦 Deployment
+
+For maintainers: See [README.DEPLOYMENT.md](README.DEPLOYMENT.md) for instructions on deploying to PyPI.
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

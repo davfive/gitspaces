@@ -198,6 +198,9 @@ Fixes #123
 
 ### Release Process
 
+For detailed deployment instructions, see [README.DEPLOYMENT.md](README.DEPLOYMENT.md).
+
+Quick version:
 1. Update version in `pyproject.toml` and `src/gitspaces/__init__.py`
 2. Update CHANGELOG.md
 3. Create a git tag: `git tag -a v1.0.0 -m "Release v1.0.0"`
