@@ -110,7 +110,7 @@ We follow PEP 8 with some modifications:
 - **Type Hints**: Use type hints where appropriate
 - **Docstrings**: Use Google-style docstrings
 
-### Running Linters
+### Running Linters and Security Checks
 
 ```bash
 # Format code with black
@@ -121,6 +121,12 @@ flake8 src/gitspaces tests
 
 # Type checking with mypy
 mypy src/gitspaces
+
+# Security scan with bandit
+bandit -r src/gitspaces
+
+# Check dependencies for vulnerabilities
+safety check
 ```
 
 ### Testing
