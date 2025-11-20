@@ -1,6 +1,10 @@
-# PyPI Setup Guide for GitSpaces
+# GitSpaces Deployment Guide
 
-This guide will help you reserve the `gitspaces` name on PyPI and TestPyPI, and set up automated publishing via GitHub Actions.
+This guide will help you deploy GitSpaces to PyPI and TestPyPI. It covers:
+- Reserving the `gitspaces` package name
+- Setting up automated deployment via GitHub Actions
+- Configuring GitHub environments for approval gates
+- Testing and troubleshooting deployments
 
 ## Quick Start Checklist
 
