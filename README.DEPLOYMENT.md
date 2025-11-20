@@ -1,35 +1,16 @@
 # GitSpaces Deployment Guide
 
-This guide will help you deploy GitSpaces to PyPI and TestPyPI. It covers:
-- Reserving the `gitspaces` package name
-- Setting up automated deployment via GitHub Actions
-- Configuring GitHub environments for approval gates
-- Testing and troubleshooting deployments
+## Overview
 
-## Quick Start Checklist
+Deploy to PyPI via manual upload or automated GitHub Actions.
 
-Use this checklist to set up PyPI publishing:
+## Quick Reference
 
-- [ ] **Step 1**: Create PyPI account (https://pypi.org/account/register/)
-- [ ] **Step 1**: Create TestPyPI account (https://test.pypi.org/account/register/)
-- [ ] **Step 2**: Build package locally: `python -m build`
-- [ ] **Step 2**: Upload to TestPyPI: `twine upload --repository testpypi dist/*`
-- [ ] **Step 2**: Test install: `pip install -i https://test.pypi.org/simple/ gitspaces`
-- [ ] **Step 2**: Upload to PyPI: `twine upload dist/*`
-- [ ] **Step 3**: Set up Trusted Publishing on PyPI (or use API tokens)
-- [ ] **Step 4**: Configure GitHub environments (`testpypi` and `pypi`)
-- [ ] **Step 5**: Push a tag to test automated workflow: `git tag v2.0.37 && git push origin v2.0.37`
+**Upload built packages from `dist/`, not source code:**
+- `dist/gitspaces-*.whl` (wheel)
+- `dist/gitspaces-*.tar.gz` (source distribution)
 
----
-
-## Quick Reference: What Am I Uploading?
-
-**You are uploading the BUILT PACKAGES, not the source code repository!**
-
-- ✅ Upload: The files in `dist/` folder (`.whl` and `.tar.gz` files)
-- ❌ Don't upload: The git repository or source code directly
-- 📦 What `pip install` downloads: The distribution files from PyPI
-- 🏗️ How to create them: Run `python -m build` in your repository
+Build: `python -m build`
 
 ## Prerequisites
 
