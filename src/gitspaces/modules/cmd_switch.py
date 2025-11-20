@@ -49,7 +49,7 @@ def switch_command(args):
     # Construct the target path
     if target_space.startswith('.zzz/'):
         Console.println(f"✗ Cannot switch to sleeping space '{target_space}'")
-        Console.println("Use 'gitspaces sleep' to wake a sleeping space first")
+        Console.println("Wake it first with 'gitspaces sleep' (which can wake sleeping spaces)")
         return
     
     target_path = project.path / target_space

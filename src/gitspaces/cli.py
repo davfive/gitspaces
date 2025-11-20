@@ -126,7 +126,8 @@ def main():
         if not run_user_environment_checks():
             sys.exit(1)
     except Exception as e:
-        Console.println(f"Error initializing config: {e}")
+        Console.println(f"Error initializing GitSpaces configuration: {e}")
+        Console.println("Try running 'gitspaces setup' to configure GitSpaces.")
         sys.exit(1)
     
     # If no command is provided, default to switch

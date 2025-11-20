@@ -55,7 +55,6 @@ class Config:
     def default_editor(self, editor: str):
         """Set the default editor."""
         self._data['default_editor'] = editor
-    
 
     def load(self):
         """Load configuration from file."""
