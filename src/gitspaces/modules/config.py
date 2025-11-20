@@ -12,7 +12,6 @@ class Config:
     _instance: Optional['Config'] = None
     _config_dir: Optional[Path] = None
     _config_file: Optional[Path] = None
-    _wrap_id: int = -1
     _data: Dict[str, Any] = {}
     
     @classmethod
@@ -57,16 +56,7 @@ class Config:
         """Set the default editor."""
         self._data['default_editor'] = editor
     
-    @property
-    def wrap_id(self) -> int:
-        """Get the wrapper ID."""
-        return self._wrap_id
-    
-    @wrap_id.setter
-    def wrap_id(self, wrap_id: int):
-        """Set the wrapper ID."""
-        self._wrap_id = wrap_id
-    
+
     def load(self):
         """Load configuration from file."""
         if self.config_file.exists():
@@ -94,10 +84,9 @@ class Config:
         self._data[key] = value
 
 
-def init_config(wrap_id: int = -1):
+def init_config():
     """Initialize the configuration system."""
     config = Config.instance()
-    config.wrap_id = wrap_id
     config.load()
 
 
@@ -105,18 +94,18 @@ def run_user_environment_checks() -> bool:
     """Run user environment checks and setup if needed.
     
     Returns:
-        True if environment is ready, False if setup was run and user needs to update environment.
+        True if environment is ready, False otherwise.
     """
     config = Config.instance()
     
     # Check if config exists
     if not config.exists():
-        from gitspaces.commands.setup import run_setup
+        from gitspaces.modules.cmd_setup import run_setup
         return run_setup()
     
     # Check if project paths are configured
     if not config.project_paths:
-        from gitspaces.commands.setup import run_setup
+        from gitspaces.modules.cmd_setup import run_setup
         return run_setup()
     
     return True

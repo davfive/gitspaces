@@ -1,70 +1,151 @@
 """GitSpaces CLI - Command-line interface for gitspaces."""
 
 import sys
-import click
+import argparse
 from gitspaces import __version__
-from gitspaces.config.config import Config, init_config, run_user_environment_checks
-from gitspaces.console.console import Console
-from gitspaces.commands import setup, create, switch, sleep, rename, code, config as config_cmd
+from gitspaces.modules.config import Config, init_config, run_user_environment_checks
+from gitspaces.modules.console import Console
 
 
-@click.group(invoke_without_command=True)
-@click.version_option(version=__version__)
-@click.option('--debug', '-d', is_flag=True, hidden=True, help='Add additional debugging information')
-@click.option('--plain', '-p', is_flag=True, hidden=True, help='Only use plain prompts')
-@click.option('--pretty', '-P', is_flag=True, hidden=True, help='Only use pretty prompts')
-@click.option('--wrapid', type=int, default=-1, hidden=True, help='Wrapper ID from calling shell')
-@click.pass_context
-def cli(ctx, debug, plain, pretty, wrapid):
-    """GitSpaces - Concurrent development manager for git projects.
+def create_parser():
+    """Create the argument parser with subcommands."""
+    parser = argparse.ArgumentParser(
+        prog='gitspaces',
+        description='GitSpaces - Concurrent development manager for git projects',
+        epilog='Use "gitspaces <command> --help" for more information about a command.'
+    )
     
-    If you're familiar with ClearCase Views, think of GitSpaces as their
-    counterpart for Git projects. GitSpaces manages multiple independent
-    clones of a project so you can switch between them as you work on
-    new features or bugs.
-    """
-    ctx.ensure_object(dict)
+    parser.add_argument(
+        '--version',
+        action='version',
+        version=f'%(prog)s {__version__}'
+    )
     
-    if debug:
+    parser.add_argument(
+        '--debug', '-d',
+        action='store_true',
+        help='Add additional debugging information'
+    )
+    
+    # Create subparsers for commands
+    subparsers = parser.add_subparsers(
+        dest='command',
+        help='Available commands'
+    )
+    
+    # Import and register commands
+    from gitspaces.modules import cmd_setup, cmd_clone, cmd_switch, cmd_sleep, cmd_rename, cmd_code, cmd_config, cmd_extend
+    
+    # Setup command
+    setup_parser = subparsers.add_parser(
+        'setup',
+        help='Setup GitSpaces configuration'
+    )
+    setup_parser.set_defaults(func=cmd_setup.setup_command)
+    
+    # Clone command
+    clone_parser = subparsers.add_parser(
+        'clone',
+        help='Clone a git repository as a GitSpaces project'
+    )
+    clone_parser.add_argument('url', help='Git repository URL')
+    clone_parser.add_argument('-n', '--num-spaces', type=int, default=3,
+                              help='Number of spaces to create (default: 3)')
+    clone_parser.add_argument('-d', '--directory', 
+                              help='Directory where project will be created')
+    clone_parser.set_defaults(func=cmd_clone.clone_command)
+    
+    # Switch command
+    switch_parser = subparsers.add_parser(
+        'switch',
+        help='Switch to a different space'
+    )
+    switch_parser.add_argument('space', nargs='?', help='Space name to switch to')
+    switch_parser.set_defaults(func=cmd_switch.switch_command)
+    
+    # Sleep command
+    sleep_parser = subparsers.add_parser(
+        'sleep',
+        help='Put a space to sleep and optionally wake another'
+    )
+    sleep_parser.add_argument('space', nargs='?', help='Space to put to sleep')
+    sleep_parser.set_defaults(func=cmd_sleep.sleep_command)
+    
+    # Rename command
+    rename_parser = subparsers.add_parser(
+        'rename',
+        help='Rename a space'
+    )
+    rename_parser.add_argument('old_name', help='Current space name')
+    rename_parser.add_argument('new_name', help='New space name')
+    rename_parser.set_defaults(func=cmd_rename.rename_command)
+    
+    # Code command
+    code_parser = subparsers.add_parser(
+        'code',
+        help='Open space in VS Code'
+    )
+    code_parser.add_argument('space', nargs='?', help='Space to open')
+    code_parser.set_defaults(func=cmd_code.code_command)
+    
+    # Config command
+    config_parser = subparsers.add_parser(
+        'config',
+        help='View or edit configuration'
+    )
+    config_parser.add_argument('key', nargs='?', help='Configuration key')
+    config_parser.add_argument('value', nargs='?', help='Configuration value')
+    config_parser.set_defaults(func=cmd_config.config_command)
+    
+    # Extend command
+    extend_parser = subparsers.add_parser(
+        'extend',
+        help='Add more clone spaces to the project'
+    )
+    extend_parser.add_argument('-n', '--num-spaces', type=int, default=1,
+                              help='Number of additional spaces to create (default: 1)')
+    extend_parser.add_argument('space', nargs='?', 
+                              help='Space to clone from (default: current or first active)')
+    extend_parser.set_defaults(func=cmd_extend.extend_command)
+    
+    return parser
+
+
+def main():
+    """Main entry point for the CLI."""
+    parser = create_parser()
+    args = parser.parse_args()
+    
+    # Show debug info if requested
+    if args.debug:
         Console.println(f"Args: {sys.argv}")
-    
-    if plain:
-        Console.set_use_pretty_prompts(False)
-    
-    if pretty:
-        Console.set_use_pretty_prompts(True)
     
     # Initialize configuration
     try:
-        init_config(wrapid)
+        init_config()
         if not run_user_environment_checks():
             sys.exit(1)
     except Exception as e:
         Console.println(f"Error initializing config: {e}")
         sys.exit(1)
     
-    # If no subcommand is provided, default to switch
-    if ctx.invoked_subcommand is None:
-        ctx.invoke(switch.switch)
-
-
-# Register commands
-cli.add_command(setup.setup)
-cli.add_command(create.create)
-cli.add_command(switch.switch)
-cli.add_command(sleep.sleep)
-cli.add_command(rename.rename)
-cli.add_command(code.code)
-cli.add_command(config_cmd.config)
-
-
-def main():
-    """Main entry point for the CLI."""
+    # If no command is provided, default to switch
+    if args.command is None:
+        from gitspaces.modules import cmd_switch
+        args.func = cmd_switch.switch_command
+    
+    # Execute the command
     try:
-        cli(obj={})
+        if hasattr(args, 'func'):
+            args.func(args)
+        else:
+            parser.print_help()
+    except KeyboardInterrupt:
+        Console.println("\nAborted by user")
+        sys.exit(1)
     except Exception as e:
         if str(e) != "user aborted":
-            click.echo(f"Error: {e}", err=True)
+            Console.println(f"Error: {e}")
             sys.exit(1)
 
 
