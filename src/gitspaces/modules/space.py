@@ -7,6 +7,7 @@ from typing import Optional
 from git import Repo
 from gitspaces.modules.errors import SpaceError
 from gitspaces.modules.path import ensure_dir
+from gitspaces.modules import rungit
 
 
 class Space:
@@ -25,15 +26,14 @@ class Space:
         self._repo: Optional[Repo] = None
     
     @property
-    def repo(self) -> Repo:
+    def repo(self) -> Optional[Repo]:
         """Get the git repository for this space.
         
         Returns:
-            The GitPython Repo instance.
+            The GitPython Repo instance or None.
         """
         if self._repo is None:
-            if self.path.exists():
-                self._repo = Repo(self.path)
+            self._repo = rungit.get_repo(str(self.path))
         return self._repo
     
     @classmethod
@@ -51,12 +51,7 @@ class Space:
         if Path(path).exists():
             raise SpaceError(f"Space directory already exists: {path}")
         
-        # Clone the repository
-        try:
-            Repo.clone_from(url, path)
-        except Exception as e:
-            raise SpaceError(f"Failed to clone repository: {e}")
-        
+        rungit.clone(url, path)
         space = cls(project, path)
         return space
     
@@ -94,9 +89,10 @@ class Space:
             new_path = self.project.path / new_name
         else:
             # Use the default branch name or 'main'
-            try:
-                branch_name = self.repo.active_branch.name
-            except:
+            repo = self.repo
+            if repo:
+                branch_name = rungit.get_active_branch(repo)
+            else:
                 branch_name = "main"
             new_path = self.project.path / branch_name
         
@@ -152,12 +148,12 @@ class Space:
         """Get the current branch name.
         
         Returns:
-            The current branch name.
+            The current branch name or "detached".
         """
-        try:
-            return self.repo.active_branch.name
-        except:
-            return "detached"
+        repo = self.repo
+        if repo:
+            return rungit.get_active_branch(repo)
+        return "detached"
     
     def is_sleeping(self) -> bool:
         """Check if this space is sleeping.
