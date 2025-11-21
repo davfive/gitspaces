@@ -1,0 +1,60 @@
+name: "python-tests: WSL steps"
+description: "Reusable WSL-specific steps for tests: setup WSL, install Python, install deps, lint, test and conditional coverage upload."
+inputs:
+  python-version:
+    description: "Python version to install/run (e.g. 3.13)"
+    required: true
+  os:
+    description: "OS name from the matrix (e.g. ubuntu-latest) - used for conditional uploads"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Set up WSL
+      uses: Vampire/setup-wsl@v3
+      with:
+        distribution: Ubuntu-22.04
+        use-cache: false
+
+    - name: Set up Python (WSL)
+      shell: wsl-bash {0}
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y software-properties-common
+        sudo add-apt-repository -y ppa:deadsnakes/ppa
+        sudo apt-get update
+        if [ "${{ inputs.python-version }}" = "3.13" ] || [ "${{ inputs.python-version }}" = "3.12" ]; then
+          sudo apt-get install -y python${{ inputs.python-version }} python${{ inputs.python-version }}-venv python3-pip python3-setuptools || {
+            sudo apt-get install -y python${{ inputs.python-version }} python${{ inputs.python-version }}-venv python3-pip
+          }
+        else
+          sudo apt-get install -y python${{ inputs.python-version }} python${{ inputs.python-version }}-venv python${{ inputs.python-version }}-distutils python3-pip
+        fi
+        python${{ inputs.python-version }} --version
+
+    - name: Install dependencies (WSL)
+      shell: wsl-bash {0}
+      run: |
+        python${{ inputs.python-version }} -m ensurepip --default-pip 2>/dev/null || true
+        python${{ inputs.python-version }} -m pip install --upgrade pip setuptools wheel
+        python${{ inputs.python-version }} -m pip install -e .
+        python${{ inputs.python-version }} -m pip install -r requirements-dev.txt
+
+    - name: Lint (WSL)
+      shell: wsl-bash {0}
+      run: |
+        python${{ inputs.python-version }} -m flake8 src/gitspaces --count --select=E9,F63,F7,F82 --show-source --statistics
+        python${{ inputs.python-version }} -m flake8 src/gitspaces --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Run tests (WSL)
+      shell: wsl-bash {0}
+      run: |
+        python${{ inputs.python-version }} -m pytest tests/ -v --cov=src/gitspaces --cov-report=xml --cov-report=term
+
+    - name: Upload coverage to Codecov (WSL)
+      if: ${{ inputs.os == 'ubuntu-latest' && inputs.python-version == '3.11' }}
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
