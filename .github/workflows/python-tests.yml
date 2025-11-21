@@ -55,66 +55,64 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Temporarily disabled to debug WSL tests - will re-enable after fixing
-        # os: [ubuntu-latest, macos-latest]
-        # python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
-        # shell: [default]
-        os: []
-        python-version: []
-        shell: []
+        os: [ubuntu-latest, macos-latest]
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
+        shell: [default]
         include:
-          # Test Windows WSL bash ONLY for debugging
-          # - os: windows-latest
-          #   python-version: '3.8'
-          #   shell: pwsh
-          # - os: windows-latest
-          #   python-version: '3.8'
-          #   shell: cmd
+          # Windows PowerShell tests
+          - os: windows-latest
+            python-version: '3.8'
+            shell: pwsh
+          - os: windows-latest
+            python-version: '3.9'
+            shell: pwsh
+          - os: windows-latest
+            python-version: '3.10'
+            shell: pwsh
+          - os: windows-latest
+            python-version: '3.11'
+            shell: pwsh
+          - os: windows-latest
+            python-version: '3.12'
+            shell: pwsh
+          - os: windows-latest
+            python-version: '3.13'
+            shell: pwsh
+          # Windows cmd.exe tests
+          - os: windows-latest
+            python-version: '3.8'
+            shell: cmd
+          - os: windows-latest
+            python-version: '3.9'
+            shell: cmd
+          - os: windows-latest
+            python-version: '3.10'
+            shell: cmd
+          - os: windows-latest
+            python-version: '3.11'
+            shell: cmd
+          - os: windows-latest
+            python-version: '3.12'
+            shell: cmd
+          - os: windows-latest
+            python-version: '3.13'
+            shell: cmd
+          # Windows WSL bash tests
           - os: windows-latest
             python-version: '3.8'
             shell: wsl-bash
-          # - os: windows-latest
-          #   python-version: '3.9'
-          #   shell: pwsh
-          # - os: windows-latest
-          #   python-version: '3.9'
-          #   shell: cmd
           - os: windows-latest
             python-version: '3.9'
             shell: wsl-bash
-          # - os: windows-latest
-          #   python-version: '3.10'
-          #   shell: pwsh
-          # - os: windows-latest
-          #   python-version: '3.10'
-          #   shell: cmd
           - os: windows-latest
             python-version: '3.10'
             shell: wsl-bash
-          # - os: windows-latest
-          #   python-version: '3.11'
-          #   shell: pwsh
-          # - os: windows-latest
-          #   python-version: '3.11'
-          #   shell: cmd
           - os: windows-latest
             python-version: '3.11'
             shell: wsl-bash
-          # - os: windows-latest
-          #   python-version: '3.12'
-          #   shell: pwsh
-          # - os: windows-latest
-          #   python-version: '3.12'
-          #   shell: cmd
           - os: windows-latest
             python-version: '3.12'
             shell: wsl-bash
-          # - os: windows-latest
-          #   python-version: '3.13'
-          #   shell: pwsh
-          # - os: windows-latest
-          #   python-version: '3.13'
-          #   shell: cmd
           - os: windows-latest
             python-version: '3.13'
             shell: wsl-bash
