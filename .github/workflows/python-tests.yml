@@ -2,9 +2,9 @@ name: Python Tests
 
 on:
   workflow_dispatch:
-    branches: [ main, d5.**, copilot/** ]
+    branches: [ main, d5.**, copilot/**, ci/** ]
   push:
-    branches: [ main, d5.**, copilot/** ]
+    branches: [ main, d5.**, copilot/**, ci/** ]
   pull_request:
     branches: [ main ]
 permissions:
