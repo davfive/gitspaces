@@ -1,124 +1,98 @@
-<picture>
-   <source media="(prefers-color-scheme: dark)" srcset="./docs/files/gitspaces.dark.png">
-   <img width="150" alt="Light and Dark logos" src="./docs/files/gitspaces.light.png">
-</picture>
+# GitSpaces
 
-# gitspaces - A git development workspace manager
+[![PyPI version](https://badge.fury.io/py/gitspaces.svg)](https://badge.fury.io/py/gitspaces)
+[![Tests](https://github.com/davfive/gitspaces/actions/workflows/python-tests.yml/badge.svg)](https://github.com/davfive/gitspaces/actions/workflows/python-tests.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.8+](https://img.shields.io/pypi/pyversions/gitspaces.svg)](https://pypi.org/project/gitspaces/)
 
-> Coming in Spring 2024
+Manage multiple independent clones of a git repository. Similar to ClearCase Views but for Git.
 
-## What is GitSpaces
+Work on multiple features, branches, or experiments simultaneously without branch switching overhead. Each "space" is an independent clone of your repository.
 
-If you're familiar with ClearCase Views, think of GitSpaces as their counterpart for Git projects. If not, you're in for a treat.
+## Features
 
-GitSpaces manages multiple independent clones of a project for you so you can switch between them as you work on new features or bugs.
-
-Instead of using `git clone url/to/repo-abc` use `gitspaces create url/to/repo-abc.git` and you will get
-
-```
-~/.../projects
- └── repo-abc
-     ├── __GITSPACES_PROJECT__              
-     ├── space-1/
-     │   └── ... repo cloned here
-     ├── space-2-...
-     ├── space-N/
-     └── .zzz         # extra clone copies for different tasks
-         ├── zzz-0/
-         │   └── ... and cloned here
-         ├── zzz-1/
-         │   └── ... and here here
-         ├── zzz-...
-         └── zzz-N/
-```
-
-Where you will be able to work independently on features, bugs, etc
-
-### Commands
-
-The `gitspaces` command 
-
-#### USAGE
-`gitspaces COMMAND`  
-
-or simplify your life with `alias gs=gitspaces`.
-
-#### WHERE
-COMMAND  | Description
----------|------------------------
-`setup`  | Helps user setup config.yaml and 'cd' shell wrappers.
-`create` | Creates a new GitSpace project from a git repo url
-`switch` | Switch spaces. Default, same as `gitspaces` w/o a command.
-`rename` | Rename a current gitspace
-`sleep`  | Archive a gitspace and wakes up another one
-`code`   | Launches Visual Studio Code Workspace for the space
-
+- Multiple independent clones per repository
+- Fast switching between workspaces
+- Inactive spaces can be put to "sleep"
+- Add more clones on demand
+- Direct editor integration
 
 ## Installation
 
-gitspaces is implemented in Go, so
+```bash
+pip install gitspaces
+```
 
-1. [Install Go](https://go.dev/doc/install)
-   
-2. Install GitSpaces  
-   [![Go Reference](https://pkg.go.dev/badge/github.com/davfive/gitspaces/v2.svg)](https://pkg.go.dev/github.com/davfive/gitspaces/v2)
-   ```
-   $ go install github.com/davfive/gitspaces/v2@latest
-     -> installs to ~/go/bin/gitspaces
+Or from source:
+```bash
+git clone https://github.com/davfive/gitspaces.git
+cd gitspaces
+pip install -e .
+```
 
-   $ gitspaces setup
-     -> run once to install .gitspaces config directory and start user setup
-   ```
+## Quick Start
 
-## Initial Setup and Use
+Configure project paths and editor:
+```bash
+gitspaces setup
+```
 
-Run `gitspaces setup` to be walked through first-time configuration. 
+Clone a repository with multiple workspaces:
+```bash
+gitspaces clone https://github.com/user/repo.git -n 3
+```
 
-If you run any `gitspaces <cmd>` and your environment isn't setup properly, `gitspaces setup` setup will automatically run.
+Creates:
+```
+projects/repo/
+├── __GITSPACES_PROJECT__
+├── main/          # active workspace
+└── .zzz/          # sleeping workspaces
+    ├── zzz-0/
+    ├── zzz-1/
+    └── zzz-2/
+```
 
-GitSpaces configuration directory is created on first run.
+Basic operations:
+```bash
+gitspaces switch              # switch workspace
+gitspaces sleep               # sleep active, wake another
+gitspaces rename old new      # rename workspace
+gitspaces extend -n 2         # add 2 more clones
+gitspaces code                # open in editor
+```
 
-### Step 1 - Configure where you keep your git projects
+## Commands
 
-GitSpaces config.yaml file contains a ProjectPaths field.
-This field defines a list of paths to your project directories.
+```bash
+gitspaces setup                           # configure project paths, editor
+gitspaces clone <url> [-n N] [-d DIR]     # clone repo with N workspaces
+gitspaces switch [SPACE]                  # switch workspace (interactive if no arg)
+gitspaces sleep [SPACE]                   # sleep workspace, optionally wake another
+gitspaces rename OLD NEW                  # rename workspace
+gitspaces extend -n N [SOURCE]            # add N more clones
+gitspaces code [SPACE]                    # open workspace in editor
+gitspaces config [KEY] [VALUE]            # view/set configuration
+```
 
-Instructions for setting up ProjectPaths field is in the config file.
+## Configuration
 
-**Windows:**
+Default location: `~/.gitspaces/config.yaml`
 
-    %USERPROFILE%/.gitspaces/config.yaml
+```yaml
+project_paths:
+  - /home/user/projects
+default_editor: code
+```
 
-**Mac/Linux**
+## Contributing
 
-    `MacOS:   ~/.gitspaces/config.yaml`
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-### Step 2 - Configure the gitspaces shell wrapper
+## Deployment
 
-Some gitspaces commands change the current working directory of the user. To accomplish this, gitspaces is run through a shell (bash / powershell) wrapper. Once you've setup your shell wrapper, restart your terminal and start using GitSpaces.
+Maintainers: see [README.DEPLOYMENT.md](README.DEPLOYMENT.md) for PyPI deployment.
 
-**Bash/Zsh (Mac/Linux/Windows)**
+## License
 
-Copy the following lines into your .bashrc or .zshrc file.
-
-    . ~/.gitspaces/gitspaces.function.sh
-    alias gs=gitspaces  # optional
-
-**PowerShell (Mac/Windows)**
-
-Copy the following lines into your PowerShell $PROFILE
-
-For more information, see [PowerShell > About Profiles](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_profiles)
-
-Copy the following to your $PROFILE
-
-    . $HOME/.gitspaces/gitspaces.scriptblock.ps1
-    Set-Alias -Name gs -Value gitspaces           # optional
-
-### Step 3 - Create your first GitSpaces project
-
-Open a terminal and run
-
-   gitspaces create https://github.com/davfive/gitspaces -n 3
-
-This will create a new GitSpaces project with three clones of this gitspaces project. By default all spaces are "asleep". You will be asked to wake one up and give it a name.
+MIT - see [LICENSE](LICENSE).
