@@ -54,32 +54,51 @@ jobs:
       contents: read
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
-        exclude:
-          # Exclude default Windows tests - we'll add specific shell tests below
+        shell: [default]
+        include:
+          # Test Windows with both PowerShell and cmd.exe for all Python versions
           - os: windows-latest
             python-version: '3.8'
+            shell: pwsh
+          - os: windows-latest
+            python-version: '3.8'
+            shell: cmd
           - os: windows-latest
             python-version: '3.9'
+            shell: pwsh
+          - os: windows-latest
+            python-version: '3.9'
+            shell: cmd
           - os: windows-latest
             python-version: '3.10'
+            shell: pwsh
+          - os: windows-latest
+            python-version: '3.10'
+            shell: cmd
           - os: windows-latest
             python-version: '3.11'
+            shell: pwsh
           - os: windows-latest
-            python-version: '3.13'
-        include:
-          # Test Windows with both PowerShell and cmd.exe for Python 3.12
+            python-version: '3.11'
+            shell: cmd
           - os: windows-latest
             python-version: '3.12'
             shell: pwsh
           - os: windows-latest
             python-version: '3.12'
             shell: cmd
+          - os: windows-latest
+            python-version: '3.13'
+            shell: pwsh
+          - os: windows-latest
+            python-version: '3.13'
+            shell: cmd
     
     defaults:
       run:
-        shell: ${{ matrix.shell || (matrix.os == 'windows-latest' && 'pwsh' || 'bash') }}
+        shell: ${{ matrix.shell == 'cmd' && 'cmd' || matrix.shell == 'pwsh' && 'pwsh' || 'bash' }}
     
     steps:
     - uses: actions/checkout@v4
