@@ -9,7 +9,7 @@ from gitspaces.modules.space import Space
 
 def extend_command(args):
     """Add more clone spaces to the current project.
-    
+
     Args:
         args: Parsed command-line arguments containing:
             - num_spaces: Number of additional spaces to create
@@ -18,23 +18,23 @@ def extend_command(args):
     # Find the current project
     cwd = Path.cwd()
     project = Project.find_project(str(cwd))
-    
+
     if not project:
         Console.println("✗ Not in a GitSpaces project directory")
         return
-    
-    num_spaces = args.num_spaces if hasattr(args, 'num_spaces') and args.num_spaces else 1
-    
+
+    num_spaces = args.num_spaces if hasattr(args, "num_spaces") and args.num_spaces else 1
+
     # Determine which space to clone from
     spaces = project.list_spaces()
-    active_spaces = [s for s in spaces if not s.startswith('.zzz/')]
-    
+    active_spaces = [s for s in spaces if not s.startswith(".zzz/")]
+
     if not active_spaces:
         Console.println("✗ No active spaces available to clone from")
         return
-    
+
     # If space name provided, use it
-    if hasattr(args, 'space') and args.space:
+    if hasattr(args, "space") and args.space:
         source_space_name = args.space
         if source_space_name not in active_spaces:
             Console.println(f"✗ Space '{source_space_name}' not found or is sleeping")
@@ -48,7 +48,7 @@ def extend_command(args):
             if cwd == space_path or cwd.is_relative_to(space_path):
                 current_space = space_name
                 break
-        
+
         if current_space:
             source_space_name = current_space
             Console.println(f"Using current space '{source_space_name}' as source")
@@ -56,14 +56,14 @@ def extend_command(args):
             # Use the first active space
             source_space_name = active_spaces[0]
             Console.println(f"Using space '{source_space_name}' as source")
-    
+
     # Create the source space object
     source_space_path = project.path / source_space_name
     source_space = Space(project, str(source_space_path))
-    
+
     # Create the additional clones
     Console.println(f"Creating {num_spaces} additional clone(s) from '{source_space_name}'...")
-    
+
     created_count = 0
     for i in range(num_spaces):
         try:
@@ -73,7 +73,7 @@ def extend_command(args):
         except Exception as e:
             Console.println(f"  ✗ Error creating clone {i + 1}: {e}")
             break
-    
+
     if created_count > 0:
         Console.println(f"\n✓ Successfully created {created_count} additional clone(s)")
         Console.println(f"Total spaces in project: {len(project.list_spaces())}")

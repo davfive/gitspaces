@@ -9,7 +9,7 @@ from gitspaces.modules.project import Project
 
 def clone_command(args):
     """Clone a git repository as a GitSpaces project.
-    
+
     Args:
         args: Parsed command-line arguments containing:
             - url: Git repository URL
@@ -20,7 +20,7 @@ def clone_command(args):
     url = args.url
     num_spaces = args.num_spaces
     directory = args.directory
-    
+
     # Determine the target directory
     if directory:
         target_dir = Path(directory).expanduser().resolve()
@@ -30,11 +30,11 @@ def clone_command(args):
     else:
         # Default to current directory
         target_dir = Path.cwd()
-    
+
     Console.println(f"Creating GitSpaces project from {url}")
     Console.println(f"Location: {target_dir}")
     Console.println(f"Number of spaces: {num_spaces}")
-    
+
     try:
         project = Project.create_project(str(target_dir), url, num_spaces)
         Console.println(f"\n✓ Successfully created project: {project.name}")
