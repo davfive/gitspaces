@@ -55,62 +55,66 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
-        shell: [default]
+        # Temporarily disabled to debug WSL tests - will re-enable after fixing
+        # os: [ubuntu-latest, macos-latest]
+        # python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
+        # shell: [default]
+        os: []
+        python-version: []
+        shell: []
         include:
-          # Test Windows with PowerShell, cmd.exe, and WSL bash for all Python versions
+          # Test Windows WSL bash ONLY for debugging
+          # - os: windows-latest
+          #   python-version: '3.8'
+          #   shell: pwsh
+          # - os: windows-latest
+          #   python-version: '3.8'
+          #   shell: cmd
           - os: windows-latest
             python-version: '3.8'
-            shell: pwsh
-          - os: windows-latest
-            python-version: '3.8'
-            shell: cmd
-          - os: windows-latest
-            python-version: '3.8'
             shell: wsl-bash
-          - os: windows-latest
-            python-version: '3.9'
-            shell: pwsh
-          - os: windows-latest
-            python-version: '3.9'
-            shell: cmd
+          # - os: windows-latest
+          #   python-version: '3.9'
+          #   shell: pwsh
+          # - os: windows-latest
+          #   python-version: '3.9'
+          #   shell: cmd
           - os: windows-latest
             python-version: '3.9'
             shell: wsl-bash
-          - os: windows-latest
-            python-version: '3.10'
-            shell: pwsh
-          - os: windows-latest
-            python-version: '3.10'
-            shell: cmd
+          # - os: windows-latest
+          #   python-version: '3.10'
+          #   shell: pwsh
+          # - os: windows-latest
+          #   python-version: '3.10'
+          #   shell: cmd
           - os: windows-latest
             python-version: '3.10'
             shell: wsl-bash
-          - os: windows-latest
-            python-version: '3.11'
-            shell: pwsh
-          - os: windows-latest
-            python-version: '3.11'
-            shell: cmd
+          # - os: windows-latest
+          #   python-version: '3.11'
+          #   shell: pwsh
+          # - os: windows-latest
+          #   python-version: '3.11'
+          #   shell: cmd
           - os: windows-latest
             python-version: '3.11'
             shell: wsl-bash
-          - os: windows-latest
-            python-version: '3.12'
-            shell: pwsh
-          - os: windows-latest
-            python-version: '3.12'
-            shell: cmd
+          # - os: windows-latest
+          #   python-version: '3.12'
+          #   shell: pwsh
+          # - os: windows-latest
+          #   python-version: '3.12'
+          #   shell: cmd
           - os: windows-latest
             python-version: '3.12'
             shell: wsl-bash
-          - os: windows-latest
-            python-version: '3.13'
-            shell: pwsh
-          - os: windows-latest
-            python-version: '3.13'
-            shell: cmd
+          # - os: windows-latest
+          #   python-version: '3.13'
+          #   shell: pwsh
+          # - os: windows-latest
+          #   python-version: '3.13'
+          #   shell: cmd
           - os: windows-latest
             python-version: '3.13'
             shell: wsl-bash
@@ -127,6 +131,7 @@ jobs:
       uses: Vampire/setup-wsl@v3
       with:
         distribution: Ubuntu-22.04
+        use-cache: false  # Disable cache to avoid corruption issues
     
     - name: Set up Python ${{ matrix.python-version }} (WSL)
       if: matrix.shell == 'wsl-bash'
