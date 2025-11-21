@@ -52,3 +52,40 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+# Append the following (example) at the end of your existing go.mod:
+
+// retractions appended on 2025-11-21
+retract v2.0.2  // deprecated: moved to Python/PyPI
+retract v2.0.3  // deprecated: moved to Python/PyPI
+retract v2.0.5  // deprecated: moved to Python/PyPI
+retract v2.0.6  // deprecated: moved to Python/PyPI
+retract v2.0.7  // deprecated: moved to Python/PyPI
+retract v2.0.9  // deprecated: moved to Python/PyPI
+retract v2.0.10 // deprecated: moved to Python/PyPI
+retract v2.0.11 // deprecated: moved to Python/PyPI
+retract v2.0.12 // deprecated: moved to Python/PyPI
+retract v2.0.13 // deprecated: moved to Python/PyPI
+retract v2.0.14 // deprecated: moved to Python/PyPI
+retract v2.0.15 // deprecated: moved to Python/PyPI
+retract v2.0.16 // deprecated: moved to Python/PyPI
+retract v2.0.17 // deprecated: moved to Python/PyPI
+retract v2.0.18 // deprecated: moved to Python/PyPI
+retract v2.0.19 // deprecated: moved to Python/PyPI
+retract v2.0.20 // deprecated: moved to Python/PyPI
+retract v2.0.21 // deprecated: moved to Python/PyPI
+retract v2.0.22 // deprecated: moved to Python/PyPI
+retract v2.0.23 // deprecated: moved to Python/PyPI
+retract v2.0.24 // deprecated: moved to Python/PyPI
+retract v2.0.25 // deprecated: moved to Python/PyPI
+retract v2.0.26 // deprecated: moved to Python/PyPI
+retract v2.0.27 // deprecated: moved to Python/PyPI
+retract v2.0.28 // deprecated: moved to Python/PyPI
+retract v2.0.29 // deprecated: moved to Python/PyPI
+retract v2.0.30 // deprecated: moved to Python/PyPI
+retract v2.0.31 // deprecated: moved to Python/PyPI
+retract v2.0.32 // deprecated: moved to Python/PyPI
+retract v2.0.33 // deprecated: moved to Python/PyPI
+retract v2.0.34 // deprecated: moved to Python/PyPI
+retract v2.0.35 // deprecated: moved to Python/PyPI
+retract v2.0.36 // deprecated: moved to Python/PyPI
