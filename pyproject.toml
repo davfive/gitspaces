@@ -70,6 +70,22 @@ addopts = "-v --cov=src/gitspaces --cov-report=term-missing --cov-report=html"
 line-length = 100
 target-version = ['py39']
 include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+  | htmlcov
+)/
+'''
 
 [tool.mypy]
 python_version = "3.9"
