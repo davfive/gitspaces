@@ -45,5 +45,5 @@ jobs:
 
       - name: Check dependencies for vulnerabilities
         run: |
-          safety check --json || true
-          safety check || echo "Safety check failed or requires authentication"
+          safety scan --json || true
+          safety scan || echo "Safety scan failed or requires authentication"
