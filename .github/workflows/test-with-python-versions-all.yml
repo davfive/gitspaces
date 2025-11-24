@@ -1,4 +1,4 @@
-name: Python Tests (All Versions)
+name: Run Tests (All Supported Versions)
 
 on:
   workflow_dispatch:

@@ -1,4 +1,4 @@
-name: Python Tests (Latest Only - Quick Check)
+name: Run Tests (Latest Supported Version)
 
 on:
   workflow_dispatch:

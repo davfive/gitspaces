@@ -1,4 +1,5 @@
-# Reusable Security Scan workflow
+name: Run Security Scans
+
 on:
   workflow_call:
     inputs:
