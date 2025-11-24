@@ -83,7 +83,7 @@ class Project:
         ensure_dir(self.zzz_dir)
         self.dotfile.touch()
 
-    def _get_empty_sleeper_path(self) -> str:
+    def _get_empty_sleeper_path(self) -> Path:
         """Get the path for a new sleeper space.
 
         Returns:
@@ -94,7 +94,7 @@ class Project:
         while True:
             sleeper_path = self.zzz_dir / f"zzz-{i}"
             if not sleeper_path.exists():
-                return str(sleeper_path)
+                return sleeper_path
             i += 1
 
     def list_spaces(self) -> List[str]:

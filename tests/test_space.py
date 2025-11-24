@@ -48,7 +48,7 @@ def test_create_space_from_url(mock_runshell):
         )
 
     mock_runshell.git.clone.assert_called_once_with(
-        "https://github.com/test/repo.git", "/test/project/main"
+        "https://github.com/test/repo.git", Path("/test/project/main")
     )
     assert space.name == "main"
 
@@ -69,13 +69,13 @@ def test_create_space_from_url_exists(mock_runshell):
 def test_space_duplicate(mock_runshell):
     """Test duplicating a space."""
     mock_project = Mock()
-    mock_project._get_empty_sleeper_path.return_value = "/test/project/.zzz/sleep1"
+    mock_project._get_empty_sleeper_path.return_value = Path("/test/project/.zzz/sleep1")
 
     space = Space(mock_project, "/test/project/main")
     new_space = space.duplicate()
 
     mock_runshell.fs.copy_tree.assert_called_once_with(
-        str(Path("/test/project/main")), "/test/project/.zzz/sleep1", symlinks=True
+        Path("/test/project/main"), Path("/test/project/.zzz/sleep1"), symlinks=True
     )
     assert new_space.name == "sleep1"
 
@@ -84,7 +84,7 @@ def test_space_duplicate(mock_runshell):
 def test_space_duplicate_error(mock_runshell):
     """Test duplicate error handling."""
     mock_project = Mock()
-    mock_project._get_empty_sleeper_path.return_value = "/test/project/.zzz/sleep1"
+    mock_project._get_empty_sleeper_path.return_value = Path("/test/project/.zzz/sleep1")
     mock_runshell.fs.copy_tree.side_effect = Exception("Copy failed")
 
     space = Space(mock_project, "/test/project/main")
@@ -159,13 +159,13 @@ def test_space_sleep(mock_runshell):
     """Test putting space to sleep."""
     mock_project = Mock()
     mock_project.zzz_dir = Path("/test/project/.zzz")
-    mock_project._get_empty_sleeper_path.return_value = "/test/project/.zzz/sleep1"
+    mock_project._get_empty_sleeper_path.return_value = Path("/test/project/.zzz/sleep1")
 
     space = Space(mock_project, "/test/project/main")
     sleeping_space = space.sleep()
 
     mock_runshell.fs.move.assert_called_once_with(
-        str(Path("/test/project/main")), "/test/project/.zzz/sleep1"
+        Path("/test/project/main"), Path("/test/project/.zzz/sleep1")
     )
 
 
@@ -186,6 +186,7 @@ def test_space_rename(mock_runshell):
     """Test renaming a space."""
     mock_project = Mock()
     mock_project.path = Path("/test/project")
+    mock_project.zzz_dir = Path("/test/project/.zzz")
 
     space = Space(mock_project, "/test/project/main")
 
@@ -216,6 +217,7 @@ def test_space_rename_exists(mock_runshell):
     """Test renaming to existing name."""
     mock_project = Mock()
     mock_project.path = Path("/test/project")
+    mock_project.zzz_dir = Path("/test/project/.zzz")
 
     space = Space(mock_project, "/test/project/main")
 
