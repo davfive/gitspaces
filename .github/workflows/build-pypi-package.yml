@@ -15,9 +15,7 @@ on:
         description: "Python version to use for building (e.g. '3.13'). Callers should pass ci-variables.python_version_latest."
         required: false
         type: string
-    secrets:
-      GITHUB_TOKEN:
-        required: false
+    secrets: inherit
 
 jobs:
   build:

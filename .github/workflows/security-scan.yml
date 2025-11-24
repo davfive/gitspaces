@@ -5,10 +5,8 @@ on:
     branches: [ main, d5.**, copilot/**, ci/** ]
 
   workflow_call:
-    secrets:
-      GITHUB_TOKEN:
-        required: false
-
+    secrets: inherit
+  
 jobs:
   vars:
     uses: ./.github/workflows/ci-variables.yml
