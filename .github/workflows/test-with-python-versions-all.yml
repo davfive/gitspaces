@@ -3,8 +3,6 @@ name: "02 - Run Tests (All Supported Versions)"
 on:
   workflow_dispatch: {}
   workflow_call: {}
-  push:
-    branches: [ copilot/**, ci/** ]
   pull_request:
     branches: [ main ]
 

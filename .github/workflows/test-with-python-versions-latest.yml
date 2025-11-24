@@ -4,7 +4,7 @@ on:
   workflow_dispatch: {}
   workflow_call: {}
   push:
-    branches: [ main, d5.** ]
+    branches: [ main, d5.**, copilot/**, ci/** ]
 
 permissions:
   contents: read
