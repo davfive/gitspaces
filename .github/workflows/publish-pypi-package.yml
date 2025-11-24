@@ -21,8 +21,8 @@ jobs:
           # Strip refs/tags/v prefix => version, and full tag
           VERSION=${GITHUB_REF#refs/tags/v}
           TAG=${GITHUB_REF#refs/tags/}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
   vars:
     uses: ./.github/workflows/ci-variables.yml

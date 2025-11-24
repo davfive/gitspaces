@@ -27,5 +27,5 @@ jobs:
     needs: vars
     uses: ./.github/workflows/test-with-python-versions-reusable.yml
     with:
-      python_versions: ${{ fromJson(needs.vars.outputs.python_versions_all) }}
+      python_versions: ${{ needs.vars.outputs.python_versions_all }}
     secrets: inherit

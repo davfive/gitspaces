@@ -29,9 +29,9 @@ jobs:
         id: set_tag
         run: |
           if [ -n "${{ inputs.tag }}" ]; then
-            echo "BUILD_TAG=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+            echo "BUILD_TAG=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
           else
-            echo "BUILD_TAG=${{ inputs.version }}" >> $GITHUB_OUTPUT
+            echo "BUILD_TAG=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Set up Python (build environment)
