@@ -31,7 +31,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ needs.vars.outputs.python_version_latest != '' && needs.vars.outputs.python_version_latest || '3.x' }}
+          python-version: ${{ needs.vars.outputs.python_version_latest }}
 
       - name: Install scanning tools
         run: |

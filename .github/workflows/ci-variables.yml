@@ -3,26 +3,35 @@ name: "99 - Setup CI Variables"
 on:
   workflow_call: {}
 
+env:
+  # Define canonical latest python version here for use across workflows
+  PYTHON_VERSION_LATEST: "3.13"
+  PYTHON_VERSIONS_ALL: '["3.13","3.12","3.11","3.10","3.9"]'
+  PYTHON_VERSIONS_LATEST: '["3.13"]'
+
+outputs:
+  python_version_latest:
+    description: "Canonical latest python minor used across workflows"
+    value: ${{ jobs.vars.outputs.python_version_latest }}
+  python_versions_all:
+    description: "Canonical list of supported python versions"
+    value: ${{ jobs.vars.outputs.python_versions_all }}
+  python_versions_latest:
+    description: "Single-element JSON array for latest"
+    value: ${{ jobs.vars.outputs.python_versions_latest }}
+
 jobs:
   vars:
     runs-on: ubuntu-latest
     outputs:
-      python_version_latest: ${{ steps.set-vars.outputs.python_version_latest }}
-      python_versions_all: ${{ steps.set-vars.outputs.python_versions_all }}
-      python_versions_latest: ${{ steps.set-vars.outputs.python_versions_latest }}
+      python_version_latest: ${{ steps.set.outputs.python_version_latest }}
+      python_versions_all: ${{ steps.set.outputs.python_versions_all }}
+      python_versions_latest: ${{ steps.set.outputs.python_versions_latest }}
+
     steps:
-      - name: Set CI variables
-        id: set-vars
+      - id: set
         run: |
-          # Define Python versions as arrays for maintainability
-          # Convert to JSON string for output (required for workflow_call inputs)
-
-          echo "python_version_latest=3.13" >> "$GITHUB_OUTPUT"
-
-          # All supported Python versions
-          python_versions_all='["3.13", "3.12", "3.11", "3.10", "3.9"]'
-          echo "python_versions_all=$python_versions_all" >> "$GITHUB_OUTPUT"
-
-          # Latest version only
-          python_versions_latest='["3.13"]'
-          echo "python_versions_latest=$python_versions_latest" >> "$GITHUB_OUTPUT"
+          # write values to the step outputs (GITHUB_OUTPUT) so they can be mapped to job/workflow outputs
+          echo "python_version_latest=$PYTHON_VERSION_LATEST" >> $GITHUB_OUTPUT
+          echo "python_versions_all=$PYTHON_VERSIONS_ALL" >> $GITHUB_OUTPUT
+          echo "python_versions_latest=$PYTHON_VERSIONS_LATEST" >> $GITHUB_OUTPUT
