@@ -95,10 +95,11 @@ def gitspaces_project(temp_home, gitspaces_config, temp_git_repo):
     main_space.mkdir(exist_ok=True)
 
     # Initialize as git repo
-    repo = Repo.init(main_space)
+    repo = Repo.init(str(main_space))
     readme = main_space / "README.md"
     readme.write_text("# Test Project\n")
-    repo.index.add([str(readme)])
+    # Use relative path for git operations to avoid path issues on Windows
+    repo.index.add(["README.md"])
     repo.index.commit("Initial commit")
 
     # Create feature space
