@@ -40,8 +40,16 @@ def temp_git_repo(temp_home):
     readme = repo_path / "README.md"
     readme.write_text("# Test Repository\n")
     # Use relative path for git operations to avoid symlink issues
-    repo.index.add(["README.md"])
-    repo.index.commit("Initial commit")
+    # Change to repo directory to ensure relative paths work correctly
+    original_dir = os.getcwd()
+    try:
+        os.chdir(str(repo_path))
+        repo.index.add(["README.md"])
+        repo.index.commit("Initial commit")
+    finally:
+        os.chdir(original_dir)
+        # Close repo to release file handles (important for Windows)
+        repo.close()
 
     return repo_path
 
@@ -99,8 +107,16 @@ def gitspaces_project(temp_home, gitspaces_config, temp_git_repo):
     readme = main_space / "README.md"
     readme.write_text("# Test Project\n")
     # Use relative path for git operations to avoid path issues on Windows
-    repo.index.add(["README.md"])
-    repo.index.commit("Initial commit")
+    # Change to repo directory to ensure relative paths work correctly
+    original_dir = os.getcwd()
+    try:
+        os.chdir(str(main_space))
+        repo.index.add(["README.md"])
+        repo.index.commit("Initial commit")
+    finally:
+        os.chdir(original_dir)
+        # Close repo to release file handles (important for Windows)
+        repo.close()
 
     # Create feature space
     feature_space = project_path / "feature"
@@ -115,6 +131,16 @@ def gitspaces_project(temp_home, gitspaces_config, temp_git_repo):
         "feature_space": feature_space,
         "zzz_dir": zzz_dir,
     }
+    
+    # Cleanup: Close any git repos to release file handles on Windows
+    for space_dir in [main_space, feature_space]:
+        git_dir = space_dir / ".git"
+        if git_dir.exists():
+            try:
+                space_repo = Repo(str(space_dir))
+                space_repo.close()
+            except Exception:
+                pass  # Ignore errors during cleanup
 
 
 @pytest.fixture
