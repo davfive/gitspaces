@@ -10,7 +10,7 @@ on:
 
 jobs:
   test:
-    name: Test • Python ${{ matrix.python-version }} • ${{ matrix.platform.os }} (shell: ${{ matrix.platform.shell }})
+    name: "Test • Python ${{ matrix.python-version }} • ${{ matrix.platform.os }} (shell: ${{ matrix.platform.shell }})"
     runs-on: ${{ matrix.platform.os }}
     permissions:
       contents: read
