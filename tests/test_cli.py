@@ -156,9 +156,7 @@ def test_main_environment_check_fails(mock_checks, mock_init, monkeypatch):
 @patch("gitspaces.cli.init_config")
 @patch("gitspaces.cli.run_user_environment_checks")
 @patch("gitspaces.modules.cmd_switch.switch_command")
-def test_main_no_command_defaults_to_switch(
-    mock_switch, mock_checks, mock_init, monkeypatch
-):
+def test_main_no_command_defaults_to_switch(mock_switch, mock_checks, mock_init, monkeypatch):
     """Test main defaults to switch when no command provided."""
     mock_checks.return_value = True
     monkeypatch.setattr(sys, "argv", ["gitspaces"])

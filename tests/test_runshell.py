@@ -38,9 +38,9 @@ def test_git_get_repo_exists():
         with patch("gitspaces.modules.runshell.Path.exists", return_value=True):
             mock_repo_instance = Mock()
             mock_repo.return_value = mock_repo_instance
-            
+
             result = runshell.git.get_repo("/test/path")
-            
+
             assert result == mock_repo_instance
 
 
@@ -64,7 +64,7 @@ def test_git_get_active_branch():
     """Test get active branch."""
     mock_repo = Mock()
     mock_repo.active_branch.name = "main"
-    
+
     result = runshell.git.get_active_branch(mock_repo)
     assert result == "main"
 
@@ -72,8 +72,10 @@ def test_git_get_active_branch():
 def test_git_get_active_branch_detached():
     """Test get active branch when detached."""
     mock_repo = Mock()
-    type(mock_repo).active_branch = property(lambda self: (_ for _ in ()).throw(Exception("Detached HEAD")))
-    
+    type(mock_repo).active_branch = property(
+        lambda self: (_ for _ in ()).throw(Exception("Detached HEAD"))
+    )
+
     result = runshell.git.get_active_branch(mock_repo)
     assert result == "detached"
 
