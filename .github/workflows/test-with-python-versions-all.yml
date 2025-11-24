@@ -1,8 +1,7 @@
 name: "02 - Run Tests (All Supported Versions)"
 
 on:
-  workflow_dispatch:
-    branches: [ main, d5.**, copilot/**, ci/** ]
+  workflow_dispatch: {}
   push:
     branches: [ main, d5.**, copilot/**, ci/** ]
   pull_request:

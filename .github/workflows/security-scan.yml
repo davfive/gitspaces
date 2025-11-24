@@ -1,8 +1,7 @@
 name: "00 - Run Security Scans"
 
 on:
-  workflow_dispatch:
-    branches: [ main, d5.**, copilot/**, ci/** ]
+  workflow_dispatch: {}
   workflow_call: {}
   
 jobs:
