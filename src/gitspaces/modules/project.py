@@ -90,13 +90,13 @@ class Project:
         Returns:
             The path for the new sleeper space.
         """
+        from itertools import count
+
         # Find the next available zzz-N directory
-        i = 0
-        while True:
+        for i in count():
             sleeper_path = self.zzz_dir / f"zzz-{i}"
             if not sleeper_path.exists():
                 return sleeper_path
-            i += 1
 
     def list_spaces(self) -> list[str]:
         """List all spaces in the project.
@@ -104,22 +104,20 @@ class Project:
         Returns:
             List of space directory names.
         """
-        spaces = []
-
         # List active spaces (top-level directories, excluding special ones)
-        for item in self.path.iterdir():
-            if (
-                item.is_dir()
-                and item.name not in [self.ZZZ_DIR, ".vscode", self.DOTFILE]
-                and not item.name.startswith(".")
-            ):
-                spaces.append(item.name)
+        spaces = [
+            item.name
+            for item in self.path.iterdir()
+            if item.is_dir()
+            and item.name not in {self.ZZZ_DIR, ".vscode", self.DOTFILE}
+            and not item.name.startswith(".")
+        ]
 
         # List sleeping spaces
         if self.zzz_dir.exists():
-            for item in self.zzz_dir.iterdir():
-                if item.is_dir():
-                    spaces.append(f"{self.ZZZ_DIR}/{item.name}")
+            spaces.extend(
+                f"{self.ZZZ_DIR}/{item.name}" for item in self.zzz_dir.iterdir() if item.is_dir()
+            )
 
         return sorted(spaces)
 
