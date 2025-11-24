@@ -28,19 +28,15 @@ jobs:
         # compact platform axis: each entry is an {os, shell} pair
         platform:
           - os: ubuntu-latest
-            shell: default
+            shell: bash
           - os: macos-latest
-            shell: default
+            shell: bash
           - os: windows-latest
             shell: pwsh
           - os: windows-latest
             shell: cmd
           - os: windows-latest
             shell: wsl-bash
-
-    defaults:
-      run:
-        shell: ${{ matrix.platform.shell == 'cmd' && 'cmd' || matrix.platform.shell == 'pwsh' && 'pwsh' || matrix.platform.shell == 'wsl-bash' && 'wsl-bash {0}' || 'bash' }}
 
     steps:
       - name: Checkout
