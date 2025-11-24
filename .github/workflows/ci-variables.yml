@@ -3,6 +3,15 @@ name: "99 - Setup CI Variables"
 on:
   workflow_call: {}
 
+# expose workflow-level outputs so callers using 'uses' can read them as needs.vars.outputs.*
+outputs:
+  python_version_latest:
+    description: "Canonical latest python minor used across workflows"
+    value: ${{ jobs.vars.outputs.python_version_latest }}
+  python_versions_all:
+    description: "Canonical list of supported python versions"
+    value: ${{ jobs.vars.outputs.python_versions_all }}
+
 jobs:
   vars:
     runs-on: ubuntu-latest
