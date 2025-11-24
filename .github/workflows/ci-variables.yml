@@ -8,8 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       python_version_latest: "3.13"
-      python_versions_all: ["3.13","3.12","3.11","3.10","3.9"]
-      python_versions_latest: ["3.13"]
+      python_versions_all: '["3.13","3.12","3.11","3.10","3.9"]'
+      python_versions_latest: '["3.13"]'
     steps:
       - name: CI variables set
         run: echo "ci variables exposed as job outputs"
