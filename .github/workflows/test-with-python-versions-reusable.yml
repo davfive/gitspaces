@@ -7,7 +7,6 @@ on:
         description: "JSON array of python versions, e.g. ['3.13','3.12']"
         required: true
         type: string
-    secrets: inherit
 
 jobs:
   test:

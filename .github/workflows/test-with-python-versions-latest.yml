@@ -3,6 +3,7 @@ name: "01 - Run Tests (Latest Supported Version)"
 on:
   workflow_dispatch:
     branches: [ main, d5.**, copilot/**, ci/** ]
+  workflow: {}
 permissions:
   contents: read
 
