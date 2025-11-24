@@ -16,7 +16,8 @@ from git import Repo
 def temp_home(monkeypatch):
     """Create a temporary home directory for testing."""
     with tempfile.TemporaryDirectory() as temp_dir:
-        temp_home_path = Path(temp_dir) / "home"
+        # Resolve to real path to handle symlinks (e.g., /var -> /private/var on macOS)
+        temp_home_path = Path(temp_dir).resolve() / "home"
         temp_home_path.mkdir()
 
         # Set HOME environment variable
@@ -29,16 +30,17 @@ def temp_home(monkeypatch):
 @pytest.fixture
 def temp_git_repo(temp_home):
     """Create a temporary git repository for testing."""
-    repo_path = temp_home / "test-repo"
+    repo_path = (temp_home / "test-repo").resolve()
     repo_path.mkdir()
 
-    # Initialize git repo
-    repo = Repo.init(repo_path)
+    # Initialize git repo with resolved path
+    repo = Repo.init(str(repo_path))
 
-    # Create initial commit
+    # Create initial commit using resolved path
     readme = repo_path / "README.md"
     readme.write_text("# Test Repository\n")
-    repo.index.add([str(readme)])
+    # Use relative path for git operations to avoid symlink issues
+    repo.index.add(["README.md"])
     repo.index.commit("Initial commit")
 
     return repo_path
