@@ -1,0 +1,29 @@
+name: Python Tests (Latest Only - Quick Check)
+
+on:
+  workflow_dispatch:
+    branches: [ main, d5.**, copilot/**, ci/** ]
+permissions:
+  contents: read
+
+jobs:
+  # load canonical variables
+  vars:
+    uses: ./.github/workflows/ci-variables.yml
+
+  # run security scan using canonical latest python
+  security-scan:
+    needs: vars
+    uses: ./.github/workflows/security-scan-reusable.yml
+    with:
+      python_version: ${{ needs.vars.outputs.python_version_latest }}
+    secrets: inherit
+
+  # call the reusable test matrix but only for the "latest" version
+  run-tests:
+    needs: vars
+    uses: ./.github/workflows/test-with-python-versions-reusable.yml
+    with:
+      # pass a JSON array string containing only the canonical latest version
+      python_versions: ${{ toJson([ needs.vars.outputs.python_version_latest ]) }}
+    secrets: inherit

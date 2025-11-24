@@ -1,0 +1,59 @@
+# Reusable workflow: called by wrapper workflows.
+on:
+  workflow_call:
+    inputs:
+      python_versions:
+        description: "JSON array of python versions, e.g. ['3.13','3.12']"
+        required: true
+        type: string
+    secrets:
+      GITHUB_TOKEN:
+        required: false
+
+jobs:
+  test:
+    name: Test • Python ${{ matrix.python-version }} • ${{ matrix.platform.os }} (shell: ${{ matrix.platform.shell }})
+    runs-on: ${{ matrix.platform.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        # python-version is supplied by caller as a JSON string and parsed here
+        python-version: ${{ fromJson(inputs.python_versions) }}
+        # compact platform axis: each entry is an {os, shell} pair
+        platform:
+          - os: ubuntu-latest
+            shell: default
+          - os: macos-latest
+            shell: default
+          - os: windows-latest
+            shell: pwsh
+          - os: windows-latest
+            shell: cmd
+          - os: windows-latest
+            shell: wsl-bash
+
+    defaults:
+      run:
+        shell: ${{ matrix.platform.shell == 'cmd' && 'cmd' || matrix.platform.shell == 'pwsh' && 'pwsh' || matrix.platform.shell == 'wsl-bash' && 'wsl-bash {0}' || 'bash' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # WSL path (keeps your WSL composite action)
+      - name: WSL steps (composite)
+        if: ${{ matrix.platform.shell == 'wsl-bash' }}
+        uses: ./.github/actions/python-tests/test-steps-wsl
+        with:
+          python-version: ${{ matrix.python-version }}
+          os: ${{ matrix.platform.os }}
+
+      # Non-WSL path (keeps your other composite)
+      - name: Non-WSL steps (composite)
+        if: ${{ matrix.platform.shell != 'wsl-bash' }}
+        uses: ./.github/actions/python-tests/test-steps
+        with:
+          python-version: ${{ matrix.python-version }}
+          os: ${{ matrix.platform.os }}
