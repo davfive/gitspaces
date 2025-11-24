@@ -2,6 +2,9 @@ name: "01 - Run Tests (Latest Supported Version)"
 
 on:
   workflow_dispatch: {}
+  workflow_call: {}
+  push:
+    branches: [ main, d5.** ]
 
 permissions:
   contents: read

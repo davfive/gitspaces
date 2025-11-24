@@ -2,11 +2,11 @@ name: "02 - Run Tests (All Supported Versions)"
 
 on:
   workflow_dispatch: {}
+  workflow_call: {}
   push:
-    branches: [ main, d5.**, copilot/**, ci/** ]
+    branches: [ copilot/**, ci/** ]
   pull_request:
     branches: [ main ]
-  workflow_call: {}
 
 permissions:
   contents: read
