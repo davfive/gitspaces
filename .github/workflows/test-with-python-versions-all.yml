@@ -18,6 +18,9 @@ jobs:
   security-scan:
     needs: vars
     uses: ./.github/workflows/security-scan.yml
+    permissions:
+      contents: read
+      security-events: write
     secrets: inherit
 
   run-tests:
