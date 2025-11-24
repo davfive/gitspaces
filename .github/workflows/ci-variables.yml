@@ -1,4 +1,4 @@
-name: 99 - Setup CI Variables
+name: "99 - Setup CI Variables"
 
 on:
   workflow_call: {}
