@@ -131,7 +131,7 @@ def gitspaces_project(temp_home, gitspaces_config, temp_git_repo):
         "feature_space": feature_space,
         "zzz_dir": zzz_dir,
     }
-    
+
     # Cleanup: Close any git repos to release file handles on Windows
     for space_dir in [main_space, feature_space]:
         git_dir = space_dir / ".git"
