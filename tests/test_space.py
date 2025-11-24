@@ -75,7 +75,7 @@ def test_space_duplicate(mock_runshell):
     new_space = space.duplicate()
 
     mock_runshell.fs.copy_tree.assert_called_once_with(
-        "/test/project/main", "/test/project/.zzz/sleep1", symlinks=True
+        str(Path("/test/project/main")), "/test/project/.zzz/sleep1", symlinks=True
     )
     assert new_space.name == "sleep1"
 
@@ -164,7 +164,9 @@ def test_space_sleep(mock_runshell):
     space = Space(mock_project, "/test/project/main")
     sleeping_space = space.sleep()
 
-    mock_runshell.fs.move.assert_called_once_with("/test/project/main", "/test/project/.zzz/sleep1")
+    mock_runshell.fs.move.assert_called_once_with(
+        str(Path("/test/project/main")), "/test/project/.zzz/sleep1"
+    )
 
 
 @patch("gitspaces.modules.space.runshell")
