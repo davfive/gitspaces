@@ -1,4 +1,4 @@
-name: Publish Python Package
+name: 10 - Publish Python Package
 
 on:
   push:

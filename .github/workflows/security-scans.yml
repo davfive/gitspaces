@@ -1,4 +1,4 @@
-name: Run Security Scans
+name: 00 - Run Security Scans
 
 on:
   workflow_call:

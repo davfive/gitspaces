@@ -1,4 +1,4 @@
-name: Run Tests (Latest Supported Version)
+name: 01 - Run Tests (Latest Supported Version)
 
 on:
   workflow_dispatch:
