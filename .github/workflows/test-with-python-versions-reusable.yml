@@ -16,7 +16,7 @@ on:
 
 jobs:
   test:
-    name: "${{ matrix.platform.os }}.${{ matrix.platform.shell }}.${{ matrix.python-version }}"
+    name: "test--${{ matrix.platform.os }}.${{ matrix.platform.shell }}.${{ matrix.python-version }}"
     runs-on: ${{ matrix.platform.os }}
     permissions:
       contents: read
