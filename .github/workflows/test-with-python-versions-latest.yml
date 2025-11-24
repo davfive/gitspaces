@@ -2,7 +2,7 @@ name: "01 - Run Tests (Latest Supported Version)"
 
 on:
   workflow_dispatch: {}
-  workflow_call: {}
+
 permissions:
   contents: read
 
@@ -19,5 +19,5 @@ jobs:
     needs: vars
     uses: ./.github/workflows/test-with-python-versions-reusable.yml
     with:
-      python_versions: [ ${{ needs.vars.outputs.python_version_latest }} ]
+      python_versions: ${{ toJson([ needs.vars.outputs.python_version_latest ]) }}
     secrets: inherit
