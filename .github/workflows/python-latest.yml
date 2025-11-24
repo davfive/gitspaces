@@ -1,12 +1,8 @@
-name: Python Latest Tests
+name: Python Tests (Latest Only - Quick Check)
 
 on:
   workflow_dispatch:
     branches: [ main, d5.**, copilot/**, ci/** ]
-  push:
-    branches: [ main, d5.**, copilot/**, ci/** ]
-  pull_request:
-    branches: [ main ]
 permissions:
   contents: read
 
