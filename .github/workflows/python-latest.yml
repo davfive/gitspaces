@@ -1,4 +1,4 @@
-name: Python Tests
+name: Python Latest Tests
 
 on:
   workflow_dispatch:
@@ -32,7 +32,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: '3.13'
     
     - name: Install dependencies
       run: |
@@ -56,55 +56,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
-        shell: [default]
         include:
-          # Windows PowerShell tests
-          - os: windows-latest
-            python-version: '3.9'
-            shell: pwsh
-          - os: windows-latest
-            python-version: '3.10'
-            shell: pwsh
-          - os: windows-latest
-            python-version: '3.11'
-            shell: pwsh
-          - os: windows-latest
-            python-version: '3.12'
-            shell: pwsh
+          # Ubuntu/Linux
+          - os: ubuntu-latest
+            python-version: '3.13'
+            shell: default
+          # macOS
+          - os: macos-latest
+            python-version: '3.13'
+            shell: default
+          # Windows PowerShell
           - os: windows-latest
             python-version: '3.13'
             shell: pwsh
-          # Windows cmd.exe tests
-          - os: windows-latest
-            python-version: '3.9'
-            shell: cmd
-          - os: windows-latest
-            python-version: '3.10'
-            shell: cmd
-          - os: windows-latest
-            python-version: '3.11'
-            shell: cmd
-          - os: windows-latest
-            python-version: '3.12'
-            shell: cmd
+          # Windows cmd.exe
           - os: windows-latest
             python-version: '3.13'
             shell: cmd
-          # Windows WSL bash tests
-          - os: windows-latest
-            python-version: '3.9'
-            shell: wsl-bash
-          - os: windows-latest
-            python-version: '3.10'
-            shell: wsl-bash
-          - os: windows-latest
-            python-version: '3.11'
-            shell: wsl-bash
-          - os: windows-latest
-            python-version: '3.12'
-            shell: wsl-bash
+          # Windows WSL bash
           - os: windows-latest
             python-version: '3.13'
             shell: wsl-bash
@@ -131,16 +100,11 @@ jobs:
         sudo apt-get install -y software-properties-common
         sudo add-apt-repository -y ppa:deadsnakes/ppa
         sudo apt-get update
-        # Install Python with proper dependencies
-        # Python 3.12+ doesn't need distutils as setuptools includes what's needed
-        if [ "${{ matrix.python-version }}" = "3.13" ] || [ "${{ matrix.python-version }}" = "3.12" ]; then
-          sudo apt-get install -y python${{ matrix.python-version }} python${{ matrix.python-version }}-venv || {
-            echo "Python ${{ matrix.python-version }} not available in deadsnakes"
-            exit 1
-          }
-        else
-          sudo apt-get install -y python${{ matrix.python-version }} python${{ matrix.python-version }}-venv python${{ matrix.python-version }}-distutils
-        fi
+        # Install Python 3.13 - no distutils needed
+        sudo apt-get install -y python${{ matrix.python-version }} python${{ matrix.python-version }}-venv || {
+          echo "Python ${{ matrix.python-version }} not available in deadsnakes"
+          exit 1
+        }
         python${{ matrix.python-version }} --version
     
     - name: Set up Python ${{ matrix.python-version }}
@@ -210,7 +174,7 @@ jobs:
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
       with:
         file: ./coverage.xml
         flags: unittests

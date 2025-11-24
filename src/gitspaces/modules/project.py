@@ -1,9 +1,10 @@
 """Project management for GitSpaces."""
 
+from __future__ import annotations
+
 import os
 import shutil
 from pathlib import Path
-from typing import Optional, List
 from git import Repo
 from gitspaces.modules.errors import ProjectError
 from gitspaces.modules.path import ensure_dir
@@ -97,7 +98,7 @@ class Project:
                 return sleeper_path
             i += 1
 
-    def list_spaces(self) -> List[str]:
+    def list_spaces(self) -> list[str]:
         """List all spaces in the project.
 
         Returns:
@@ -131,7 +132,7 @@ class Project:
         return self.path.exists() and self.dotfile.exists()
 
     @classmethod
-    def find_project(cls, path: str) -> Optional["Project"]:
+    def find_project(cls, path: str) -> Project | None:
         """Find a GitSpaces project by searching upward from the given path.
 
         Args:

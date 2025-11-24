@@ -4,10 +4,11 @@ This module encapsulates all external command execution (subprocess, git, and OS
 to isolate security scanner warnings and provide OS-agnostic operations.
 """
 
+from __future__ import annotations
+
 import os
 import shutil
 from pathlib import Path
-from typing import Optional, Union
 from git import Repo
 from gitspaces.modules.errors import GitSpacesError
 
@@ -43,7 +44,7 @@ class git:
     """Git operations using GitPython."""
 
     @staticmethod
-    def clone(url: str, target_path: Union[str, Path]) -> None:
+    def clone(url: str, target_path: str | Path) -> None:
         """Clone a git repository.
 
         Args:
@@ -59,7 +60,7 @@ class git:
             raise GitSpacesError(f"Failed to clone repository: {e}")
 
     @staticmethod
-    def get_repo(path: Union[str, Path]) -> Optional[Repo]:
+    def get_repo(path: str | Path) -> Repo | None:
         """Get a Repo instance for a path.
 
         Args:
@@ -113,7 +114,7 @@ class fs:
     """File system operations wrapper."""
 
     @staticmethod
-    def move(src: Union[str, Path], dst: Union[str, Path]) -> None:
+    def move(src: str | Path, dst: str | Path) -> None:
         """Move a file or directory.
 
         Args:
@@ -123,7 +124,7 @@ class fs:
         shutil.move(str(src), str(dst))
 
     @staticmethod
-    def copy_tree(src: Union[str, Path], dst: Union[str, Path], symlinks: bool = True) -> None:
+    def copy_tree(src: str | Path, dst: str | Path, symlinks: bool = True) -> None:
         """Recursively copy a directory tree.
 
         Args:
@@ -134,7 +135,7 @@ class fs:
         shutil.copytree(str(src), str(dst), symlinks=symlinks)
 
     @staticmethod
-    def chdir(path: Union[str, Path]) -> None:
+    def chdir(path: str | Path) -> None:
         """Change the current working directory.
 
         Args:

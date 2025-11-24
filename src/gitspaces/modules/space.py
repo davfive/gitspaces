@@ -1,7 +1,8 @@
 """Space management for GitSpaces."""
 
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Optional
 from git import Repo
 from gitspaces.modules.errors import SpaceError
 from gitspaces.modules.path import ensure_dir
@@ -21,10 +22,10 @@ class Space:
         self.project = project
         self.path = Path(path)
         self.name = self.path.name
-        self._repo: Optional[Repo] = None
+        self._repo: Repo | None = None
 
     @property
-    def repo(self) -> Optional[Repo]:
+    def repo(self) -> Repo | None:
         """Get the git repository for this space.
 
         Returns:
@@ -70,7 +71,7 @@ class Space:
 
         return Space(self.project, new_path)
 
-    def wake(self, new_name: Optional[str] = None) -> "Space":
+    def wake(self, new_name: str | None = None) -> "Space":
         """Wake up a sleeping space and optionally rename it.
 
         Args:
