@@ -4,10 +4,11 @@ This module encapsulates all external command execution (subprocess, git, and OS
 to isolate security scanner warnings and provide OS-agnostic operations.
 """
 
+from __future__ import annotations
+
 import os
 import shutil
 from pathlib import Path
-from typing import Optional
 from git import Repo
 from gitspaces.modules.errors import GitSpacesError
 
@@ -43,7 +44,7 @@ class git:
     """Git operations using GitPython."""
 
     @staticmethod
-    def clone(url: str, target_path: str) -> None:
+    def clone(url: str, target_path: str | Path) -> None:
         """Clone a git repository.
 
         Args:
@@ -54,12 +55,12 @@ class git:
             GitSpacesError: If clone fails
         """
         try:
-            Repo.clone_from(url, target_path)
+            Repo.clone_from(url, str(target_path))
         except Exception as e:
             raise GitSpacesError(f"Failed to clone repository: {e}")
 
     @staticmethod
-    def get_repo(path: str) -> Optional[Repo]:
+    def get_repo(path: str | Path) -> Repo | None:
         """Get a Repo instance for a path.
 
         Args:
@@ -71,7 +72,7 @@ class git:
         p = Path(path)
         if p.exists():
             try:
-                return Repo(path)
+                return Repo(str(path))
             except Exception:
                 return None
         return None
@@ -113,17 +114,17 @@ class fs:
     """File system operations wrapper."""
 
     @staticmethod
-    def move(src: str, dst: str) -> None:
+    def move(src: str | Path, dst: str | Path) -> None:
         """Move a file or directory.
 
         Args:
             src: Source path
             dst: Destination path
         """
-        shutil.move(src, dst)
+        shutil.move(str(src), str(dst))
 
     @staticmethod
-    def copy_tree(src: str, dst: str, symlinks: bool = True) -> None:
+    def copy_tree(src: str | Path, dst: str | Path, symlinks: bool = True) -> None:
         """Recursively copy a directory tree.
 
         Args:
@@ -131,13 +132,13 @@ class fs:
             dst: Destination directory
             symlinks: If True, preserve symlinks
         """
-        shutil.copytree(src, dst, symlinks=symlinks)
+        shutil.copytree(str(src), str(dst), symlinks=symlinks)
 
     @staticmethod
-    def chdir(path: str) -> None:
+    def chdir(path: str | Path) -> None:
         """Change the current working directory.
 
         Args:
             path: Directory path
         """
-        os.chdir(path)
+        os.chdir(str(path))

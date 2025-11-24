@@ -1,0 +1,35 @@
+name: Python Tests (All Versions)
+
+on:
+  workflow_dispatch:
+    branches: [ main, d5.**, copilot/**, ci/** ]
+  push:
+    branches: [ main, d5.**, copilot/**, ci/** ]
+  pull_request:
+    branches: [ main ]
+  # allow this workflow to be invoked by other workflows
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+jobs:
+  # canonical variables available inside this workflow
+  vars:
+    uses: ./.github/workflows/ci-variables.yml
+
+  # run security scan using canonical latest python (from vars)
+  security-scan:
+    needs: vars
+    uses: ./.github/workflows/security-scan-reusable.yml
+    with:
+      python_version: ${{ needs.vars.outputs.python_version_latest }}
+    secrets: inherit
+
+  # call the shared test workflow with the canonical full list
+  run-tests:
+    needs: vars
+    uses: ./.github/workflows/test-with-python-versions-reusable.yml
+    with:
+      python_versions: ${{ needs.vars.outputs.python_versions_all }}
+    secrets: inherit

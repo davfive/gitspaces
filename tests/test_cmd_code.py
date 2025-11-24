@@ -26,7 +26,7 @@ def test_code_command_with_space(mock_project_cls, mock_config_cls, mock_console
     with patch("gitspaces.modules.cmd_code.runshell.subprocess.run") as mock_run:
         with patch("gitspaces.modules.cmd_code.Path.cwd") as mock_cwd:
             mock_cwd.return_value = Path("/test/project/main")
-            
+
             # Create space path mock
             space_path = Path("/test/project/main")
             with patch.object(Path, "exists", return_value=True):
@@ -54,17 +54,13 @@ def test_code_command_no_project(mock_project_cls, mock_config_cls, mock_console
         mock_cwd.return_value = Path("/some/path")
         code_command(args)
 
-    mock_console.println.assert_called_with(
-        "✗ Not in a GitSpaces project directory"
-    )
+    mock_console.println.assert_called_with("✗ Not in a GitSpaces project directory")
 
 
 @patch("gitspaces.modules.cmd_code.Console")
 @patch("gitspaces.modules.cmd_code.Config")
 @patch("gitspaces.modules.cmd_code.Project")
-def test_code_command_space_not_found(
-    mock_project_cls, mock_config_cls, mock_console
-):
+def test_code_command_space_not_found(mock_project_cls, mock_config_cls, mock_console):
     """Test code command when space doesn't exist."""
     mock_config = Mock()
     mock_config.default_editor = "code"
@@ -88,9 +84,7 @@ def test_code_command_space_not_found(
 @patch("gitspaces.modules.cmd_code.Console")
 @patch("gitspaces.modules.cmd_code.Config")
 @patch("gitspaces.modules.cmd_code.Project")
-def test_code_command_editor_not_found(
-    mock_project_cls, mock_config_cls, mock_console
-):
+def test_code_command_editor_not_found(mock_project_cls, mock_config_cls, mock_console):
     """Test code command when editor is not found."""
     mock_config = Mock()
     mock_config.default_editor = "nonexistent-editor"
@@ -110,9 +104,7 @@ def test_code_command_editor_not_found(
             with patch.object(Path, "exists", return_value=True):
                 code_command(args)
 
-    mock_console.println.assert_any_call(
-        "✗ Editor 'nonexistent-editor' not found"
-    )
+    mock_console.println.assert_any_call("✗ Editor 'nonexistent-editor' not found")
 
 
 @patch("gitspaces.modules.cmd_code.Console")
@@ -172,9 +164,7 @@ def test_code_command_select_space(mock_project_cls, mock_config_cls, mock_conso
 @patch("gitspaces.modules.cmd_code.Console")
 @patch("gitspaces.modules.cmd_code.Config")
 @patch("gitspaces.modules.cmd_code.Project")
-def test_code_command_no_active_spaces(
-    mock_project_cls, mock_config_cls, mock_console
-):
+def test_code_command_no_active_spaces(mock_project_cls, mock_config_cls, mock_console):
     """Test code command when no active spaces available."""
     mock_config = Mock()
     mock_config.default_editor = "code"

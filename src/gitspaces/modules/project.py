@@ -1,9 +1,10 @@
 """Project management for GitSpaces."""
 
+from __future__ import annotations
+
 import os
 import shutil
 from pathlib import Path
-from typing import Optional, List
 from git import Repo
 from gitspaces.modules.errors import ProjectError
 from gitspaces.modules.path import ensure_dir
@@ -83,42 +84,40 @@ class Project:
         ensure_dir(self.zzz_dir)
         self.dotfile.touch()
 
-    def _get_empty_sleeper_path(self) -> str:
+    def _get_empty_sleeper_path(self) -> Path:
         """Get the path for a new sleeper space.
 
         Returns:
             The path for the new sleeper space.
         """
+        from itertools import count
+
         # Find the next available zzz-N directory
-        i = 0
-        while True:
+        for i in count():
             sleeper_path = self.zzz_dir / f"zzz-{i}"
             if not sleeper_path.exists():
-                return str(sleeper_path)
-            i += 1
+                return sleeper_path
 
-    def list_spaces(self) -> List[str]:
+    def list_spaces(self) -> list[str]:
         """List all spaces in the project.
 
         Returns:
             List of space directory names.
         """
-        spaces = []
-
         # List active spaces (top-level directories, excluding special ones)
-        for item in self.path.iterdir():
-            if (
-                item.is_dir()
-                and item.name not in [self.ZZZ_DIR, ".vscode", self.DOTFILE]
-                and not item.name.startswith(".")
-            ):
-                spaces.append(item.name)
+        spaces = [
+            item.name
+            for item in self.path.iterdir()
+            if item.is_dir()
+            and item.name not in {self.ZZZ_DIR, ".vscode", self.DOTFILE}
+            and not item.name.startswith(".")
+        ]
 
         # List sleeping spaces
         if self.zzz_dir.exists():
-            for item in self.zzz_dir.iterdir():
-                if item.is_dir():
-                    spaces.append(f"{self.ZZZ_DIR}/{item.name}")
+            spaces.extend(
+                f"{self.ZZZ_DIR}/{item.name}" for item in self.zzz_dir.iterdir() if item.is_dir()
+            )
 
         return sorted(spaces)
 
@@ -131,7 +130,7 @@ class Project:
         return self.path.exists() and self.dotfile.exists()
 
     @classmethod
-    def find_project(cls, path: str) -> Optional["Project"]:
+    def find_project(cls, path: str) -> Project | None:
         """Find a GitSpaces project by searching upward from the given path.
 
         Args:

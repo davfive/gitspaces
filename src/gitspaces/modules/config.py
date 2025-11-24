@@ -1,18 +1,19 @@
 """Configuration management for GitSpaces."""
 
+from __future__ import annotations
+
 import os
 import yaml
 from pathlib import Path
-from typing import List, Optional, Dict, Any
 
 
 class Config:
     """GitSpaces configuration management."""
 
-    _instance: Optional["Config"] = None
-    _config_dir: Optional[Path] = None
-    _config_file: Optional[Path] = None
-    _data: Dict[str, Any] = {}
+    _instance: Config | None = None
+    _config_dir: Path | None = None
+    _config_file: Path | None = None
+    _data: dict[str, any] = {}
 
     @classmethod
     def instance(cls) -> "Config":
@@ -37,12 +38,12 @@ class Config:
         return self._config_file
 
     @property
-    def project_paths(self) -> List[str]:
+    def project_paths(self) -> list[str]:
         """Get the list of project paths."""
         return self._data.get("project_paths", [])
 
     @project_paths.setter
-    def project_paths(self, paths: List[str]):
+    def project_paths(self, paths: list[str]):
         """Set the list of project paths."""
         self._data["project_paths"] = paths
 
@@ -74,11 +75,11 @@ class Config:
         """Check if configuration file exists."""
         return self.config_file.exists()
 
-    def get(self, key: str, default: Any = None) -> Any:
+    def get(self, key: str, default: any = None) -> any:
         """Get a configuration value."""
         return self._data.get(key, default)
 
-    def set(self, key: str, value: Any):
+    def set(self, key: str, value: any):
         """Set a configuration value."""
         self._data[key] = value
 

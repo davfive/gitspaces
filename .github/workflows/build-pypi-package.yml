@@ -1,0 +1,77 @@
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "Version string (no leading 'v'), e.g. 1.2.3"
+        required: true
+        type: string
+      tag:
+        description: "Optional tag string (used for naming). If omitted the version will be used."
+        required: false
+        type: string
+      python_version:
+        description: "Python version to use for building (e.g. '3.13'). Callers should pass ci-variables.python_version_latest."
+        required: false
+        type: string
+    secrets:
+      GITHUB_TOKEN:
+        required: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Determine BUILD_TAG
+        id: set_tag
+        run: |
+          if [ -n "${{ inputs.tag }}" ]; then
+            echo "BUILD_TAG=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "BUILD_TAG=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Python (build environment)
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version || '3.11' }}
+
+      - name: Update version in pyproject.toml
+        run: |
+          sed -i "s/^version = \".*\"/version = \"${{ inputs.version }}\"/" pyproject.toml
+
+      - name: Update version in __init__.py
+        run: |
+          sed -i "s/__version__ = \".*\"/__version__ = \"${{ inputs.version }}\"/" src/gitspaces/__init__.py
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+
+      - name: Build package
+        run: python -m build
+
+      - name: Rename distribution files
+        run: |
+          cd dist
+          for file in *; do
+            # Add gitspaces-<tag>- prefix if not already present
+            if [[ ! "$file" =~ ^gitspaces- ]]; then
+              mv "$file" "gitspaces-${{ steps.set_tag.outputs.BUILD_TAG }}-${file}"
+            fi
+          done
+          ls -la
+
+      - name: Check package
+        run: twine check dist/*
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/

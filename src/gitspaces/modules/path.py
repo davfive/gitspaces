@@ -1,11 +1,12 @@
 """Path utility functions."""
 
+from __future__ import annotations
+
 import os
 from pathlib import Path
-from typing import Union
 
 
-def ensure_dir(path: Union[str, Path]) -> Path:
+def ensure_dir(path: str | Path) -> Path:
     """Ensure a directory exists, creating it if necessary.
 
     Args:

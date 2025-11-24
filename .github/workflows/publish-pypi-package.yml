@@ -1,0 +1,82 @@
+name: Publish Python Package
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+
+jobs:
+  extract_version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+      tag: ${{ steps.get_version.outputs.tag }}
+    steps:
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          # Strip refs/tags/v prefix => version, and full tag
+          VERSION=${GITHUB_REF#refs/tags/v}
+          TAG=${GITHUB_REF#refs/tags/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+  vars:
+    uses: ./.github/workflows/ci-variables.yml
+
+  run-tests:
+    needs: [vars, extract_version]
+    uses: ./.github/workflows/test-with-python-versions-all.yml
+    secrets: inherit
+
+  build:
+    needs: [run-tests, vars, extract_version]
+    uses: ./.github/workflows/build-pypi-package.yml
+    with:
+      version: ${{ needs.extract_version.outputs.version }}
+      tag: ${{ needs.extract_version.outputs.tag }}
+      python_version: ${{ needs.vars.outputs.python_version_latest }}
+    secrets: inherit
+
+  publish-to-testpypi:
+    name: Publish to TestPyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/gitspaces
+    permissions:
+      id-token: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  publish-to-pypi:
+    name: Publish to PyPI
+    needs: publish-to-testpypi
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/gitspaces
+    permissions:
+      id-token: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
