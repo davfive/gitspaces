@@ -9,6 +9,8 @@ Manage multiple independent clones of a git repository. Similar to ClearCase Vie
 
 Work on multiple features, branches, or experiments simultaneously without branch switching overhead. Each "space" is an independent clone of your repository.
 
+> *Note: This project is currently at v3. It has evolved through several major iterations over the past 7 years — originally implemented as a collection of Bash scripts (v1), then rewritten in Go (v2), and now implemented in Python (v3). The prior v1/v2 repositories are archived and available at https://github.com/davfive/gitspaces.golang.*
+
 ## Features
 
 - Multiple independent clones per repository
