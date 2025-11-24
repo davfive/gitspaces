@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       python_versions:
-        description: "JSON array of python versions, e.g. ['3.13','3.12']"
+        description: "JSON array of python versions, e.g.'['3.13','3.12']'"
         required: true
         type: string
       fail_fast:
