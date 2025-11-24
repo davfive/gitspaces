@@ -25,3 +25,10 @@ jobs:
           echo "python_version_latest=$PYTHON_VERSION_LATEST" >> $GITHUB_OUTPUT
           echo "python_versions_all=$PYTHON_VERSIONS_ALL" >> $GITHUB_OUTPUT
           echo "python_versions_latest=$PYTHON_VERSIONS_LATEST" >> $GITHUB_OUTPUT
+          
+          # ALSO PRINT THEM TO THE LOG so you can see the actual values (not just "outputs set")
+          # Use a NOTICE so they stand out in the Actions log; plain echo is fine too.
+          echo "::notice::CI variables set by ci-variables.yml:"
+          echo "PYTHON_VERSION_LATEST=$PYTHON_VERSION_LATEST"
+          echo "PYTHON_VERSIONS_ALL=$PYTHON_VERSIONS_ALL"
+          echo "PYTHON_VERSIONS_LATEST=$PYTHON_VERSIONS_LATEST"
