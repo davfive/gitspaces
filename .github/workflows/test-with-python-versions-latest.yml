@@ -2,7 +2,7 @@ name: "01 - Run Tests (Latest Supported Version)"
 
 on:
   workflow_dispatch: {}
-  workflow: {}
+  workflow_call: {}
 permissions:
   contents: read
 
