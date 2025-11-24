@@ -14,19 +14,14 @@ permissions:
   contents: read
 
 jobs:
-  # canonical variables available inside this workflow
   vars:
     uses: ./.github/workflows/ci-variables.yml
 
-  # run security scan using canonical latest python (from vars)
   security-scan:
     needs: vars
-    uses: ./.github/workflows/security-scan-reusable.yml
-    with:
-      python_version: ${{ needs.vars.outputs.python_version_latest }}
+    uses: ./.github/workflows/security-scan.yml
     secrets: inherit
 
-  # call the shared test workflow with the canonical full list
   run-tests:
     needs: vars
     uses: ./.github/workflows/test-with-python-versions-reusable.yml

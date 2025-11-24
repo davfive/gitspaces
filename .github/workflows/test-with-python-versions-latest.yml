@@ -14,7 +14,7 @@ jobs:
   # run security scan using canonical latest python
   security-scan:
     needs: vars
-    uses: ./.github/workflows/security-scan-reusable.yml
+    uses: ./.github/workflows/security-scan.yml
     with:
       python_version: ${{ needs.vars.outputs.python_version_latest }}
     secrets: inherit
