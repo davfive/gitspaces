@@ -30,6 +30,14 @@ def test_extract_project_name():
     name = Project._extract_project_name("https://github.com/user/project")
     assert name == "project"
 
+    # Windows-style local path (backslashes)
+    name = Project._extract_project_name(r"C:\Users\test\repos\test-repo")
+    assert name == "test-repo"
+
+    # Mixed path separators
+    name = Project._extract_project_name(r"C:\Users/test\repos/my-project.git")
+    assert name == "my-project"
+
 
 def test_project_exists(tmp_path):
     """Test project existence check."""
