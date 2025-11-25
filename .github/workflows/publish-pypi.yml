@@ -25,10 +25,11 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
   vars:
+    needs: extract_version
     uses: ./.github/workflows/vars.yml
 
-  run-tests:
-    needs: [vars, extract_version]
+  test:
+    needs: vars
     uses: ./.github/workflows/test-all.yml
     permissions:
       contents: read
@@ -36,7 +37,7 @@ jobs:
     secrets: inherit
 
   build:
-    needs: [run-tests, vars, extract_version]
+    needs: test
     uses: ./.github/workflows/build-pypi-package.yml
     with:
       version: ${{ needs.extract_version.outputs.version }}

@@ -1,10 +1,15 @@
-name: "CI — Python Tests (latest only)"
+name: "01 — Python Tests (latest only)"
 
 on:
-  workflow_dispatch: {}
-  workflow_call: {}
   push:
     branches: [ main, 'd5.**', 'copilot/**', 'ci/**' ]
+  workflow_dispatch: {}
+  workflow_call:
+    inputs:
+      run-codeql:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   vars:
@@ -21,7 +26,7 @@ jobs:
 
   test:
     needs: [vars, static]
-    name: test-${{ replace(matrix.platform.os, '-latest', '') }}.${{ matrix.platform.shell }}.latest
+    name: test-${{ replace(matrix.platform.os, '-latest', '') }}.${{ matrix.platform.shell }}.${{ replace(needs.vars.outputs.python_versions_latest, ',', '-') }}
     runs-on: ${{ matrix.platform.os }}
     strategy:
       fail-fast: false
@@ -39,12 +44,11 @@ jobs:
             shell: wsl-bash
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Run Python tests (latest)
-        uses: ./.github/actions/python-tests
+      - name: Run tests (Python 3.13)
+        uses: ./.github/actions/run-tests
         with:
-          shell: ${{ matrix.platform.shell }}
-          python-versions: ${{ needs.vars.outputs.python_versions_latest }}
-          os: ${{ matrix.platform.os }}
+          python-version: '3.13'
+          upload-coverage: ${{ matrix.os == "ubuntu-latest" && matrix.shell == "bash" && 'true' || 'false' }}
+          run-codeql: ${{ inputs.run-codeql && matrix.os == "ubuntu-latest" && matrix.shell == "bash" && 'true' || 'false' }}
