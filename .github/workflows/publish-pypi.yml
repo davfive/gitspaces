@@ -37,8 +37,8 @@ jobs:
     secrets: inherit
 
   build:
-    needs: test
-    uses: ./.github/workflows/build-pypi-package.yml
+    needs: [extract_version, vars, test]
+    uses: ./.github/workflows/build-pypi.yml
     with:
       version: ${{ needs.extract_version.outputs.version }}
       tag: ${{ needs.extract_version.outputs.tag }}

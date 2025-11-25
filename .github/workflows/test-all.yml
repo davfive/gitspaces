@@ -11,9 +11,12 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: read
+
 jobs:
   vars:
-    uses: ./workflows/vars.yml
+    uses: ./.github/workflows/vars.yml
 
   static:
     needs: vars
@@ -50,8 +53,8 @@ jobs:
         uses: ./.github/actions/run-tests
         with:
           python-version: '3.13'
-          upload-coverage: ${{ matrix.os == "ubuntu-latest" && matrix.shell == "bash" && 'true' || 'false' }}
-          run-codeql: ${{ inputs.run-codeql && matrix.os == "ubuntu-latest" && matrix.shell == "bash" && 'true' || 'false' }}
+          upload-coverage: ${{ matrix.platform.os == 'ubuntu-latest' && matrix.platform.shell == 'bash' && 'true' || 'false' }}
+          windows-shell: ${{ matrix.platform.shell == 'wsl-bash' && 'wsl' || matrix.platform.shell }}
 
       - name: Run tests (Python 3.12)
         uses: ./.github/actions/run-tests

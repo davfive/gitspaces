@@ -48,15 +48,43 @@ runs:
         restore-keys: |
           ${{ runner.os }}-pip-${{ inputs.python-version }}-
 
-    - name: Install dependencies
+    # Install dependencies - Unix/macOS
+    - name: Install dependencies (Unix/macOS)
+      if: runner.os != 'Windows'
+      shell: bash
       run: |
         python -m pip install --upgrade pip
         python -m pip install -e . -r "${{ inputs.requirements-file }}"
+
+    # Install dependencies - Windows cmd
+    - name: Install dependencies (Windows cmd)
+      if: runner.os == 'Windows' && (inputs.windows-shell == 'cmd')
+      shell: cmd
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -e . -r "${{ inputs.requirements-file }}"
+
+    # Install dependencies - Windows PowerShell
+    - name: Install dependencies (Windows pwsh)
+      if: runner.os == 'Windows' && (inputs.windows-shell == 'pwsh')
+      shell: pwsh
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -e . -r "${{ inputs.requirements-file }}"
+
+    # Install dependencies - Windows WSL (uses cmd to invoke wsl)
+    - name: Install dependencies (Windows WSL)
+      if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
+      shell: cmd
+      run: |
+        for /f "delims=" %%P in ('wsl wslpath -u "%CD%"') do set "WPATH=%%P"
+        wsl bash -lc "cd '%WPATH%' && python -m pip install --upgrade pip && python -m pip install -e . -r '${{ inputs.requirements-file }}'"
 
     # Unix / macOS path
     - name: Run tests on Unix/macOS
       if: runner.os != 'Windows'
       id: run_unix
+      shell: bash
       run: |
         COVERAGE_FILE="${{ inputs.coverage-file }}"
         if [ -z "$COVERAGE_FILE" ]; then
