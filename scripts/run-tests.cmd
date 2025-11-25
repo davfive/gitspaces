@@ -1,19 +1,30 @@
 @echo off
-REM Because: Cross-platform test runner wrapper for Windows CMD
-REM Supports: Windows CMD with pyenv-win (delegates to PowerShell script)
-REM Usage: scripts\run-tests.cmd [PYTHON_VERSION]
-REM   PYTHON_VERSION: Optional Python version (e.g., 3.13). If not provided, uses pyenv local version.
-
-setlocal EnableDelayedExpansion
-
+REM Tiny cmd wrapper that invokes the Python orchestrator so tests actually run on Windows but orchestration uses Python.
+REM Usage: scripts\run-tests.cmd "3.9,3.10"  (or omit arg for default)
+setlocal
 set "SCRIPT_DIR=%~dp0"
-set "PYTHON_VERSION=%~1"
+set "PY_SCRIPTS=%SCRIPT_DIR%run-tests.py"
+set "VERSIONS=%~1"
 
-REM Afterward: Delegate to PowerShell script with the same arguments
-if "%PYTHON_VERSION%"=="" (
-    powershell -ExecutionPolicy Bypass -File "%SCRIPT_DIR%run-tests.ps1"
+REM Try to find a Python interpreter (prefer py launcher)
+where python >nul 2>&1
+if errorlevel 1 (
+  where py >nul 2>&1
+  if errorlevel 1 (
+    echo ERROR: No python interpreter found on PATH.
+    endlocal & exit /b 1
+  ) else (
+    set "PY_CMD=py -3"
+  )
 ) else (
-    powershell -ExecutionPolicy Bypass -File "%SCRIPT_DIR%run-tests.ps1" -PythonVersion "%PYTHON_VERSION%"
+  set "PY_CMD=python"
 )
 
+if "%VERSIONS%"=="" (
+  %PY_CMD% "%PY_SCRIPTS%"
+) else (
+  %PY_CMD% "%PY_SCRIPTS%" "%VERSIONS%"
+)
+
+endlocal
 exit /b %ERRORLEVEL%
