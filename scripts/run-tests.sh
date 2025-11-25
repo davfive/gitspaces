@@ -50,11 +50,11 @@ install_deps() {
     pip install -r requirements-dev.txt
 }
 
-# Because: Run linting checks
+# Because: Run linting checks (uses .flake8 config file for settings)
 run_lint() {
     echo "Running flake8 linting..."
-    flake8 src/gitspaces --count --select=E9,F63,F7,F82 --show-source --statistics
-    flake8 src/gitspaces --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    flake8 src/gitspaces
+    flake8 src/gitspaces --exit-zero
 
     echo "Checking code formatting with black..."
     black --check src/gitspaces tests

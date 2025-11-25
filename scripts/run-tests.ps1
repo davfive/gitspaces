@@ -64,13 +64,13 @@ function Install-Dependencies {
     if ($LASTEXITCODE -ne 0) { throw "Failed to install dev requirements" }
 }
 
-# Because: Run linting checks
+# Because: Run linting checks (uses .flake8 config file for settings)
 function Run-Lint {
     Write-Host "Running flake8 linting..."
-    & flake8 src/gitspaces --count --select=E9,F63,F7,F82 --show-source --statistics
+    & flake8 src/gitspaces
     if ($LASTEXITCODE -ne 0) { throw "Flake8 found critical errors" }
     
-    & flake8 src/gitspaces --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    & flake8 src/gitspaces --exit-zero
     
     Write-Host "Checking code formatting with black..."
     & black --check src/gitspaces tests
