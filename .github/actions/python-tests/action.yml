@@ -1,0 +1,125 @@
+name: "python-tests"
+description: "Composite action for multi-version Python testing with pyenv (bash/WSL) and pyenv-win (pwsh/cmd)"
+
+inputs:
+  python-version:
+    description: "Python version to test (e.g., 3.13)"
+    required: true
+  shell:
+    description: "Shell to use: bash, wsl-bash, pwsh, or cmd"
+    required: true
+  os:
+    description: "OS name from the matrix (e.g., ubuntu-latest, windows-latest)"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    # Because: Setup WSL environment for wsl-bash shell
+    - name: Setup WSL
+      if: ${{ inputs.shell == 'wsl-bash' }}
+      uses: Vampire/setup-wsl@v3
+      with:
+        distribution: Ubuntu-22.04
+        use-cache: false
+
+    # Because: Install pyenv prerequisites on WSL
+    - name: Install pyenv prerequisites (WSL)
+      if: ${{ inputs.shell == 'wsl-bash' }}
+      shell: wsl-bash {0}
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y make build-essential libssl-dev zlib1g-dev \
+          libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
+          libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev \
+          libffi-dev liblzma-dev git
+
+    # Because: Install pyenv on WSL
+    - name: Install pyenv (WSL)
+      if: ${{ inputs.shell == 'wsl-bash' }}
+      shell: wsl-bash {0}
+      run: |
+        if [ ! -d "$HOME/.pyenv" ]; then
+          curl https://pyenv.run | bash
+        fi
+        export PYENV_ROOT="$HOME/.pyenv"
+        export PATH="$PYENV_ROOT/bin:$PATH"
+        eval "$(pyenv init -)"
+        pyenv --version
+
+    # Because: Run tests via bash script (WSL)
+    - name: Run tests (WSL)
+      if: ${{ inputs.shell == 'wsl-bash' }}
+      shell: wsl-bash {0}
+      run: |
+        export PYENV_ROOT="$HOME/.pyenv"
+        export PATH="$PYENV_ROOT/bin:$PATH"
+        eval "$(pyenv init -)"
+        chmod +x scripts/run-tests.sh
+        scripts/run-tests.sh "${{ inputs.python-version }}"
+
+    # Because: Setup Python with actions/setup-python for non-WSL bash (Linux/macOS)
+    - name: Setup Python (non-WSL bash)
+      if: ${{ inputs.shell == 'bash' }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    # Because: Run tests via bash script (Linux/macOS - uses setup-python, no pyenv install needed)
+    - name: Run tests (bash)
+      if: ${{ inputs.shell == 'bash' }}
+      shell: bash
+      run: |
+        chmod +x scripts/run-tests.sh
+        # Skip pyenv install since actions/setup-python already set up Python
+        echo "Using Python $(python --version)"
+        python -m pip install --upgrade pip setuptools wheel
+        pip install -e .
+        pip install -r requirements-dev.txt
+        flake8 src/gitspaces --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 src/gitspaces --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        black --check src/gitspaces tests
+        pytest tests/ -v --cov=src/gitspaces --cov-report=xml:coverage-${{ inputs.python-version }}.xml --cov-report=term
+
+    # Because: Install pyenv-win for Windows pwsh/cmd
+    - name: Install pyenv-win
+      if: ${{ inputs.shell == 'pwsh' || inputs.shell == 'cmd' }}
+      shell: pwsh
+      run: |
+        $pyenvRoot = "$env:USERPROFILE\.pyenv\pyenv-win"
+        if (-not (Test-Path $pyenvRoot)) {
+          Invoke-WebRequest -UseBasicParsing -Uri "https://raw.githubusercontent.com/pyenv-win/pyenv-win/master/pyenv-win/install-pyenv-win.ps1" -OutFile "./install-pyenv-win.ps1"
+          & ./install-pyenv-win.ps1
+          Remove-Item ./install-pyenv-win.ps1 -Force
+        }
+        $env:PYENV_ROOT = $pyenvRoot
+        $env:PATH = "$pyenvRoot\bin;$pyenvRoot\shims;$env:PATH"
+        & pyenv --version
+
+    # Because: Run tests via PowerShell script (Windows pwsh)
+    - name: Run tests (pwsh)
+      if: ${{ inputs.shell == 'pwsh' }}
+      shell: pwsh
+      run: |
+        $pyenvRoot = "$env:USERPROFILE\.pyenv\pyenv-win"
+        $env:PYENV_ROOT = $pyenvRoot
+        $env:PATH = "$pyenvRoot\bin;$pyenvRoot\shims;$env:PATH"
+        .\scripts\run-tests.ps1 -PythonVersion "${{ inputs.python-version }}"
+
+    # Because: Run tests via CMD script (Windows cmd)
+    - name: Run tests (cmd)
+      if: ${{ inputs.shell == 'cmd' }}
+      shell: cmd
+      run: |
+        set "PYENV_ROOT=%USERPROFILE%\.pyenv\pyenv-win"
+        set "PATH=%PYENV_ROOT%\bin;%PYENV_ROOT%\shims;%PATH%"
+        scripts\run-tests.cmd ${{ inputs.python-version }}
+
+    # Because: Upload coverage for primary configuration
+    - name: Upload coverage to Codecov
+      if: ${{ inputs.os == 'ubuntu-latest' && inputs.python-version == '3.13' && inputs.shell == 'bash' }}
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage-${{ inputs.python-version }}.xml
+        flags: unittests
+        name: codecov-py${{ inputs.python-version }}

@@ -1,21 +1,19 @@
-name: "99 - Run Tests (Multiple Python Versions)"
+name: "CI - Python Tests with pyenv (Example)"
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       python_versions:
-        description: "JSON array of python versions, e.g.'['3.13','3.12']'"
-        required: true
-        type: string
-      fail_fast:
-        description: "Whether matrix should fail-fast"
+        description: "JSON array of Python versions (e.g., '[\"3.13\",\"3.12\"]')"
         required: false
-        type: boolean
-        default: true
-
+        default: '["3.13"]'
 
 jobs:
+  vars:
+    uses: ./.github/workflows/ci-variables.yml
+
   test:
+    needs: vars
     name: "test--${{ matrix.platform.os }}.${{ matrix.platform.shell }}.py${{ matrix.python-version }}"
     runs-on: ${{ matrix.platform.os }}
     permissions:
@@ -23,9 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # python-version is supplied by caller as a JSON string and parsed here
-        python-version: ${{ fromJson(inputs.python_versions) }}
-        # compact platform axis: each entry is an {os, shell} pair
+        python-version: ${{ fromJson(inputs.python_versions || needs.vars.outputs.python_versions_latest) }}
         platform:
           - os: ubuntu-latest
             shell: bash
