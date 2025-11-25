@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import glob
 import os
 import shutil
 from pathlib import Path
@@ -86,19 +87,19 @@ class Project:
         ensure_dir(self.zzz_dir)
         self.dotfile.touch()
 
-    def _get_empty_sleeper_path(self) -> Path:
+    def _get_empty_sleeper_path(self) -> Path | None:
         """Get the path for a new sleeper space.
 
         Returns:
             The path for the new sleeper space.
         """
         from itertools import count
-
-        # Find the next available zzz-N directory
         for i in count():
             sleeper_path = self.zzz_dir / f"zzz-{i}"
             if not sleeper_path.exists():
                 return sleeper_path
+        
+        return None
 
     def list_spaces(self) -> list[str]:
         """List all spaces in the project.

@@ -33,7 +33,7 @@ def run_setup() -> bool:
     Console.println("Where do you keep your git projects?")
 
     # Get project paths
-    paths = []
+    paths: list[str] = []
     while True:
         path = Console.prompt_input(
             "Enter a project directory path (or press Enter to finish):", default=""

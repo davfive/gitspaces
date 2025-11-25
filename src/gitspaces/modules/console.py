@@ -1,7 +1,7 @@
 """Console output and prompting utilities."""
 
 from __future__ import annotations
-
+from typing import Any
 from rich.console import Console as RichConsole
 import questionary
 
@@ -13,7 +13,7 @@ class Console:
     _console = RichConsole()
 
     @classmethod
-    def println(cls, message: str, *args: any):
+    def println(cls, message: str, *args: Any) -> None:
         """Print a message to the console.
 
         Args:
@@ -25,7 +25,7 @@ class Console:
         cls._console.print(message)
 
     @classmethod
-    def set_use_pretty_prompts(cls, use_pretty: bool):
+    def set_use_pretty_prompts(cls, use_pretty: bool) -> None   :
         """Set whether to use pretty prompts.
 
         Args:
@@ -72,4 +72,4 @@ class Console:
         Returns:
             The selected choice.
         """
-        return questionary.select(message, choices=choices, default=default).ask()
+        return str(questionary.select(message, choices=choices, default=default).ask())

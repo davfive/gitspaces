@@ -1,8 +1,7 @@
 """Configuration management for GitSpaces."""
 
 from __future__ import annotations
-
-import os
+from typing import Any
 import yaml
 from pathlib import Path
 
@@ -13,7 +12,7 @@ class Config:
     _instance: Config | None = None
     _config_dir: Path | None = None
     _config_file: Path | None = None
-    _data: dict[str, any] = {}
+    _data: dict[str, Any] = {}
 
     @classmethod
     def instance(cls) -> "Config":
@@ -40,7 +39,7 @@ class Config:
     @property
     def project_paths(self) -> list[str]:
         """Get the list of project paths."""
-        return self._data.get("project_paths", [])
+        return list(self._data.get("project_paths", []))
 
     @project_paths.setter
     def project_paths(self, paths: list[str]):
@@ -50,7 +49,7 @@ class Config:
     @property
     def default_editor(self) -> str:
         """Get the default editor."""
-        return self._data.get("default_editor", "code")
+        return str(self._data.get("default_editor", "code"))
 
     @default_editor.setter
     def default_editor(self, editor: str):
@@ -75,11 +74,11 @@ class Config:
         """Check if configuration file exists."""
         return self.config_file.exists()
 
-    def get(self, key: str, default: any = None) -> any:
+    def get(self, key: str, default: Any = None) -> Any:
         """Get a configuration value."""
         return self._data.get(key, default)
 
-    def set(self, key: str, value: any):
+    def set(self, key: str, value: Any):
         """Set a configuration value."""
         self._data[key] = value
 

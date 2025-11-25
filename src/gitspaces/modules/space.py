@@ -12,7 +12,7 @@ from gitspaces.modules import runshell
 class Space:
     """Represents a single workspace (clone) within a GitSpaces project."""
 
-    def __init__(self, project, path):
+    def __init__(self: Space, project, path: str | Path):
         """Initialize a Space.
 
         Args:
@@ -161,4 +161,5 @@ class Space:
         Returns:
             True if the space is in the .zzz directory.
         """
-        return self.path.is_relative_to(self.project.zzz_dir)
+        return bool(self.path.is_relative_to(self.project.zzz_dir))
+    
