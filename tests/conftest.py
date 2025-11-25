@@ -20,6 +20,7 @@ def _robust_rmtree(path: Path, retries: int = 5, delay: float = 0.5):
     On Windows, Git processes may hold file handles open briefly after repo.close().
     This function retries deletion with exponential backoff.
     """
+    max_delay = 2.0  # Cap maximum delay at 2 seconds
     for attempt in range(retries):
         try:
             # Force garbage collection to release any Python-held handles
@@ -28,7 +29,7 @@ def _robust_rmtree(path: Path, retries: int = 5, delay: float = 0.5):
             return
         except PermissionError:
             if attempt < retries - 1:
-                time.sleep(delay * (2**attempt))
+                time.sleep(min(delay * (2**attempt), max_delay))
             else:
                 # Final attempt: use ignore_errors to clean up what we can
                 shutil.rmtree(path, ignore_errors=True)
@@ -40,20 +41,22 @@ def _close_git_repos_in_directory(directory: Path):
     """Close any Git repository objects to release file handles.
 
     This is important on Windows where file handles prevent deletion.
+    This function uses GitPython's global cache clearing mechanism
+    for efficiency rather than creating new Repo objects.
     """
     if not directory.exists():
         return
 
-    for git_dir in directory.rglob(".git"):
-        if git_dir.is_dir():
-            try:
-                repo = Repo(str(git_dir.parent))
-                repo.close()
-                # Also close the git command interface
-                if hasattr(repo, "git"):
-                    repo.git.clear_cache()
-            except Exception:
-                pass  # Ignore errors - we're just trying to release handles
+    # Clear GitPython's global Git command cache which holds file handles
+    try:
+        from git import Git
+
+        Git.clear_cache()
+    except Exception:
+        pass  # Ignore errors - we're just trying to release handles
+
+    # Also try garbage collection to release any remaining handles
+    gc.collect()
 
 
 @pytest.fixture
