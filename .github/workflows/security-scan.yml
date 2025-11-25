@@ -6,7 +6,7 @@ on:
 
 jobs:
   vars:
-    uses: ./.github/workflows/ci-variables.yml
+    uses: ./.github/workflows/vars.yml
 
   security-scan:
     name: Security Scan

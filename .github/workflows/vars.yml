@@ -18,9 +18,8 @@ on:
 
 env:
   # Define canonical latest python version here for use across workflows
-  PYTHON_VERSION_LATEST: "3.13"
-  PYTHON_VERSIONS_ALL: '["3.13","3.12","3.11","3.10","3.9"]'
-  PYTHON_VERSIONS_LATEST: '["3.13"]'
+  PYTHON_VERSIONS_ALL: "3.13,3.12,3.11,3.10,3.9"
+  PYTHON_VERSIONS_LATEST: "3.13"
 
 jobs:
   vars:
@@ -40,7 +39,7 @@ jobs:
           
           # ALSO PRINT THEM TO THE LOG so you can see the actual values (not just "outputs set")
           # Use a NOTICE so they stand out in the Actions log; plain echo is fine too.
-          echo "::notice::CI variables set by ci-variables.yml:"
+          echo "::notice::CI variables set by vars.yml:"
           echo "PYTHON_VERSION_LATEST=$PYTHON_VERSION_LATEST"
           echo "PYTHON_VERSIONS_ALL=$PYTHON_VERSIONS_ALL"
           echo "PYTHON_VERSIONS_LATEST=$PYTHON_VERSIONS_LATEST"

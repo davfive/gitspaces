@@ -11,19 +11,11 @@ permissions:
 
 jobs:
   vars:
-    uses: ./.github/workflows/ci-variables.yml
-
-  # security-scan:
-  #   needs: vars
-  #   uses: ./.github/workflows/security-scan.yml
-  #   permissions:
-  #     contents: read
-  #     security-events: write
-  #   secrets: inherit
+    uses: ./.github/workflows/vars.yml
 
   run-tests:
     needs: vars
-    uses: ./.github/workflows/test-with-python-versions-reusable.yml
+    uses: ./.github/workflows/test-reusable.yml
     with:
       python_versions: ${{ needs.vars.outputs.python_versions_latest }}
       fail_fast: false
