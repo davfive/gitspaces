@@ -1,0 +1,118 @@
+name: "run-tests"
+description: "Set up a Python version, cache pip, install deps and run tests producing coverage. Supports Windows cmd, PowerShell, or running inside WSL. Optional upload of coverage artifact."
+
+inputs:
+  python-version:
+    description: "Python version (e.g. '3.13')"
+    required: true
+  requirements-file:
+    description: "Requirements file to install (default: requirements-dev.txt)"
+    required: false
+    default: "requirements-dev.txt"
+  test-args:
+    description: "Additional pytest args (default: tests/ -v --maxfail=1)"
+    required: false
+    default: "tests/ -v --maxfail=1"
+  coverage-file:
+    description: "Optional coverage filename (default: coverage-<version>.xml)"
+    required: false
+    default: ""
+  windows-shell:
+    description: "On Windows, which shell to use: cmd | pwsh | wsl"
+    required: false
+    default: "cmd"
+  upload-coverage:
+    description: "If 'true', upload the produced coverage xml as an artifact from this step (default: false)"
+    required: false
+    default: "false"
+
+outputs:
+  coverage-file:
+    description: "Path to coverage xml produced."
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Cache pip (cross-platform)
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/pip
+          C:\Users\runneradmin\AppData\Local\pip\Cache
+        key: ${{ runner.os }}-pip-${{ inputs.python-version }}-${{ hashFiles(inputs.requirements-file) }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ inputs.python-version }}-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -e . -r "${{ inputs.requirements-file }}"
+
+    # Unix / macOS path
+    - name: Run tests on Unix/macOS
+      if: runner.os != 'Windows'
+      id: run_unix
+      run: |
+        COVERAGE_FILE="${{ inputs.coverage-file }}"
+        if [ -z "$COVERAGE_FILE" ]; then
+          COVERAGE_FILE="coverage-${{ inputs.python-version }}.xml"
+        fi
+        python -m pytest ${{ inputs.test-args }} --cov=src/gitspaces --cov-report=xml:$COVERAGE_FILE --cov-report=term
+        echo "coverage-file=$COVERAGE_FILE" >> $GITHUB_OUTPUT
+
+    # Windows: native cmd.exe
+    - name: Run tests on Windows (cmd)
+      if: runner.os == 'Windows' && (inputs.windows-shell == 'cmd')
+      id: run_win_cmd
+      shell: cmd
+      run: |
+        set "COVERAGE_FILE=${{ inputs.coverage-file }}"
+        if "%COVERAGE_FILE%"=="" set "COVERAGE_FILE=coverage-${{ inputs.python-version }}.xml"
+        python -m pytest ${{ inputs.test-args }} --cov=src/gitspaces --cov-report=xml:%COVERAGE_FILE% --cov-report=term
+        echo coverage-file=%COVERAGE_FILE%>> %GITHUB_OUTPUT%
+
+    # Windows: PowerShell
+    - name: Run tests on Windows (PowerShell)
+      if: runner.os == 'Windows' && (inputs.windows-shell == 'pwsh')
+      id: run_win_pwsh
+      shell: pwsh
+      run: |
+        $coverage = '${{ inputs.coverage-file }}'
+        if ([string]::IsNullOrEmpty($coverage)) { $coverage = "coverage-${{ inputs.python-version }}.xml" }
+        python -m pytest ${{ inputs.test-args }} --cov=src/gitspaces --cov-report=xml:$coverage --cov-report=term
+        Write-Output ("coverage-file=$coverage") | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+    # Windows: run inside WSL (invoked via wsl.exe). Uses host cmd shell to convert paths and call wsl.
+    - name: Run tests on Windows (WSL)
+      if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
+      id: run_win_wsl
+      shell: cmd
+      run: |
+        rem Determine coverage filename
+        set "COVERAGE_FILE=${{ inputs.coverage-file }}"
+        if "%COVERAGE_FILE%"=="" set "COVERAGE_FILE=coverage-${{ inputs.python-version }}.xml"
+
+        rem Convert current host repo path to WSL path
+        for /f "delims=" %%P in ('wsl wslpath -u "%CD%"') do set "WPATH=%%P"
+
+        rem Run pytest inside WSL using the WSL path (will write coverage file into repo workspace)
+        wsl bash -lc "cd '$WPATH' && python -m pytest ${{ inputs.test-args }} --cov=src/gitspaces --cov-report=xml:$COVERAGE_FILE --cov-report=term"
+
+        rem Export coverage-file to GITHUB_OUTPUT for workflow consumption
+        echo coverage-file=%COVERAGE_FILE%>> %GITHUB_OUTPUT%
+
+    # Optional: upload coverage artifact from inside the composite action if requested
+    - name: Upload coverage artifact (if requested)
+      if: ${{ inputs.upload-coverage == 'true' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-${{ inputs.python-version }}-${{ runner.os }}
+        # try explicit coverage-file input first, otherwise default filename
+        path: |
+          ${{ inputs.coverage-file }}
+          coverage-${{ inputs.python-version }}.xml
