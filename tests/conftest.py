@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import gc
 import os
 import shutil
 import tempfile
+import time
 from pathlib import Path
 from unittest.mock import Mock
 import pytest
@@ -12,19 +14,65 @@ import yaml
 from git import Repo
 
 
+def _robust_rmtree(path: Path, retries: int = 5, delay: float = 0.5):
+    """Remove directory tree with retries for Windows file locking issues.
+
+    On Windows, Git processes may hold file handles open briefly after repo.close().
+    This function retries deletion with exponential backoff.
+    """
+    for attempt in range(retries):
+        try:
+            # Force garbage collection to release any Python-held handles
+            gc.collect()
+            shutil.rmtree(path, ignore_errors=False)
+            return
+        except PermissionError:
+            if attempt < retries - 1:
+                time.sleep(delay * (2**attempt))
+            else:
+                # Final attempt: use ignore_errors to clean up what we can
+                shutil.rmtree(path, ignore_errors=True)
+        except FileNotFoundError:
+            return  # Already deleted
+
+
+def _close_git_repos_in_directory(directory: Path):
+    """Close any Git repository objects to release file handles.
+
+    This is important on Windows where file handles prevent deletion.
+    """
+    if not directory.exists():
+        return
+
+    for git_dir in directory.rglob(".git"):
+        if git_dir.is_dir():
+            try:
+                repo = Repo(str(git_dir.parent))
+                repo.close()
+                # Also close the git command interface
+                if hasattr(repo, "git"):
+                    repo.git.clear_cache()
+            except Exception:
+                pass  # Ignore errors - we're just trying to release handles
+
+
 @pytest.fixture
 def temp_home(monkeypatch):
     """Create a temporary home directory for testing."""
-    with tempfile.TemporaryDirectory() as temp_dir:
-        # Resolve to real path to handle symlinks (e.g., /var -> /private/var on macOS)
-        temp_home_path = Path(temp_dir).resolve() / "home"
-        temp_home_path.mkdir()
+    # Create temp directory manually for better control over cleanup
+    temp_dir = tempfile.mkdtemp()
+    temp_home_path = Path(temp_dir).resolve() / "home"
+    temp_home_path.mkdir()
 
-        # Set HOME environment variable
-        monkeypatch.setenv("HOME", str(temp_home_path))
-        monkeypatch.setenv("USERPROFILE", str(temp_home_path))  # For Windows
+    # Set HOME environment variable
+    monkeypatch.setenv("HOME", str(temp_home_path))
+    monkeypatch.setenv("USERPROFILE", str(temp_home_path))  # For Windows
 
-        yield temp_home_path
+    yield temp_home_path
+
+    # Cleanup with proper handling for Windows file locking
+    _close_git_repos_in_directory(Path(temp_dir))
+    _robust_rmtree(Path(temp_dir))
 
 
 @pytest.fixture
@@ -117,6 +165,8 @@ def gitspaces_project(temp_home, gitspaces_config, temp_git_repo):
         os.chdir(original_dir)
         # Close repo to release file handles (important for Windows)
         repo.close()
+        if hasattr(repo, "git"):
+            repo.git.clear_cache()
 
     # Create feature space
     feature_space = project_path / "feature"
@@ -132,15 +182,10 @@ def gitspaces_project(temp_home, gitspaces_config, temp_git_repo):
         "zzz_dir": zzz_dir,
     }
 
-    # Cleanup: Close any git repos to release file handles on Windows
-    for space_dir in [main_space, feature_space]:
-        git_dir = space_dir / ".git"
-        if git_dir.exists():
-            try:
-                space_repo = Repo(str(space_dir))
-                space_repo.close()
-            except Exception:
-                pass  # Ignore errors during cleanup
+    # Cleanup: Close all git repos in the project directory to release file handles
+    # This is handled by temp_home fixture cleanup, but we explicitly close here
+    # to ensure handles are released before any other cleanup happens
+    _close_git_repos_in_directory(project_path)
 
 
 @pytest.fixture

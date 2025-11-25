@@ -73,7 +73,9 @@ class Project:
             The project name.
         """
         # Remove .git suffix and extract last part of path
-        name = url.rstrip("/").split("/")[-1]
+        # Handle both forward slashes (URLs, Unix paths) and backslashes (Windows paths)
+        normalized = url.replace("\\", "/")
+        name = normalized.rstrip("/").split("/")[-1]
         if name.endswith(".git"):
             name = name[:-4]
         return name
