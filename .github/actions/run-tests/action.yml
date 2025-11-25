@@ -72,13 +72,21 @@ runs:
         python -m pip install --upgrade pip
         python -m pip install -e . -r "${{ inputs.requirements-file }}"
 
+    # Setup WSL with Ubuntu (required for Windows WSL shell)
+    - name: Setup WSL
+      if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
+      uses: Vampire/setup-wsl@v5
+      with:
+        distribution: Ubuntu-24.04
+        additional-packages: python3 python3-pip python3-venv
+
     # Install dependencies - Windows WSL (uses cmd to invoke wsl)
     - name: Install dependencies (Windows WSL)
       if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
       shell: cmd
       run: |
         for /f "delims=" %%P in ('wsl wslpath -u "%CD%"') do set "WPATH=%%P"
-        wsl bash -lc "cd '%WPATH%' && python -m pip install --upgrade pip && python -m pip install -e . -r '${{ inputs.requirements-file }}'"
+        wsl bash -lc "cd '%WPATH%' && python3 -m pip install --upgrade pip && python3 -m pip install -e . -r '${{ inputs.requirements-file }}'"
 
     # Unix / macOS path
     - name: Run tests on Unix/macOS
@@ -129,7 +137,7 @@ runs:
         for /f "delims=" %%P in ('wsl wslpath -u "%CD%"') do set "WPATH=%%P"
 
         rem Run pytest inside WSL using the WSL path (will write coverage file into repo workspace)
-        wsl bash -lc "cd '$WPATH' && python -m pytest ${{ inputs.test-args }} --cov=src/gitspaces --cov-report=xml:$COVERAGE_FILE --cov-report=term"
+        wsl bash -lc "cd '%WPATH%' && python3 -m pytest ${{ inputs.test-args }} --cov=src/gitspaces --cov-report=xml:$COVERAGE_FILE --cov-report=term"
 
         rem Export coverage-file to GITHUB_OUTPUT for workflow consumption
         echo coverage-file=%COVERAGE_FILE%>> %GITHUB_OUTPUT%
