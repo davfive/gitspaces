@@ -22,7 +22,7 @@ jobs:
     secrets: inherit
 
   run-tests:
-    needs: vars
+    needs: [vars, security-scan]
     uses: ./.github/workflows/test-reusable.yml
     with:
       python_versions: ${{ needs.vars.outputs.python_versions_all }}

@@ -13,8 +13,16 @@ jobs:
   vars:
     uses: ./.github/workflows/vars.yml
 
-  run-tests:
+  security-scan:
     needs: vars
+    uses: ./.github/workflows/security-scan.yml
+    permissions:
+      contents: read
+      security-events: write
+    secrets: inherit
+
+  run-tests:
+    needs: [vars, security-scan]
     uses: ./.github/workflows/test-reusable.yml
     with:
       python_versions: ${{ needs.vars.outputs.python_versions_latest }}
