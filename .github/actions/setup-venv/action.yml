@@ -53,51 +53,67 @@ runs:
       if: runner.os != 'Windows'
       id: setup-unix
       shell: bash
+      env:
+        INPUT_VENV_PATH: ${{ inputs.venv-path }}
+        INPUT_REQUIREMENTS_FILE: ${{ inputs.requirements-file }}
+        ACTION_PATH: ${{ github.action_path }}
       run: |
-        chmod +x "${{ github.action_path }}/scripts/setup-venv.sh"
-        "${{ github.action_path }}/scripts/setup-venv.sh" \
-          "${{ inputs.venv-path }}" \
-          "${{ inputs.requirements-file }}"
-        echo "venv-path=${{ inputs.venv-path }}" >> $GITHUB_OUTPUT
-        echo "python-path=${{ inputs.venv-path }}/bin/python" >> $GITHUB_OUTPUT
+        chmod +x "$ACTION_PATH/scripts/setup-venv.sh"
+        "$ACTION_PATH/scripts/setup-venv.sh" \
+          "$INPUT_VENV_PATH" \
+          "$INPUT_REQUIREMENTS_FILE"
+        echo "venv-path=$INPUT_VENV_PATH" >> $GITHUB_OUTPUT
+        echo "python-path=$INPUT_VENV_PATH/bin/python" >> $GITHUB_OUTPUT
 
     # Windows cmd setup
     - name: Setup venv (Windows cmd)
       if: runner.os == 'Windows' && (inputs.shell-type == 'cmd' || inputs.shell-type == '')
       id: setup-win-cmd
       shell: cmd
+      env:
+        INPUT_VENV_PATH: ${{ inputs.venv-path }}
+        INPUT_REQUIREMENTS_FILE: ${{ inputs.requirements-file }}
+        ACTION_PATH: ${{ github.action_path }}
       run: |
-        call "${{ github.action_path }}\scripts\setup-venv.cmd" ^
-          "${{ inputs.venv-path }}" ^
-          "${{ inputs.requirements-file }}"
-        echo venv-path=${{ inputs.venv-path }}>> %GITHUB_OUTPUT%
-        echo python-path=${{ inputs.venv-path }}\Scripts\python.exe>> %GITHUB_OUTPUT%
+        call "%ACTION_PATH%\scripts\setup-venv.cmd" ^
+          "%INPUT_VENV_PATH%" ^
+          "%INPUT_REQUIREMENTS_FILE%"
+        echo venv-path=%INPUT_VENV_PATH%>> %GITHUB_OUTPUT%
+        echo python-path=%INPUT_VENV_PATH%\Scripts\python.exe>> %GITHUB_OUTPUT%
 
     # Windows PowerShell setup
     - name: Setup venv (Windows pwsh)
       if: runner.os == 'Windows' && inputs.shell-type == 'pwsh'
       id: setup-win-pwsh
       shell: pwsh
+      env:
+        INPUT_VENV_PATH: ${{ inputs.venv-path }}
+        INPUT_REQUIREMENTS_FILE: ${{ inputs.requirements-file }}
+        ACTION_PATH: ${{ github.action_path }}
       run: |
-        & "${{ github.action_path }}\scripts\setup-venv.ps1" `
-          -VenvPath "${{ inputs.venv-path }}" `
-          -RequirementsFile "${{ inputs.requirements-file }}"
-        Write-Output "venv-path=${{ inputs.venv-path }}" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-        Write-Output "python-path=${{ inputs.venv-path }}\Scripts\python.exe" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+        & "$env:ACTION_PATH\scripts\setup-venv.ps1" `
+          -VenvPath "$env:INPUT_VENV_PATH" `
+          -RequirementsFile "$env:INPUT_REQUIREMENTS_FILE"
+        Write-Output "venv-path=$env:INPUT_VENV_PATH" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+        Write-Output "python-path=$env:INPUT_VENV_PATH\Scripts\python.exe" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
     # Windows WSL setup
     - name: Setup venv (Windows WSL)
       if: runner.os == 'Windows' && inputs.shell-type == 'wsl'
       id: setup-win-wsl
       shell: cmd
+      env:
+        INPUT_VENV_PATH: ${{ inputs.venv-path }}
+        INPUT_REQUIREMENTS_FILE: ${{ inputs.requirements-file }}
+        ACTION_PATH: ${{ github.action_path }}
       run: |
         rem Convert script and venv paths to WSL paths
-        for /f "delims=" %%S in ('wsl wslpath -u "${{ github.action_path }}\scripts\setup-venv.sh"') do set "SCRIPT=%%S"
+        for /f "delims=" %%S in ('wsl wslpath -u "%ACTION_PATH%\scripts\setup-venv.sh"') do set "SCRIPT=%%S"
         for /f "delims=" %%W in ('wsl wslpath -u "%CD%"') do set "WPATH=%%W"
 
         rem Run setup script in WSL
-        wsl bash -lc "chmod +x '%SCRIPT%' && '%SCRIPT%' '%WPATH%/${{ inputs.venv-path }}' '${{ inputs.requirements-file }}'"
+        wsl bash -lc "chmod +x '%SCRIPT%' && '%SCRIPT%' '%WPATH%/%INPUT_VENV_PATH%' '%INPUT_REQUIREMENTS_FILE%'"
 
         rem Output paths (Windows-style for host consumption)
-        echo venv-path=${{ inputs.venv-path }}>> %GITHUB_OUTPUT%
-        echo python-path=${{ inputs.venv-path }}/bin/python>> %GITHUB_OUTPUT%
+        echo venv-path=%INPUT_VENV_PATH%>> %GITHUB_OUTPUT%
+        echo python-path=%INPUT_VENV_PATH%/bin/python>> %GITHUB_OUTPUT%

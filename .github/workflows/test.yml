@@ -39,10 +39,13 @@ jobs:
 
       - name: Verify venv setup
         shell: bash
+        env:
+          VENV_PATH: ${{ steps.venv.outputs.venv-path }}
+          PYTHON_PATH: ${{ steps.venv.outputs.python-path }}
         run: |
-          echo "Venv path: ${{ steps.venv.outputs.venv-path }}"
-          echo "Python path: ${{ steps.venv.outputs.python-path }}"
-          source ${{ steps.venv.outputs.venv-path }}/bin/activate
+          echo "Venv path: $VENV_PATH"
+          echo "Python path: $PYTHON_PATH"
+          source "$VENV_PATH/bin/activate"
           python --version
           which python
 
@@ -71,17 +74,21 @@ jobs:
       - name: Verify venv setup (cmd)
         if: matrix.shell-type == 'cmd'
         shell: cmd
+        env:
+          VENV_PATH: ${{ steps.venv.outputs.venv-path }}
         run: |
-          echo Venv path: ${{ steps.venv.outputs.venv-path }}
-          call ${{ steps.venv.outputs.venv-path }}\Scripts\activate.bat
+          echo Venv path: %VENV_PATH%
+          call %VENV_PATH%\Scripts\activate.bat
           python --version
 
       - name: Verify venv setup (pwsh)
         if: matrix.shell-type == 'pwsh'
         shell: pwsh
+        env:
+          VENV_PATH: ${{ steps.venv.outputs.venv-path }}
         run: |
-          Write-Host "Venv path: ${{ steps.venv.outputs.venv-path }}"
-          & "${{ steps.venv.outputs.venv-path }}\Scripts\Activate.ps1"
+          Write-Host "Venv path: $env:VENV_PATH"
+          & "$env:VENV_PATH\Scripts\Activate.ps1"
           python --version
 
   test-setup-wsl:
@@ -101,9 +108,11 @@ jobs:
 
       - name: Verify marker file
         shell: cmd
+        env:
+          MARKER_PATH: ${{ steps.wsl.outputs.marker-path }}
         run: |
-          echo Marker path: ${{ steps.wsl.outputs.marker-path }}
-          type "${{ steps.wsl.outputs.marker-path }}"
+          echo Marker path: %MARKER_PATH%
+          type "%MARKER_PATH%"
 
       - name: Verify deadsnakes PPA in WSL
         shell: cmd
@@ -135,6 +144,8 @@ jobs:
 
       - name: Verify venv in WSL
         shell: cmd
+        env:
+          VENV_PATH: ${{ steps.venv.outputs.venv-path }}
         run: |
           for /f "delims=" %%W in ('wsl wslpath -u "%CD%"') do set "WPATH=%%W"
-          wsl bash -lc "source '%WPATH%/.venv-wsl/bin/activate' && python --version"
+          wsl bash -lc "source '%WPATH%/%VENV_PATH%/bin/activate' && python --version"

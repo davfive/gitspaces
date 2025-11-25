@@ -39,6 +39,8 @@ runs:
     - name: Write marker file
       id: write-marker
       shell: cmd
+      env:
+        INPUT_MARKER_FILENAME: ${{ inputs.marker-filename }}
       run: |
         rem Ensure .github directory exists on host
         if not exist "%GITHUB_WORKSPACE%\.github" mkdir "%GITHUB_WORKSPACE%\.github"
@@ -47,7 +49,7 @@ runs:
         for /f "delims=" %%P in ('wsl wslpath -u "%GITHUB_WORKSPACE%"') do set "WPATH=%%P"
 
         rem Write marker file from WSL
-        wsl bash -lc "echo 'wsl-ready: $(date -Iseconds)' > '%WPATH%/.github/${{ inputs.marker-filename }}'"
+        wsl bash -lc "echo 'wsl-ready: $(date -Iseconds)' > '%WPATH%/.github/%INPUT_MARKER_FILENAME%'"
 
         rem Output the marker path for downstream steps
-        echo marker-path=%GITHUB_WORKSPACE%\.github\${{ inputs.marker-filename }}>> %GITHUB_OUTPUT%
+        echo marker-path=%GITHUB_WORKSPACE%\.github\%INPUT_MARKER_FILENAME%>> %GITHUB_OUTPUT%
