@@ -26,6 +26,7 @@ jobs:
       python-for-tools: ${{ needs.vars.outputs.python_versions_latest }}
     permissions:
       contents: read
+      security-events: write
 
   test:
     needs: [vars, static]
