@@ -25,10 +25,10 @@ inputs:
 outputs:
   venv-path:
     description: "Path to the created virtual environment"
-    value: ${{ steps.setup.outputs.venv-path }}
+    value: ${{ steps.setup-unix.outputs.venv-path || steps.setup-win-cmd.outputs.venv-path || steps.setup-win-pwsh.outputs.venv-path || steps.setup-win-wsl.outputs.venv-path }}
   python-path:
     description: "Path to the Python executable in the venv"
-    value: ${{ steps.setup.outputs.python-path }}
+    value: ${{ steps.setup-unix.outputs.python-path || steps.setup-win-cmd.outputs.python-path || steps.setup-win-pwsh.outputs.python-path || steps.setup-win-wsl.outputs.python-path }}
 
 runs:
   using: "composite"
@@ -43,7 +43,6 @@ runs:
       with:
         path: |
           ~/.cache/pip
-          ~/Library/Caches/pip
           C:\Users\runneradmin\AppData\Local\pip\Cache
         key: ${{ runner.os }}-${{ inputs.cache-key-prefix }}-${{ inputs.python-version }}-${{ hashFiles(inputs.requirements-file || '**/requirements*.txt') }}
         restore-keys: |
@@ -59,12 +58,6 @@ runs:
         "${{ github.action_path }}/scripts/setup-venv.sh" \
           "${{ inputs.venv-path }}" \
           "${{ inputs.requirements-file }}"
-
-    - name: Set outputs (Unix/macOS)
-      if: runner.os != 'Windows'
-      id: setup
-      shell: bash
-      run: |
         echo "venv-path=${{ inputs.venv-path }}" >> $GITHUB_OUTPUT
         echo "python-path=${{ inputs.venv-path }}/bin/python" >> $GITHUB_OUTPUT
 

@@ -24,7 +24,7 @@ runs:
   using: "composite"
   steps:
     - name: Setup WSL
-      uses: Vampire/setup-wsl@v3
+      uses: Vampire/setup-wsl@v5
       with:
         distribution: ${{ inputs.distribution }}
         additional-packages: software-properties-common ${{ inputs.additional-packages }}
