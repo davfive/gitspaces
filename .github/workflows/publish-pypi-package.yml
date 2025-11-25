@@ -30,6 +30,9 @@ jobs:
   run-tests:
     needs: [vars, extract_version]
     uses: ./.github/workflows/test-with-python-versions-all.yml
+    permissions:
+      contents: read
+      security-events: write
     secrets: inherit
 
   build:
