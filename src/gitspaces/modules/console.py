@@ -25,7 +25,7 @@ class Console:
         cls._console.print(message)
 
     @classmethod
-    def set_use_pretty_prompts(cls, use_pretty: bool) -> None   :
+    def set_use_pretty_prompts(cls, use_pretty: bool) -> None:
         """Set whether to use pretty prompts.
 
         Args:

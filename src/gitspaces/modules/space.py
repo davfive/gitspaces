@@ -162,4 +162,3 @@ class Space:
             True if the space is in the .zzz directory.
         """
         return bool(self.path.is_relative_to(self.project.zzz_dir))
-    

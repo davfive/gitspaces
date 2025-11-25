@@ -94,11 +94,12 @@ class Project:
             The path for the new sleeper space.
         """
         from itertools import count
+
         for i in count():
             sleeper_path = self.zzz_dir / f"zzz-{i}"
             if not sleeper_path.exists():
                 return sleeper_path
-        
+
         return None
 
     def list_spaces(self) -> list[str]:
