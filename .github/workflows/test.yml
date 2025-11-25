@@ -1,0 +1,140 @@
+name: "Example — Test Composite Actions"
+
+# Example workflow demonstrating the setup-wsl and setup-venv composite actions
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - 'ci/**'
+    paths:
+      - '.github/actions/setup-wsl/**'
+      - '.github/actions/setup-venv/**'
+      - '.github/workflows/test.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test-setup-venv-unix:
+    name: test-setup-venv (Unix/macOS)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ['3.11', '3.12', '3.13']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup venv
+        id: venv
+        uses: ./.github/actions/setup-venv
+        with:
+          python-version: ${{ matrix.python-version }}
+          venv-path: .venv
+          requirements-file: requirements.txt
+
+      - name: Verify venv setup
+        shell: bash
+        run: |
+          echo "Venv path: ${{ steps.venv.outputs.venv-path }}"
+          echo "Python path: ${{ steps.venv.outputs.python-path }}"
+          source ${{ steps.venv.outputs.venv-path }}/bin/activate
+          python --version
+          which python
+
+  test-setup-venv-windows:
+    name: test-setup-venv (Windows)
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shell-type: [cmd, pwsh]
+        python-version: ['3.12']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup venv
+        id: venv
+        uses: ./.github/actions/setup-venv
+        with:
+          python-version: ${{ matrix.python-version }}
+          venv-path: .venv
+          shell-type: ${{ matrix.shell-type }}
+          requirements-file: requirements.txt
+
+      - name: Verify venv setup (cmd)
+        if: matrix.shell-type == 'cmd'
+        shell: cmd
+        run: |
+          echo Venv path: ${{ steps.venv.outputs.venv-path }}
+          call ${{ steps.venv.outputs.venv-path }}\Scripts\activate.bat
+          python --version
+
+      - name: Verify venv setup (pwsh)
+        if: matrix.shell-type == 'pwsh'
+        shell: pwsh
+        run: |
+          Write-Host "Venv path: ${{ steps.venv.outputs.venv-path }}"
+          & "${{ steps.venv.outputs.venv-path }}\Scripts\Activate.ps1"
+          python --version
+
+  test-setup-wsl:
+    name: test-setup-wsl (Windows WSL)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup WSL with deadsnakes
+        id: wsl
+        uses: ./.github/actions/setup-wsl
+        with:
+          distribution: Ubuntu-24.04
+          marker-filename: wsl-ready
+
+      - name: Verify marker file
+        shell: cmd
+        run: |
+          echo Marker path: ${{ steps.wsl.outputs.marker-path }}
+          type "${{ steps.wsl.outputs.marker-path }}"
+
+      - name: Verify deadsnakes PPA in WSL
+        shell: cmd
+        run: |
+          wsl bash -lc "apt-cache policy | grep deadsnakes || echo 'deadsnakes PPA present'"
+
+  test-combined-wsl-venv:
+    name: test-combined (WSL + venv)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup WSL
+        uses: ./.github/actions/setup-wsl
+        with:
+          distribution: Ubuntu-24.04
+          additional-packages: python3-venv python3-pip
+
+      - name: Setup venv in WSL
+        id: venv
+        uses: ./.github/actions/setup-venv
+        with:
+          python-version: '3.12'
+          venv-path: .venv-wsl
+          shell-type: wsl
+          requirements-file: requirements.txt
+
+      - name: Verify venv in WSL
+        shell: cmd
+        run: |
+          for /f "delims=" %%W in ('wsl wslpath -u "%CD%"') do set "WPATH=%%W"
+          wsl bash -lc "source '%WPATH%/.venv-wsl/bin/activate' && python --version"

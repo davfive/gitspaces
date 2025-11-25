@@ -1,0 +1,110 @@
+name: "setup-venv"
+description: "Set up a Python virtual environment with cross-platform support (Unix/macOS, Windows cmd/pwsh, WSL)"
+
+inputs:
+  python-version:
+    description: "Python version to use (e.g. '3.13')"
+    required: true
+  venv-path:
+    description: "Path for the virtual environment (default: .venv)"
+    required: false
+    default: ".venv"
+  requirements-file:
+    description: "Requirements file to install (optional)"
+    required: false
+    default: ""
+  shell-type:
+    description: "Shell type to use: bash | cmd | pwsh | wsl (auto-detected if not specified)"
+    required: false
+    default: ""
+  cache-key-prefix:
+    description: "Prefix for pip cache key (default: venv)"
+    required: false
+    default: "venv"
+
+outputs:
+  venv-path:
+    description: "Path to the created virtual environment"
+    value: ${{ steps.setup.outputs.venv-path }}
+  python-path:
+    description: "Path to the Python executable in the venv"
+    value: ${{ steps.setup.outputs.python-path }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Cache pip (cross-platform)
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/pip
+          ~/Library/Caches/pip
+          C:\Users\runneradmin\AppData\Local\pip\Cache
+        key: ${{ runner.os }}-${{ inputs.cache-key-prefix }}-${{ inputs.python-version }}-${{ hashFiles(inputs.requirements-file || '**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ inputs.cache-key-prefix }}-${{ inputs.python-version }}-
+
+    # Unix/macOS setup
+    - name: Setup venv (Unix/macOS)
+      if: runner.os != 'Windows'
+      id: setup-unix
+      shell: bash
+      run: |
+        chmod +x "${{ github.action_path }}/scripts/setup-venv.sh"
+        "${{ github.action_path }}/scripts/setup-venv.sh" \
+          "${{ inputs.venv-path }}" \
+          "${{ inputs.requirements-file }}"
+
+    - name: Set outputs (Unix/macOS)
+      if: runner.os != 'Windows'
+      id: setup
+      shell: bash
+      run: |
+        echo "venv-path=${{ inputs.venv-path }}" >> $GITHUB_OUTPUT
+        echo "python-path=${{ inputs.venv-path }}/bin/python" >> $GITHUB_OUTPUT
+
+    # Windows cmd setup
+    - name: Setup venv (Windows cmd)
+      if: runner.os == 'Windows' && (inputs.shell-type == 'cmd' || inputs.shell-type == '')
+      id: setup-win-cmd
+      shell: cmd
+      run: |
+        call "${{ github.action_path }}\scripts\setup-venv.cmd" ^
+          "${{ inputs.venv-path }}" ^
+          "${{ inputs.requirements-file }}"
+        echo venv-path=${{ inputs.venv-path }}>> %GITHUB_OUTPUT%
+        echo python-path=${{ inputs.venv-path }}\Scripts\python.exe>> %GITHUB_OUTPUT%
+
+    # Windows PowerShell setup
+    - name: Setup venv (Windows pwsh)
+      if: runner.os == 'Windows' && inputs.shell-type == 'pwsh'
+      id: setup-win-pwsh
+      shell: pwsh
+      run: |
+        & "${{ github.action_path }}\scripts\setup-venv.ps1" `
+          -VenvPath "${{ inputs.venv-path }}" `
+          -RequirementsFile "${{ inputs.requirements-file }}"
+        Write-Output "venv-path=${{ inputs.venv-path }}" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+        Write-Output "python-path=${{ inputs.venv-path }}\Scripts\python.exe" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+    # Windows WSL setup
+    - name: Setup venv (Windows WSL)
+      if: runner.os == 'Windows' && inputs.shell-type == 'wsl'
+      id: setup-win-wsl
+      shell: cmd
+      run: |
+        rem Convert script and venv paths to WSL paths
+        for /f "delims=" %%S in ('wsl wslpath -u "${{ github.action_path }}\scripts\setup-venv.sh"') do set "SCRIPT=%%S"
+        for /f "delims=" %%W in ('wsl wslpath -u "%CD%"') do set "WPATH=%%W"
+
+        rem Run setup script in WSL
+        wsl bash -lc "chmod +x '%SCRIPT%' && '%SCRIPT%' '%WPATH%/${{ inputs.venv-path }}' '${{ inputs.requirements-file }}'"
+
+        rem Output paths (Windows-style for host consumption)
+        echo venv-path=${{ inputs.venv-path }}>> %GITHUB_OUTPUT%
+        echo python-path=${{ inputs.venv-path }}/bin/python>> %GITHUB_OUTPUT%
