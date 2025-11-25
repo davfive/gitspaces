@@ -8,6 +8,9 @@ on:
         required: false
         default: '["3.13"]'
 
+permissions:
+  contents: read
+
 jobs:
   vars:
     uses: ./.github/workflows/ci-variables.yml
