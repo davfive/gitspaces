@@ -141,7 +141,8 @@ runs:
       run: |
         $coverage = $env:INPUT_COVERAGE_FILE
         if ([string]::IsNullOrEmpty($coverage)) { $coverage = "coverage-$env:INPUT_PYTHON_VERSION.xml" }
-        python -m pytest $env:INPUT_TEST_ARGS.Split(' ') --cov=src/gitspaces --cov-report=xml:$coverage --cov-report=term
+        $testArgs = $env:INPUT_TEST_ARGS
+        Invoke-Expression "python -m pytest $testArgs --cov=src/gitspaces --cov-report=xml:$coverage --cov-report=term"
         Write-Output ("coverage-file=$coverage") | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
     # Windows: run inside WSL (invoked via wsl.exe). Uses host cmd shell to convert paths and call wsl.
