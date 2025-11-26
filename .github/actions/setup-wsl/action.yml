@@ -1,0 +1,55 @@
+name: "setup-wsl"
+description: "Set up WSL with Ubuntu distro, add deadsnakes PPA (idempotent), and write a host-visible marker file"
+
+inputs:
+  distribution:
+    description: "WSL distribution to use (default: Ubuntu-24.04)"
+    required: false
+    default: "Ubuntu-24.04"
+  additional-packages:
+    description: "Additional apt packages to install in WSL"
+    required: false
+    default: ""
+  marker-filename:
+    description: "Name of the marker file to write into $GITHUB_WORKSPACE/.github/ (default: wsl-ready)"
+    required: false
+    default: "wsl-ready"
+
+outputs:
+  marker-path:
+    description: "Path to the marker file written by WSL"
+    value: ${{ steps.write-marker.outputs.marker-path }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup WSL
+      uses: Vampire/setup-wsl@v5
+      with:
+        distribution: ${{ inputs.distribution }}
+        additional-packages: software-properties-common ${{ inputs.additional-packages }}
+
+    - name: Add deadsnakes PPA (idempotent)
+      shell: cmd
+      run: |
+        rem Convert script path to WSL path and run it
+        for /f "delims=" %%P in ('wsl wslpath -u "%GITHUB_ACTION_PATH%\scripts\setup-deadsnakes.sh"') do set "SCRIPT=%%P"
+        wsl bash -lc "chmod +x '%SCRIPT%' && '%SCRIPT%'"
+
+    - name: Write marker file
+      id: write-marker
+      shell: cmd
+      env:
+        INPUT_MARKER_FILENAME: ${{ inputs.marker-filename }}
+      run: |
+        rem Ensure .github directory exists on host
+        if not exist "%GITHUB_WORKSPACE%\.github" mkdir "%GITHUB_WORKSPACE%\.github"
+
+        rem Convert workspace path to WSL path
+        for /f "delims=" %%P in ('wsl wslpath -u "%GITHUB_WORKSPACE%"') do set "WPATH=%%P"
+
+        rem Write marker file from WSL
+        wsl bash -lc "echo 'wsl-ready: $(date -Iseconds)' > '%WPATH%/.github/%INPUT_MARKER_FILENAME%'"
+
+        rem Output the marker path for downstream steps
+        echo marker-path=%GITHUB_WORKSPACE%\.github\%INPUT_MARKER_FILENAME%>> %GITHUB_OUTPUT%
