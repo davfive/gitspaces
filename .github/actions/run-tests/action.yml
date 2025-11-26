@@ -33,52 +33,7 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ inputs.python-version }}
-
-    - name: Cache pip (cross-platform)
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cache/pip
-          C:\Users\runneradmin\AppData\Local\pip\Cache
-        key: ${{ runner.os }}-pip-${{ inputs.python-version }}-${{ hashFiles(inputs.requirements-file) }}
-        restore-keys: |
-          ${{ runner.os }}-pip-${{ inputs.python-version }}-
-
-    # Install dependencies - Unix/macOS
-    - name: Install dependencies (Unix/macOS)
-      if: runner.os != 'Windows'
-      shell: bash
-      env:
-        INPUT_REQUIREMENTS_FILE: ${{ inputs.requirements-file }}
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install -e . -r "$INPUT_REQUIREMENTS_FILE"
-
-    # Install dependencies - Windows cmd
-    - name: Install dependencies (Windows cmd)
-      if: runner.os == 'Windows' && (inputs.windows-shell == 'cmd')
-      shell: cmd
-      env:
-        INPUT_REQUIREMENTS_FILE: ${{ inputs.requirements-file }}
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install -e . -r "%INPUT_REQUIREMENTS_FILE%"
-
-    # Install dependencies - Windows PowerShell
-    - name: Install dependencies (Windows pwsh)
-      if: runner.os == 'Windows' && (inputs.windows-shell == 'pwsh')
-      shell: pwsh
-      env:
-        INPUT_REQUIREMENTS_FILE: ${{ inputs.requirements-file }}
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install -e . -r "$env:INPUT_REQUIREMENTS_FILE"
-
-    # Setup WSL with Ubuntu (required for Windows WSL shell)
+    # Setup WSL with Ubuntu (required for Windows WSL shell) - must come before setup-venv
     - name: Setup WSL
       if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
       uses: Vampire/setup-wsl@v5
@@ -86,16 +41,15 @@ runs:
         distribution: Ubuntu-24.04
         additional-packages: python3 python3-pip python3-venv
 
-    # Install dependencies - Windows WSL (uses cmd to invoke wsl)
-    # Uses a virtual environment to avoid PEP 668 externally-managed-environment error on Ubuntu 24.04
-    - name: Install dependencies (Windows WSL)
-      if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
-      shell: cmd
-      env:
-        INPUT_REQUIREMENTS_FILE: ${{ inputs.requirements-file }}
-      run: |
-        for /f "delims=" %%P in ('wsl wslpath -u "%CD%"') do set "WPATH=%%P"
-        wsl bash -lc "cd '%WPATH%' && python3 -m venv .venv && source .venv/bin/activate && python -m pip install --upgrade pip && python -m pip install -e . -r '%INPUT_REQUIREMENTS_FILE%'"
+    # Use setup-venv action to create venv and install dependencies
+    - name: Setup venv and install dependencies
+      id: venv
+      uses: ./.github/actions/setup-venv
+      with:
+        python-version: ${{ inputs.python-version }}
+        venv-path: .venv
+        requirements-file: ${{ inputs.requirements-file }}
+        shell-type: ${{ runner.os == 'Windows' && inputs.windows-shell || '' }}
 
     # Unix / macOS path
     - name: Run tests on Unix/macOS
@@ -106,11 +60,13 @@ runs:
         INPUT_COVERAGE_FILE: ${{ inputs.coverage-file }}
         INPUT_PYTHON_VERSION: ${{ inputs.python-version }}
         INPUT_TEST_ARGS: ${{ inputs.test-args }}
+        VENV_PATH: ${{ steps.venv.outputs.venv-path }}
       run: |
         COVERAGE_FILE="$INPUT_COVERAGE_FILE"
         if [ -z "$COVERAGE_FILE" ]; then
           COVERAGE_FILE="coverage-$INPUT_PYTHON_VERSION.xml"
         fi
+        source "$VENV_PATH/bin/activate"
         python -m pytest $INPUT_TEST_ARGS --cov=src/gitspaces --cov-report=xml:$COVERAGE_FILE --cov-report=term
         echo "coverage-file=$COVERAGE_FILE" >> $GITHUB_OUTPUT
 
@@ -123,9 +79,11 @@ runs:
         INPUT_COVERAGE_FILE: ${{ inputs.coverage-file }}
         INPUT_PYTHON_VERSION: ${{ inputs.python-version }}
         INPUT_TEST_ARGS: ${{ inputs.test-args }}
+        VENV_PATH: ${{ steps.venv.outputs.venv-path }}
       run: |
         set "COVERAGE_FILE=%INPUT_COVERAGE_FILE%"
         if "%COVERAGE_FILE%"=="" set "COVERAGE_FILE=coverage-%INPUT_PYTHON_VERSION%.xml"
+        call "%VENV_PATH%\Scripts\activate.bat"
         python -m pytest %INPUT_TEST_ARGS% --cov=src/gitspaces --cov-report=xml:%COVERAGE_FILE% --cov-report=term
         echo coverage-file=%COVERAGE_FILE%>> %GITHUB_OUTPUT%
 
@@ -138,15 +96,16 @@ runs:
         INPUT_COVERAGE_FILE: ${{ inputs.coverage-file }}
         INPUT_PYTHON_VERSION: ${{ inputs.python-version }}
         INPUT_TEST_ARGS: ${{ inputs.test-args }}
+        VENV_PATH: ${{ steps.venv.outputs.venv-path }}
       run: |
         $coverage = $env:INPUT_COVERAGE_FILE
         if ([string]::IsNullOrEmpty($coverage)) { $coverage = "coverage-$env:INPUT_PYTHON_VERSION.xml" }
         $testArgs = $env:INPUT_TEST_ARGS
+        & "$env:VENV_PATH\Scripts\Activate.ps1"
         Invoke-Expression "python -m pytest $testArgs --cov=src/gitspaces --cov-report=xml:$coverage --cov-report=term"
         Write-Output ("coverage-file=$coverage") | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
     # Windows: run inside WSL (invoked via wsl.exe). Uses host cmd shell to convert paths and call wsl.
-    # Uses the virtual environment created during dependency installation
     - name: Run tests on Windows (WSL)
       if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
       id: run_win_wsl
@@ -155,6 +114,7 @@ runs:
         INPUT_COVERAGE_FILE: ${{ inputs.coverage-file }}
         INPUT_PYTHON_VERSION: ${{ inputs.python-version }}
         INPUT_TEST_ARGS: ${{ inputs.test-args }}
+        VENV_PATH: ${{ steps.venv.outputs.venv-path }}
       run: |
         rem Determine coverage filename
         set "COVERAGE_FILE=%INPUT_COVERAGE_FILE%"
@@ -164,7 +124,7 @@ runs:
         for /f "delims=" %%P in ('wsl wslpath -u "%CD%"') do set "WPATH=%%P"
 
         rem Run pytest inside WSL using the WSL path and venv (will write coverage file into repo workspace)
-        wsl bash -lc "cd '%WPATH%' && source .venv/bin/activate && python -m pytest %INPUT_TEST_ARGS% --cov=src/gitspaces --cov-report=xml:%COVERAGE_FILE% --cov-report=term"
+        wsl bash -lc "cd '%WPATH%' && source '%VENV_PATH%/bin/activate' && python -m pytest %INPUT_TEST_ARGS% --cov=src/gitspaces --cov-report=xml:%COVERAGE_FILE% --cov-report=term"
 
         rem Export coverage-file to GITHUB_OUTPUT for workflow consumption
         echo coverage-file=%COVERAGE_FILE%>> %GITHUB_OUTPUT%

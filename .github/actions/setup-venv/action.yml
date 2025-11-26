@@ -33,7 +33,9 @@ outputs:
 runs:
   using: "composite"
   steps:
+    # Setup Python - only for non-WSL (WSL uses system Python from Ubuntu)
     - name: Setup Python
+      if: inputs.shell-type != 'wsl'
       uses: actions/setup-python@v5
       with:
         python-version: ${{ inputs.python-version }}
