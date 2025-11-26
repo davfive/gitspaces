@@ -22,6 +22,9 @@ if (-not (Test-Path "$VenvPath\Scripts\Activate.ps1")) {
 & "$VenvPath\Scripts\Activate.ps1"
 python -m pip install --upgrade pip
 
+# Because: Install the package in editable mode (required for tests to import it)
+python -m pip install -e .
+
 # Because: Install requirements if file is specified and exists
 if ($RequirementsFile -and (Test-Path $RequirementsFile)) {
     Write-Host "Installing dependencies from $RequirementsFile..."

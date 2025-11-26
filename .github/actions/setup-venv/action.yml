@@ -113,8 +113,8 @@ runs:
         for /f "delims=" %%S in ('wsl wslpath -u "%ACTION_PATH%\scripts\setup-venv.sh"') do set "SCRIPT=%%S"
         for /f "delims=" %%W in ('wsl wslpath -u "%CD%"') do set "WPATH=%%W"
 
-        rem Run setup script in WSL
-        wsl bash -lc "chmod +x '%SCRIPT%' && '%SCRIPT%' '%WPATH%/%INPUT_VENV_PATH%' '%INPUT_REQUIREMENTS_FILE%'"
+        rem Run setup script in WSL (use sed to fix line endings, then source to avoid shebang issues)
+        wsl bash -lc "cd '%WPATH%' && sed -i 's/\r$//' '%SCRIPT%' && source '%SCRIPT%' '%WPATH%/%INPUT_VENV_PATH%' '%INPUT_REQUIREMENTS_FILE%'"
 
         rem Output paths (Windows-style for host consumption)
         echo venv-path=%INPUT_VENV_PATH%>> %GITHUB_OUTPUT%

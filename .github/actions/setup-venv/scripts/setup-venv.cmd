@@ -20,6 +20,9 @@ REM Because: Activate and upgrade pip
 call "%VENV_PATH%\Scripts\activate.bat"
 python -m pip install --upgrade pip
 
+REM Because: Install the package in editable mode (required for tests to import it)
+python -m pip install -e .
+
 REM Because: Install requirements if file is specified and exists
 if not "%REQUIREMENTS_FILE%"=="" (
     if exist "%REQUIREMENTS_FILE%" (
