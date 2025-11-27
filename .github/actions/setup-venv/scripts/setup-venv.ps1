@@ -1,8 +1,9 @@
 # setup-venv.ps1
 # PowerShell script for creating and configuring a Python virtual environment
+# Supports CI matrix jobs by creating a separate venv per Python version
 param(
     [Parameter(Position=0)]
-    [string]$VenvPath = ".venv",
+    [string]$VenvPathBase = ".venv",
     
     [Parameter(Position=1)]
     [string]$RequirementsFile = ""
@@ -10,12 +11,31 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# Because: Create virtual environment if it doesn't exist
+# Because: ensure that when matrix jobs run multiple Python versions on the same runner, each Python version gets an isolated venv
+# Afterward: a venv directory named .venv-py<M>.<m> exists and its python matches the current interpreter
+$PyVer = python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"
+$VenvPath = "$VenvPathBase-py$PyVer"
+
+# Because: reuse a venv only when it already matches the interpreter version
+# Afterward: existing venv is kept if it matches; otherwise it's removed so we recreate it
+if (Test-Path "$VenvPath\Scripts\python.exe") {
+    $ExistingVer = & "$VenvPath\Scripts\python.exe" -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"
+    if ($ExistingVer -ne $PyVer) {
+        Write-Host "Existing venv python $ExistingVer does not match current python $PyVer; recreating $VenvPath"
+        Remove-Item -Recurse -Force $VenvPath
+    } else {
+        Write-Host "Using existing venv $VenvPath (python $ExistingVer)"
+    }
+} elseif (Test-Path $VenvPath) {
+    Write-Host "Venv dir exists but no python binary found; recreating $VenvPath"
+    Remove-Item -Recurse -Force $VenvPath
+}
+
+# Because: create a venv tied to the current python interpreter
+# Afterward: $VenvPath exists
 if (-not (Test-Path "$VenvPath\Scripts\Activate.ps1")) {
     Write-Host "Creating virtual environment at $VenvPath..."
     python -m venv $VenvPath
-} else {
-    Write-Host "Virtual environment already exists at $VenvPath"
 }
 
 # Because: Activate and upgrade pip
@@ -33,3 +53,6 @@ if ($RequirementsFile -and (Test-Path $RequirementsFile)) {
 
 # Afterward: Virtual environment is ready for use
 Write-Host "Virtual environment setup complete at $VenvPath"
+
+# Export the actual venv path for callers that need it
+$env:VENV_PATH = $VenvPath
