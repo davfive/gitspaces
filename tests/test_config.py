@@ -14,8 +14,11 @@ def test_config_singleton():
 
 def test_config_dir(tmp_path, monkeypatch):
     """Test configuration directory path."""
-    # Reset singleton
+    # Reset singleton and all class-level state
     Config._instance = None
+    Config._config_dir = None
+    Config._config_file = None
+    Config._data = {}
 
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     config = Config.instance()
@@ -27,6 +30,9 @@ def test_config_dir(tmp_path, monkeypatch):
 def test_config_file(tmp_path, monkeypatch):
     """Test configuration file path."""
     Config._instance = None
+    Config._config_dir = None
+    Config._config_file = None
+    Config._data = {}
 
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     config = Config.instance()
@@ -37,8 +43,11 @@ def test_config_file(tmp_path, monkeypatch):
 
 def test_project_paths(tmp_path, monkeypatch):
     """Test project paths property."""
-    # Reset singleton and ensure clean config
+    # Reset singleton and all class-level state
     Config._instance = None
+    Config._config_dir = None
+    Config._config_file = None
+    Config._data = {}
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     config = Config.instance()
 
@@ -51,9 +60,13 @@ def test_project_paths(tmp_path, monkeypatch):
     assert config.project_paths == test_paths
 
 
-def test_default_editor():
+def test_default_editor(tmp_path, monkeypatch):
     """Test default editor property."""
     Config._instance = None
+    Config._config_dir = None
+    Config._config_file = None
+    Config._data = {}
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
     config = Config.instance()
 
     # Default should be 'code'
@@ -67,6 +80,9 @@ def test_default_editor():
 def test_config_save_load(tmp_path, monkeypatch):
     """Test saving and loading configuration."""
     Config._instance = None
+    Config._config_dir = None
+    Config._config_file = None
+    Config._data = {}
 
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     config = Config.instance()
@@ -83,6 +99,9 @@ def test_config_save_load(tmp_path, monkeypatch):
 
     # Create new config and load
     Config._instance = None
+    Config._config_dir = None
+    Config._config_file = None
+    Config._data = {}
     config2 = Config.instance()
     config2.load()
 
@@ -91,9 +110,13 @@ def test_config_save_load(tmp_path, monkeypatch):
     assert config2.default_editor == "emacs"
 
 
-def test_config_get_set():
+def test_config_get_set(tmp_path, monkeypatch):
     """Test generic get/set methods."""
     Config._instance = None
+    Config._config_dir = None
+    Config._config_file = None
+    Config._data = {}
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
     config = Config.instance()
 
     # Test set and get

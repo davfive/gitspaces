@@ -29,7 +29,7 @@ jobs:
 
   test:
     needs: static
-    name: test-${{ matrix.platform.name }}
+    name: test-${{ matrix.platform.name }}-pyall
     runs-on: ${{ matrix.platform.os }}
     strategy:
       fail-fast: false
@@ -37,49 +37,49 @@ jobs:
         platform:
           - os: ubuntu-latest
             shell: bash
-            name: ubuntu.bash
+            name: ubuntu-bash
           - os: macos-latest
             shell: bash
-            name: macos.bash
+            name: macos-bash
           - os: windows-latest
             shell: pwsh
-            name: windows.pwsh
+            name: windows-pwsh
           - os: windows-latest
             shell: cmd
-            name: windows.cmd
+            name: windows-cmd
           - os: windows-latest
             shell: wsl-bash
-            name: windows.wsl
+            name: windows-wsl
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run tests (Python 3.13)
+      - name: test-${{ matrix.platform.name }}-py3.13
         uses: ./.github/actions/run-tests
         with:
           python-version: '3.13'
           upload-coverage: ${{ matrix.platform.os == 'ubuntu-latest' && matrix.platform.shell == 'bash' && 'true' || 'false' }}
           windows-shell: ${{ matrix.platform.shell == 'wsl-bash' && 'wsl' || matrix.platform.shell }}
 
-      - name: Run tests (Python 3.12)
+      - name: test-${{ matrix.platform.name }}-py3.12
         uses: ./.github/actions/run-tests
         with:
           python-version: '3.12'
           windows-shell: ${{ matrix.platform.shell == 'wsl-bash' && 'wsl' || matrix.platform.shell }}
 
-      - name: Run tests (Python 3.11)
+      - name: test-${{ matrix.platform.name }}-py3.11
         uses: ./.github/actions/run-tests
         with:
           python-version: '3.11'
           windows-shell: ${{ matrix.platform.shell == 'wsl-bash' && 'wsl' || matrix.platform.shell }}
 
-      - name: Run tests (Python 3.10)
+      - name: test-${{ matrix.platform.name }}-py3.10
         uses: ./.github/actions/run-tests
         with:
           python-version: '3.10'
           windows-shell: ${{ matrix.platform.shell == 'wsl-bash' && 'wsl' || matrix.platform.shell }}
 
-      - name: Run tests (Python 3.9)
+      - name: test-${{ matrix.platform.name }}-py3.9
         uses: ./.github/actions/run-tests
         with:
           python-version: '3.9'

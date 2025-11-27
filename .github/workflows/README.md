@@ -21,13 +21,17 @@ publish-pypi.yml ─→ test-all.yml ─→ build-pypi.yml ─→ TestPyPI ─�
 
 ## Test Platforms
 
-| Platform | Shell | Notes |
-|----------|-------|-------|
-| `ubuntu-latest` | bash | Primary CI, uploads coverage |
-| `macos-latest` | bash | macOS compatibility |
-| `windows-latest` | cmd | Native Windows CMD |
-| `windows-latest` | pwsh | PowerShell |
-| `windows-latest` | wsl-bash | WSL2 Ubuntu via ext4 filesystem |
+| Platform | Shell | Job/Step Name |
+|----------|-------|---------------|
+| `ubuntu-latest` | bash | `test-ubuntu-bash-py*` |
+| `macos-latest` | bash | `test-macos-bash-py*` |
+| `windows-latest` | cmd | `test-windows-cmd-py*` |
+| `windows-latest` | pwsh | `test-windows-pwsh-py*` |
+| `windows-latest` | wsl-bash | `test-windows-wsl-py*` |
+
+### Naming Convention
+- **Jobs**: `test-{platform}-{shell}-pylatest` or `test-{platform}-{shell}-pyall`
+- **Steps**: `test-{platform}-{shell}-py{version}` (e.g., `test-ubuntu-bash-py3.13`)
 
 ## Key Design Decisions
 
