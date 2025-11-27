@@ -42,13 +42,32 @@ if (-not (Test-Path "$VenvPath\Scripts\Activate.ps1")) {
 & "$VenvPath\Scripts\Activate.ps1"
 python -m pip install --upgrade pip
 
-# Because: Install the package in editable mode (required for tests to import it)
-python -m pip install -e .
+# Because: Build and install the package as a wheel (faster and more representative of user installs)
+# Afterward: the package wheel is installed and importable
+Write-Host "Building package wheel..."
+python -m pip install build
+python -m build --wheel
+Write-Host "Installing package wheel..."
+$WheelFile = Get-ChildItem -Path "dist\*.whl" | Select-Object -First 1
+python -m pip install $WheelFile.FullName
 
 # Because: Install requirements if file is specified and exists
+# Afterward: all dev dependencies are installed (local wheels first with fallback to index)
 if ($RequirementsFile -and (Test-Path $RequirementsFile)) {
     Write-Host "Installing dependencies from $RequirementsFile..."
-    python -m pip install -r $RequirementsFile
+    # Try local wheels first if wheels directory exists
+    if (Test-Path "wheels") {
+        Write-Host "Attempting install from local wheels cache..."
+        $localInstallResult = python -m pip install --no-index --find-links wheels/ -r $RequirementsFile 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "Successfully installed from local wheels"
+        } else {
+            Write-Host "Local wheels incomplete, falling back to index..."
+            python -m pip install -r $RequirementsFile
+        }
+    } else {
+        python -m pip install -r $RequirementsFile
+    }
 }
 
 # Afterward: Virtual environment is ready for use

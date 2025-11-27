@@ -40,13 +40,30 @@ fi
 source "${VENV_PATH}/bin/activate"
 python -m pip install --upgrade pip
 
-# Because: Install the package in editable mode (required for tests to import it)
-python -m pip install -e .
+# Because: Build and install the package as a wheel (faster and more representative of user installs)
+# Afterward: the package wheel is installed and importable
+echo "Building package wheel..."
+python -m pip install build
+python -m build --wheel
+echo "Installing package wheel..."
+python -m pip install dist/*.whl
 
 # Because: Install requirements if file is specified and exists
+# Afterward: all dev dependencies are installed (local wheels first with fallback to index)
 if [ -n "$REQUIREMENTS_FILE" ] && [ -f "$REQUIREMENTS_FILE" ]; then
     echo "Installing dependencies from $REQUIREMENTS_FILE..."
-    python -m pip install -r "$REQUIREMENTS_FILE"
+    # Try local wheels first if wheels directory exists
+    if [ -d "wheels" ]; then
+        echo "Attempting install from local wheels cache..."
+        if python -m pip install --no-index --find-links wheels/ -r "$REQUIREMENTS_FILE" 2>/dev/null; then
+            echo "Successfully installed from local wheels"
+        else
+            echo "Local wheels incomplete, falling back to index..."
+            python -m pip install -r "$REQUIREMENTS_FILE"
+        fi
+    else
+        python -m pip install -r "$REQUIREMENTS_FILE"
+    fi
 fi
 
 # Afterward: Virtual environment is ready for use
