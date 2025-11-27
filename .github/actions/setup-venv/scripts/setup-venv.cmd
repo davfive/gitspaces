@@ -11,13 +11,13 @@ set "REQUIREMENTS_FILE=%~2"
 
 REM Because: ensure that when matrix jobs run multiple Python versions on the same runner, each Python version gets an isolated venv
 REM Afterward: a venv directory named .venv-py<M>.<m> exists and its python matches the current interpreter
-for /f "delims=" %%V in ('python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"') do set "PY_VER=%%V"
+for /f "delims=" %%V in ('python -c "import sys; print(str(sys.version_info.major) + '.' + str(sys.version_info.minor))"') do set "PY_VER=%%V"
 set "VENV_PATH=%VENV_PATH_BASE%-py%PY_VER%"
 
 REM Because: reuse a venv only when it already matches the interpreter version
 REM Afterward: existing venv is kept if it matches; otherwise it's removed so we recreate it
 if exist "%VENV_PATH%\Scripts\python.exe" (
-    for /f "delims=" %%E in ('"%VENV_PATH%\Scripts\python.exe" -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"') do set "EXISTING_VER=%%E"
+    for /f "delims=" %%E in ('"%VENV_PATH%\Scripts\python.exe" -c "import sys; print(str(sys.version_info.major) + '.' + str(sys.version_info.minor))"') do set "EXISTING_VER=%%E"
     if not "!EXISTING_VER!"=="%PY_VER%" (
         echo Existing venv python !EXISTING_VER! does not match current python %PY_VER%; recreating %VENV_PATH%
         rmdir /s /q "%VENV_PATH%"
