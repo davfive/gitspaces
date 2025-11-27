@@ -2,7 +2,7 @@ name: "01 — Python Tests (latest only)"
 
 on:
   push:
-    branches: [ main, 'd5.**', 'copilot/**', 'ci/**' ]
+    branches: [ 'd5.**', 'copilot/**', 'ci/**' ]
   workflow_dispatch: {}
   workflow_call:
     inputs:
@@ -13,9 +13,6 @@ on:
 
 permissions:
   contents: read
-
-env:
-  LATEST_PYTHON_VERSION: '3.13'
 
 jobs:
   static:

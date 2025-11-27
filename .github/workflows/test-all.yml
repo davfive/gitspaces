@@ -14,9 +14,6 @@ on:
 permissions:
   contents: read
 
-env:
-  LATEST_PYTHON_VERSION: '3.13'
-
 jobs:
   static:
     uses: ./.github/workflows/static-checks.yml
