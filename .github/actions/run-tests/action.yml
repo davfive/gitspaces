@@ -33,16 +33,40 @@ outputs:
 runs:
   using: "composite"
   steps:
-    # Setup WSL with Ubuntu (required for Windows WSL shell) - must come before setup-venv
-    - name: Setup WSL
+    # Setup WSL with Ubuntu and deadsnakes PPA (required for Windows WSL shell)
+    - name: Setup WSL with deadsnakes
       if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
-      uses: Vampire/setup-wsl@v5
+      uses: ./.github/actions/setup-wsl
       with:
         distribution: Ubuntu-24.04
         additional-packages: python3 python3-pip python3-venv
 
-    # Use setup-venv action to create venv and install dependencies
+    # Install requested Python version in WSL and copy workspace to ext4 filesystem
+    - name: Setup WSL Python and workspace
+      if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
+      shell: cmd
+      env:
+        INPUT_PYTHON_VERSION: ${{ inputs.python-version }}
+        INPUT_REQUIREMENTS_FILE: ${{ inputs.requirements-file }}
+      run: |
+        rem Install the requested Python version in WSL via deadsnakes
+        wsl bash -lc "sudo apt-get install -y python%INPUT_PYTHON_VERSION% python%INPUT_PYTHON_VERSION%-venv python%INPUT_PYTHON_VERSION%-dev"
+
+        rem Convert Windows workspace path to WSL path for copying
+        for /f "delims=" %%P in ('wsl wslpath -u "%CD%"') do set "WPATH=%%P"
+
+        rem Copy workspace to WSL ext4 filesystem (~/gitspaces) for faster I/O
+        wsl bash -lc "rm -rf ~/gitspaces && mkdir -p ~/gitspaces && cp -r '%WPATH%'/. ~/gitspaces/"
+
+        rem Create venv with the correct Python version in ext4 filesystem
+        wsl bash -lc "cd ~/gitspaces && python%INPUT_PYTHON_VERSION% -m venv .venv-py%INPUT_PYTHON_VERSION%"
+
+        rem Activate venv and install dependencies
+        wsl bash -lc "cd ~/gitspaces && source .venv-py%INPUT_PYTHON_VERSION%/bin/activate && python -m pip install --upgrade pip && python -m pip install -e . && python -m pip install -r %INPUT_REQUIREMENTS_FILE%"
+
+    # Use setup-venv action to create venv and install dependencies (non-WSL)
     - name: Setup venv and install dependencies
+      if: runner.os != 'Windows' || inputs.windows-shell != 'wsl'
       id: venv
       uses: ./.github/actions/setup-venv
       with:
@@ -120,11 +144,14 @@ runs:
         set "COVERAGE_FILE=%INPUT_COVERAGE_FILE%"
         if "%COVERAGE_FILE%"=="" set "COVERAGE_FILE=coverage-%INPUT_PYTHON_VERSION%.xml"
 
-        rem Convert current host repo path to WSL path
+        rem Convert Windows workspace path to WSL path for coverage copy-back
         for /f "delims=" %%P in ('wsl wslpath -u "%CD%"') do set "WPATH=%%P"
 
-        rem Run pytest inside WSL using the WSL path and venv (will write coverage file into repo workspace)
-        wsl bash -lc "cd '%WPATH%' && source '%VENV_PATH%/bin/activate' && python -m pytest %INPUT_TEST_ARGS% --cov=src/gitspaces --cov-report=xml:%COVERAGE_FILE% --cov-report=term"
+        rem Run pytest inside WSL using ext4 filesystem (~/gitspaces) for best performance
+        wsl bash -lc "cd ~/gitspaces && source .venv-py%INPUT_PYTHON_VERSION%/bin/activate && python -m pytest %INPUT_TEST_ARGS% --cov=src/gitspaces --cov-report=xml:%COVERAGE_FILE% --cov-report=term"
+
+        rem Copy coverage file back to Windows workspace for artifact upload
+        wsl bash -lc "cp ~/gitspaces/%COVERAGE_FILE% '%WPATH%/%COVERAGE_FILE%'"
 
         rem Export coverage-file to GITHUB_OUTPUT for workflow consumption
         echo coverage-file=%COVERAGE_FILE%>> %GITHUB_OUTPUT%
