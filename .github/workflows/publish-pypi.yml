@@ -8,6 +8,9 @@ on:
 permissions:
   contents: read
 
+env:
+  LATEST_PYTHON_VERSION: '3.13'
+
 jobs:
   extract_version:
     runs-on: ubuntu-latest
@@ -24,12 +27,8 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
-  vars:
-    needs: extract_version
-    uses: ./.github/workflows/vars.yml
-
   test:
-    needs: vars
+    needs: extract_version
     uses: ./.github/workflows/test-all.yml
     permissions:
       contents: read
@@ -37,12 +36,12 @@ jobs:
     secrets: inherit
 
   build:
-    needs: [extract_version, vars, test]
+    needs: [extract_version, test]
     uses: ./.github/workflows/build-pypi.yml
     with:
       version: ${{ needs.extract_version.outputs.version }}
       tag: ${{ needs.extract_version.outputs.tag }}
-      python_version: ${{ needs.vars.outputs.python_version_latest }}
+      python_version: '3.13'
     secrets: inherit
 
   publish-to-testpypi:
