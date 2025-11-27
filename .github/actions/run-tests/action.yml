@@ -41,20 +41,6 @@ runs:
         distribution: Ubuntu-24.04
         additional-packages: python3 python3-pip python3-venv
 
-    # Copy workspace to WSL ext4 filesystem for faster I/O
-    - name: Copy workspace to WSL ext4 filesystem
-      if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
-      shell: cmd
-      run: |
-        rem Convert Windows path to WSL path
-        for /f "delims=" %%P in ('wsl wslpath -u "%CD%"') do set "WPATH=%%P"
-        rem Remove existing workspace and create fresh copy
-        wsl bash -lc "rm -rf ~/gitspaces"
-        wsl bash -lc "mkdir -p ~/gitspaces"
-        rem Copy files (ignore hidden file copy errors for .git internals)
-        wsl bash -lc "cp -r '%WPATH%'/* ~/gitspaces/"
-        wsl bash -lc "cp -r '%WPATH%'/.[!.]* ~/gitspaces/ 2>/dev/null || true"
-
     # Use setup-venv action to create venv and install dependencies
     - name: Setup venv and install dependencies
       id: venv
@@ -119,7 +105,7 @@ runs:
         Invoke-Expression "python -m pytest $testArgs --cov=src/gitspaces --cov-report=xml:$coverage --cov-report=term"
         Write-Output ("coverage-file=$coverage") | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
-    # Windows: run inside WSL (invoked via wsl.exe). Uses WSL ext4 filesystem for faster I/O.
+    # Windows: run inside WSL (invoked via wsl.exe). Uses host cmd shell to convert paths and call wsl.
     - name: Run tests on Windows (WSL)
       if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
       id: run_win_wsl
@@ -134,24 +120,14 @@ runs:
         set "COVERAGE_FILE=%INPUT_COVERAGE_FILE%"
         if "%COVERAGE_FILE%"=="" set "COVERAGE_FILE=coverage-%INPUT_PYTHON_VERSION%.xml"
 
-        rem Run pytest inside WSL using ext4 filesystem path (~/gitspaces)
-        wsl bash -lc "cd ~/gitspaces && source '%VENV_PATH%/bin/activate' && python -m pytest %INPUT_TEST_ARGS% --cov=src/gitspaces --cov-report=xml:%COVERAGE_FILE% --cov-report=term"
+        rem Convert current host repo path to WSL path
+        for /f "delims=" %%P in ('wsl wslpath -u "%CD%"') do set "WPATH=%%P"
+
+        rem Run pytest inside WSL using the WSL path and venv (will write coverage file into repo workspace)
+        wsl bash -lc "cd '%WPATH%' && source '%VENV_PATH%/bin/activate' && python -m pytest %INPUT_TEST_ARGS% --cov=src/gitspaces --cov-report=xml:%COVERAGE_FILE% --cov-report=term"
 
         rem Export coverage-file to GITHUB_OUTPUT for workflow consumption
         echo coverage-file=%COVERAGE_FILE%>> %GITHUB_OUTPUT%
-
-    # Copy coverage file back from WSL to Windows host for artifact upload
-    - name: Copy coverage from WSL to host
-      if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
-      shell: cmd
-      env:
-        INPUT_COVERAGE_FILE: ${{ inputs.coverage-file }}
-        INPUT_PYTHON_VERSION: ${{ inputs.python-version }}
-      run: |
-        set "COVERAGE_FILE=%INPUT_COVERAGE_FILE%"
-        if "%COVERAGE_FILE%"=="" set "COVERAGE_FILE=coverage-%INPUT_PYTHON_VERSION%.xml"
-        for /f "delims=" %%P in ('wsl wslpath -u "%CD%"') do set "WPATH=%%P"
-        wsl bash -lc "cp ~/gitspaces/%COVERAGE_FILE% '%WPATH%/%COVERAGE_FILE%'"
 
     # Optional: upload coverage artifact from inside the composite action if requested
     - name: Upload coverage artifact (if requested)

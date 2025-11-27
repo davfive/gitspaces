@@ -40,32 +40,14 @@ REM Because: Activate and upgrade pip
 call "%VENV_PATH%\Scripts\activate.bat"
 python -m pip install --upgrade pip
 
-REM Because: Build and install the package as a wheel (faster and more representative of user installs)
-REM Afterward: the package wheel is installed and importable
-echo Building package wheel...
-python -m pip install build
-python -m build --wheel
-echo Installing package wheel...
-for %%W in (dist\*.whl) do python -m pip install "%%W"
+REM Because: Install the package in editable mode (required for tests to import it)
+python -m pip install -e .
 
 REM Because: Install requirements if file is specified and exists
-REM Afterward: all dev dependencies are installed (local wheels first with fallback to index)
 if not "%REQUIREMENTS_FILE%"=="" (
     if exist "%REQUIREMENTS_FILE%" (
         echo Installing dependencies from %REQUIREMENTS_FILE%...
-        REM Try local wheels first if wheels directory exists
-        if exist "wheels" (
-            echo Attempting install from local wheels cache...
-            python -m pip install --no-index --find-links wheels/ -r "%REQUIREMENTS_FILE%" 2>nul
-            if errorlevel 1 (
-                echo Local wheels incomplete, falling back to index...
-                python -m pip install -r "%REQUIREMENTS_FILE%"
-            ) else (
-                echo Successfully installed from local wheels
-            )
-        ) else (
-            python -m pip install -r "%REQUIREMENTS_FILE%"
-        )
+        python -m pip install -r "%REQUIREMENTS_FILE%"
     )
 )
 

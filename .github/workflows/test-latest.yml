@@ -50,34 +50,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Git config tuning for Windows cmd/pwsh (faster file operations)
-      - name: Configure Git for Windows performance
-        if: runner.os == 'Windows' && matrix.platform.shell != 'wsl-bash'
-        shell: cmd
-        run: |
-          git config --global core.autocrlf false
-          git config --global core.fsyncObjectFiles false
-          git config --global gc.auto 0
-
-      # Predownload wheels for faster installation (Unix/macOS)
-      - name: Predownload wheels (Unix)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          python -m pip install --upgrade pip
-          mkdir -p wheels
-          pip download -r requirements-dev.txt -d wheels/ || true
-
-      # Predownload wheels for faster installation (Windows cmd/pwsh)
-      - name: Predownload wheels (Windows)
-        if: runner.os == 'Windows' && matrix.platform.shell != 'wsl-bash'
-        shell: pwsh
-        run: |
-          python -m pip install --upgrade pip
-          New-Item -ItemType Directory -Force -Path wheels | Out-Null
-          pip download -r requirements-dev.txt -d wheels/ 2>&1 | Out-Null
-          if ($LASTEXITCODE -ne 0) { Write-Host "Some wheels failed to download, will use fallback" }
-
       - name: Run tests (Python 3.13)
         uses: ./.github/actions/run-tests
         with:
