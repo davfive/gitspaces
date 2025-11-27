@@ -14,65 +14,50 @@ on:
 permissions:
   contents: read
 
-jobs:
-  vars:
-    uses: ./.github/workflows/vars.yml
+env:
+  LATEST_PYTHON_VERSION: '3.13'
 
+jobs:
   static:
-    needs: vars
     uses: ./.github/workflows/static-checks.yml
     with:
       run-security: true
-      python-for-tools: ${{ needs.vars.outputs.python_versions_latest }}
+      python-for-tools: '3.13'
     permissions:
       contents: read
       security-events: write
 
   test:
-    needs: [vars, static]
-    name: test-${{ matrix.platform.os }}.${{ matrix.platform.shell }}.latest
+    needs: static
+    name: test-${{ matrix.platform.name }}.py${{ matrix.python-version }}
     runs-on: ${{ matrix.platform.os }}
     strategy:
       fail-fast: false
       matrix:
+        python-version: ['3.13', '3.12', '3.11', '3.10', '3.9']
         platform:
           - os: ubuntu-latest
             shell: bash
+            name: ubuntu.bash
           - os: macos-latest
             shell: bash
+            name: macos.bash
           - os: windows-latest
             shell: pwsh
+            name: windows.pwsh
           - os: windows-latest
             shell: cmd
+            name: windows.cmd
           - os: windows-latest
             shell: wsl-bash
+            name: windows.wsl
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run tests (Python 3.13)
+      - name: Run tests (Python ${{ matrix.python-version }})
         uses: ./.github/actions/run-tests
         with:
-          python-version: '3.13'
-          upload-coverage: ${{ matrix.platform.os == 'ubuntu-latest' && matrix.platform.shell == 'bash' && 'true' || 'false' }}
+          python-version: ${{ matrix.python-version }}
+          upload-coverage: ${{ matrix.platform.os == 'ubuntu-latest' && matrix.platform.shell == 'bash' && matrix.python-version == '3.13' && 'true' || 'false' }}
           windows-shell: ${{ matrix.platform.shell == 'wsl-bash' && 'wsl' || matrix.platform.shell }}
-
-      - name: Run tests (Python 3.12)
-        uses: ./.github/actions/run-tests
-        with:
-          python-version: '3.12'
-
-      - name: Run tests (Python 3.11)
-        uses: ./.github/actions/run-tests
-        with:
-          python-version: '3.11'
-
-      - name: Run tests (Python 3.10)
-        uses: ./.github/actions/run-tests
-        with:
-          python-version: '3.10'
-
-      - name: Run tests (Python 3.9)
-        uses: ./.github/actions/run-tests
-        with:
-          python-version: '3.9'

@@ -32,9 +32,8 @@ runs:
     - name: Add deadsnakes PPA (idempotent)
       shell: cmd
       run: |
-        rem Convert script path to WSL path and run it
-        for /f "delims=" %%P in ('wsl wslpath -u "%GITHUB_ACTION_PATH%\scripts\setup-deadsnakes.sh"') do set "SCRIPT=%%P"
-        wsl bash -lc "chmod +x '%SCRIPT%' && '%SCRIPT%'"
+        rem Add deadsnakes PPA directly (inline script to avoid file path issues)
+        wsl bash -lc "if ! ls /etc/apt/sources.list.d/deadsnakes-ubuntu-ppa-*.list 1>/dev/null 2>&1; then echo 'Adding deadsnakes PPA...' && sudo add-apt-repository -y ppa:deadsnakes/ppa; else echo 'deadsnakes PPA already configured'; fi && sudo apt-get update -qq"
 
     - name: Write marker file
       id: write-marker

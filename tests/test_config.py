@@ -35,9 +35,11 @@ def test_config_file(tmp_path, monkeypatch):
     assert config.config_file == expected_file
 
 
-def test_project_paths():
+def test_project_paths(tmp_path, monkeypatch):
     """Test project paths property."""
+    # Reset singleton and ensure clean config
     Config._instance = None
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
     config = Config.instance()
 
     # Default should be empty list
