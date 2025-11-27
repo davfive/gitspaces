@@ -58,7 +58,8 @@ if ($RequirementsFile -and (Test-Path $RequirementsFile)) {
     # Try local wheels first if wheels directory exists
     if (Test-Path "wheels") {
         Write-Host "Attempting install from local wheels cache..."
-        $localInstallResult = python -m pip install --no-index --find-links wheels/ -r $RequirementsFile 2>&1
+        # Capture and discard output while checking exit code
+        python -m pip install --no-index --find-links wheels/ -r $RequirementsFile 2>&1 | Out-Null
         if ($LASTEXITCODE -eq 0) {
             Write-Host "Successfully installed from local wheels"
         } else {

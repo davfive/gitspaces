@@ -39,7 +39,7 @@ runs:
       uses: Vampire/setup-wsl@v5
       with:
         distribution: Ubuntu-24.04
-        additional-packages: python3 python3-pip python3-venv python3-dev build-essential
+        additional-packages: python3 python3-pip python3-venv
 
     # Copy workspace to WSL ext4 filesystem for faster I/O
     - name: Copy workspace to WSL ext4 filesystem
@@ -48,8 +48,12 @@ runs:
       run: |
         rem Convert Windows path to WSL path
         for /f "delims=" %%P in ('wsl wslpath -u "%CD%"') do set "WPATH=%%P"
-        rem Copy workspace to WSL home directory (ext4 filesystem)
-        wsl bash -lc "rm -rf ~/gitspaces && mkdir -p ~/gitspaces && cp -r '%WPATH%'/* ~/gitspaces/ && cp -r '%WPATH%'/.* ~/gitspaces/ 2>/dev/null || true"
+        rem Remove existing workspace and create fresh copy
+        wsl bash -lc "rm -rf ~/gitspaces"
+        wsl bash -lc "mkdir -p ~/gitspaces"
+        rem Copy files (ignore hidden file copy errors for .git internals)
+        wsl bash -lc "cp -r '%WPATH%'/* ~/gitspaces/"
+        wsl bash -lc "cp -r '%WPATH%'/.[!.]* ~/gitspaces/ 2>/dev/null || true"
 
     # Use setup-venv action to create venv and install dependencies
     - name: Setup venv and install dependencies
