@@ -20,6 +20,7 @@ class TestCloneE2E:
         """User selects from configured project directories when multiple exist."""
         # Add another project path to config
         from gitspaces.modules.config import Config
+
         config = Config.instance()
         second_path = gitspaces_config["projects_dir"].parent / "second-dir"
         second_path.mkdir(parents=True, exist_ok=True)
@@ -30,6 +31,7 @@ class TestCloneE2E:
         mock_console_input(["main"])
 
         from gitspaces.modules import runshell
+
         monkeypatch.setattr(runshell.fs, "chdir", lambda x: None)
 
         args = Mock()
@@ -51,6 +53,7 @@ class TestCloneE2E:
         mock_console_input(["main"])
 
         from gitspaces.modules import runshell
+
         monkeypatch.setattr(runshell.fs, "chdir", lambda x: None)
 
         args = Mock()
@@ -81,6 +84,7 @@ class TestCloneE2E:
         mock_console_input(["my-first-space"])
 
         from gitspaces.modules import runshell
+
         monkeypatch.setattr(runshell.fs, "chdir", lambda x: None)
 
         args = Mock()
@@ -102,6 +106,7 @@ class TestCloneE2E:
         mock_console_input(["dev-space"])
 
         from gitspaces.modules import runshell
+
         monkeypatch.setattr(runshell.fs, "chdir", lambda x: None)
 
         args = Mock()

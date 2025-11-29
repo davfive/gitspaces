@@ -15,9 +15,7 @@ from gitspaces.modules.config import Config
 class TestSetupE2E:
     """End-to-end tests for the setup command."""
 
-    def test_setup_creates_config_file(
-        self, temp_home, monkeypatch, mock_console_input, capsys
-    ):
+    def test_setup_creates_config_file(self, temp_home, monkeypatch, mock_console_input, capsys):
         """Creates ~/.gitspaces/config.yaml with project_dirs."""
         # Reset config singleton
         Config._instance = None
@@ -32,6 +30,7 @@ class TestSetupE2E:
 
         # Mock confirm for creating directory
         from gitspaces.modules.console import Console
+
         monkeypatch.setattr(Console, "prompt_confirm", lambda msg, default=True: True)
 
         args = Mock()
@@ -53,9 +52,7 @@ class TestSetupE2E:
         assert str(project_dir) in config_data["project_paths"]
         assert config_data["default_editor"] == "vim"
 
-    def test_setup_prompts_for_editor(
-        self, temp_home, monkeypatch, mock_console_input, capsys
-    ):
+    def test_setup_prompts_for_editor(self, temp_home, monkeypatch, mock_console_input, capsys):
         """Allow user to configure default editor."""
         Config._instance = None
         Config._config_dir = None
@@ -76,9 +73,7 @@ class TestSetupE2E:
         config.load()
         assert config.default_editor == "nvim"
 
-    def test_setup_validates_directory_paths(
-        self, temp_home, monkeypatch, capsys
-    ):
+    def test_setup_validates_directory_paths(self, temp_home, monkeypatch, capsys):
         """Reject invalid/non-existent directories (unless user confirms creation)."""
         Config._instance = None
         Config._config_dir = None
@@ -93,12 +88,17 @@ class TestSetupE2E:
         input_iter = iter(input_responses)
 
         from gitspaces.modules.console import Console
-        monkeypatch.setattr(Console, "prompt_input", lambda msg, default="": next(input_iter, default))
+
+        monkeypatch.setattr(
+            Console, "prompt_input", lambda msg, default="": next(input_iter, default)
+        )
 
         # First prompt for nonexistent - decline creation, then accept existing
         confirm_responses = [False]  # Don't create nonexistent
         confirm_iter = iter(confirm_responses)
-        monkeypatch.setattr(Console, "prompt_confirm", lambda msg, default=True: next(confirm_iter, default))
+        monkeypatch.setattr(
+            Console, "prompt_confirm", lambda msg, default=True: next(confirm_iter, default)
+        )
 
         result = run_setup()
 
@@ -125,6 +125,7 @@ class TestSetupE2E:
         mock_console_input([str(new_dir), "", "code"])
 
         from gitspaces.modules.console import Console
+
         monkeypatch.setattr(Console, "prompt_confirm", lambda msg, default=True: True)
 
         result = run_setup()
@@ -132,9 +133,7 @@ class TestSetupE2E:
         assert result is True
         assert new_dir.exists()
 
-    def test_setup_requires_at_least_one_path(
-        self, temp_home, monkeypatch, capsys
-    ):
+    def test_setup_requires_at_least_one_path(self, temp_home, monkeypatch, capsys):
         """At least one project path is required."""
         Config._instance = None
         Config._config_dir = None
@@ -149,7 +148,10 @@ class TestSetupE2E:
         input_iter = iter(input_responses)
 
         from gitspaces.modules.console import Console
-        monkeypatch.setattr(Console, "prompt_input", lambda msg, default="": next(input_iter, default))
+
+        monkeypatch.setattr(
+            Console, "prompt_input", lambda msg, default="": next(input_iter, default)
+        )
 
         result = run_setup()
 
@@ -158,9 +160,7 @@ class TestSetupE2E:
         captured = capsys.readouterr()
         assert "At least one project path is required" in captured.out
 
-    def test_setup_multiple_project_paths(
-        self, temp_home, monkeypatch, mock_console_input, capsys
-    ):
+    def test_setup_multiple_project_paths(self, temp_home, monkeypatch, mock_console_input, capsys):
         """Support configuring multiple project directories."""
         Config._instance = None
         Config._config_dir = None

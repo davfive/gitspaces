@@ -28,6 +28,7 @@ class TestCodeE2E:
         editor_called_with = []
 
         from gitspaces.modules import runshell
+
         def mock_run(cmd, **kwargs):
             editor_called_with.append(cmd)
 
@@ -45,15 +46,14 @@ class TestCodeE2E:
         assert len(editor_called_with) == 1
         assert ".code-workspace" in str(editor_called_with[0][1])
 
-    def test_code_creates_workspace_file(
-        self, gitspaces_project, monkeypatch
-    ):
+    def test_code_creates_workspace_file(self, gitspaces_project, monkeypatch):
         """Generate .code-workspace/<project>~<clone>.code-workspace if missing."""
         project_data = gitspaces_project
 
         monkeypatch.chdir(project_data["main_space"])
 
         from gitspaces.modules import runshell
+
         monkeypatch.setattr(runshell.subprocess, "run", lambda cmd, **kwargs: None)
 
         args = Mock()
@@ -78,9 +78,7 @@ class TestCodeE2E:
         assert len(content["folders"]) == 1
         assert str(project_data["main_space"]) in content["folders"][0]["path"]
 
-    def test_code_opens_workspace_not_folder(
-        self, gitspaces_project, monkeypatch
-    ):
+    def test_code_opens_workspace_not_folder(self, gitspaces_project, monkeypatch):
         """Verify 'code' command receives .code-workspace file, not directory."""
         project_data = gitspaces_project
 
@@ -89,6 +87,7 @@ class TestCodeE2E:
         editor_args = []
 
         from gitspaces.modules import runshell
+
         def mock_run(cmd, **kwargs):
             editor_args.extend(cmd)
 
@@ -117,6 +116,7 @@ class TestCodeE2E:
         mock_console_select(["feature"])
 
         from gitspaces.modules import runshell
+
         monkeypatch.setattr(runshell.subprocess, "run", lambda cmd, **kwargs: None)
 
         args = Mock()
@@ -127,15 +127,14 @@ class TestCodeE2E:
         captured = capsys.readouterr()
         assert "Opening 'feature'" in captured.out
 
-    def test_code_workspace_includes_correct_path(
-        self, gitspaces_project, monkeypatch
-    ):
+    def test_code_workspace_includes_correct_path(self, gitspaces_project, monkeypatch):
         """Workspace file should include correct folder path."""
         project_data = gitspaces_project
 
         monkeypatch.chdir(project_data["feature_space"])
 
         from gitspaces.modules import runshell
+
         monkeypatch.setattr(runshell.subprocess, "run", lambda cmd, **kwargs: None)
 
         args = Mock()
@@ -144,7 +143,9 @@ class TestCodeE2E:
         code_command(args)
 
         # Check workspace file content
-        ws_file = project_data["project_path"] / ".code-workspace" / "test-project~feature.code-workspace"
+        ws_file = (
+            project_data["project_path"] / ".code-workspace" / "test-project~feature.code-workspace"
+        )
         assert ws_file.exists()
 
         content = json.loads(ws_file.read_text())

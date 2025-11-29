@@ -14,9 +14,7 @@ from gitspaces.modules.project import Project
 class TestSleepE2E:
     """End-to-end tests for the sleep command."""
 
-    def test_sleep_puts_active_clone_to_sleep(
-        self, gitspaces_project, monkeypatch, capsys
-    ):
+    def test_sleep_puts_active_clone_to_sleep(self, gitspaces_project, monkeypatch, capsys):
         """Move clone dir to .zzz/ with next available number."""
         project_data = gitspaces_project
 
@@ -62,7 +60,12 @@ class TestSleepE2E:
         assert not project_data["feature_space"].exists()
 
     def test_sleep_wakes_sleeper_with_new_name(
-        self, gitspaces_project_with_sleepers, monkeypatch, mock_console_select, mock_console_input, capsys
+        self,
+        gitspaces_project_with_sleepers,
+        monkeypatch,
+        mock_console_select,
+        mock_console_input,
+        capsys,
     ):
         """Select sleeper, prompt for name, move out of .zzz/."""
         project_data = gitspaces_project_with_sleepers
@@ -75,6 +78,7 @@ class TestSleepE2E:
 
         # Need to also mock confirm to wake
         from gitspaces.modules.console import Console
+
         original_confirm = Console.prompt_confirm
         confirm_calls = [True]  # Yes, wake another
 
@@ -114,6 +118,7 @@ class TestSleepE2E:
             return choices[0] if choices else default
 
         from gitspaces.modules.console import Console
+
         monkeypatch.setattr(Console, "prompt_select", capture_select)
 
         # Mock confirm to wake
@@ -130,9 +135,7 @@ class TestSleepE2E:
         # Should have offered both sleepers
         assert ".zzz/zzz-0" in wake_choices or ".zzz/zzz-1" in wake_choices
 
-    def test_sleep_preserves_git_repo(
-        self, gitspaces_project, monkeypatch, capsys
-    ):
+    def test_sleep_preserves_git_repo(self, gitspaces_project, monkeypatch, capsys):
         """Verify git repository is preserved when sleeping."""
         project_data = gitspaces_project
 

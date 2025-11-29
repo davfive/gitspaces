@@ -14,9 +14,7 @@ from gitspaces.modules.project import Project
 class TestExtendE2E:
     """End-to-end tests for the extend command."""
 
-    def test_extend_creates_new_sleeper_clone(
-        self, gitspaces_project, monkeypatch, capsys
-    ):
+    def test_extend_creates_new_sleeper_clone(self, gitspaces_project, monkeypatch, capsys):
         """Verify new .zzz-N directory created with git clone."""
         project_data = gitspaces_project
 
@@ -37,9 +35,7 @@ class TestExtendE2E:
         sleeper_path = sleepers[0]
         assert (sleeper_path / ".git").exists()
 
-    def test_extend_increments_sleeper_counter(
-        self, gitspaces_project, monkeypatch, capsys
-    ):
+    def test_extend_increments_sleeper_counter(self, gitspaces_project, monkeypatch, capsys):
         """New sleeper gets next available number."""
         project_data = gitspaces_project
 
@@ -65,9 +61,7 @@ class TestExtendE2E:
         assert "zzz-0" in names
         assert "zzz-1" in names
 
-    def test_extend_outputs_correct_help_message(
-        self, gitspaces_project, monkeypatch, capsys
-    ):
+    def test_extend_outputs_correct_help_message(self, gitspaces_project, monkeypatch, capsys):
         """Verify final message references 'gitspaces switch', not 'gitspaces sleep'."""
         project_data = gitspaces_project
 
@@ -86,9 +80,7 @@ class TestExtendE2E:
         # Should NOT mention 'gitspaces sleep'
         assert "gitspaces sleep" not in captured.out
 
-    def test_extend_creates_multiple_clones(
-        self, gitspaces_project, monkeypatch, capsys
-    ):
+    def test_extend_creates_multiple_clones(self, gitspaces_project, monkeypatch, capsys):
         """Test creating multiple clones at once."""
         project_data = gitspaces_project
 
@@ -110,9 +102,7 @@ class TestExtendE2E:
         # Verify success message
         assert "Successfully created 3" in captured.out
 
-    def test_extend_uses_current_space_as_source(
-        self, gitspaces_project, monkeypatch, capsys
-    ):
+    def test_extend_uses_current_space_as_source(self, gitspaces_project, monkeypatch, capsys):
         """When in a space, use that as the source for cloning."""
         project_data = gitspaces_project
 
@@ -136,9 +126,7 @@ class TestExtendE2E:
         sleeper = list(zzz_dir.iterdir())[0]
         assert (sleeper / "test-marker.txt").exists()
 
-    def test_extend_with_specific_source_space(
-        self, gitspaces_project, monkeypatch, capsys
-    ):
+    def test_extend_with_specific_source_space(self, gitspaces_project, monkeypatch, capsys):
         """Test extending from a specific named space."""
         project_data = gitspaces_project
 

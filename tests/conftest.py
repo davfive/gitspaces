@@ -394,12 +394,14 @@ def multiple_projects(temp_home, gitspaces_config):
             os.chdir(original_dir)
             repo.close()
 
-        projects.append({
-            "name": name,
-            "path": project_path,
-            "space": space,
-            "zzz_dir": zzz_dir,
-        })
+        projects.append(
+            {
+                "name": name,
+                "path": project_path,
+                "space": space,
+                "zzz_dir": zzz_dir,
+            }
+        )
 
     yield {
         "projects_dir": projects_dir,

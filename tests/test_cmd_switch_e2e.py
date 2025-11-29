@@ -35,10 +35,12 @@ class TestSwitchE2E:
             return choices[0] if choices else default
 
         from gitspaces.modules.console import Console
+
         monkeypatch.setattr(Console, "prompt_select", capture_select)
 
         # Mock chdir
         from gitspaces.modules import runshell
+
         monkeypatch.setattr(runshell.fs, "chdir", lambda x: None)
 
         args = Mock()
@@ -60,6 +62,7 @@ class TestSwitchE2E:
 
         # Mock chdir
         from gitspaces.modules import runshell
+
         monkeypatch.setattr(runshell.fs, "chdir", lambda x: None)
 
         # Track what choices are offered
@@ -74,6 +77,7 @@ class TestSwitchE2E:
             return choices[0] if choices else default
 
         from gitspaces.modules.console import Console
+
         monkeypatch.setattr(Console, "prompt_select", capture_select)
 
         args = Mock()
@@ -95,6 +99,7 @@ class TestSwitchE2E:
         monkeypatch.chdir(project_data["project_path"])
 
         from gitspaces.modules import runshell
+
         monkeypatch.setattr(runshell.fs, "chdir", lambda x: None)
 
         # Track what choices are offered
@@ -109,6 +114,7 @@ class TestSwitchE2E:
             return choices[0] if choices else default
 
         from gitspaces.modules.console import Console
+
         monkeypatch.setattr(Console, "prompt_select", capture_select)
 
         args = Mock()
@@ -122,15 +128,14 @@ class TestSwitchE2E:
         # Should include count of sleepers
         assert "2" in wake_options[0] or "sleeping" in wake_options[0]
 
-    def test_switch_filters_current_clone_from_list(
-        self, gitspaces_project, monkeypatch, capsys
-    ):
+    def test_switch_filters_current_clone_from_list(self, gitspaces_project, monkeypatch, capsys):
         """Current clone directory should not appear in selection."""
         project_data = gitspaces_project
 
         monkeypatch.chdir(project_data["main_space"])
 
         from gitspaces.modules import runshell
+
         monkeypatch.setattr(runshell.fs, "chdir", lambda x: None)
 
         # Track what choices are offered
@@ -141,6 +146,7 @@ class TestSwitchE2E:
             return choices[0] if choices else default
 
         from gitspaces.modules.console import Console
+
         monkeypatch.setattr(Console, "prompt_select", capture_select)
 
         args = Mock()
@@ -161,6 +167,7 @@ class TestSwitchE2E:
         monkeypatch.chdir(project_data["main_space"])
 
         from gitspaces.modules import runshell
+
         monkeypatch.setattr(runshell.fs, "chdir", lambda x: None)
 
         args = Mock()
@@ -184,6 +191,7 @@ class TestSwitchE2E:
         monkeypatch.chdir(project_data["main_space"])
 
         from gitspaces.modules import runshell
+
         monkeypatch.setattr(runshell.fs, "chdir", lambda x: None)
 
         # Mock the input for new space name

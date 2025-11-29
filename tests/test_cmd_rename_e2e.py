@@ -14,9 +14,7 @@ from gitspaces.modules.project import Project
 class TestRenameE2E:
     """End-to-end tests for the rename command."""
 
-    def test_rename_uses_current_clone_as_source(
-        self, gitspaces_project, monkeypatch, capsys
-    ):
+    def test_rename_uses_current_clone_as_source(self, gitspaces_project, monkeypatch, capsys):
         """When in clone dir, only require new_name argument."""
         project_data = gitspaces_project
 
@@ -24,6 +22,7 @@ class TestRenameE2E:
         monkeypatch.chdir(project_data["main_space"])
 
         from gitspaces.modules import runshell
+
         chdir_calls = []
         monkeypatch.setattr(runshell.fs, "chdir", lambda x: chdir_calls.append(x))
 
@@ -41,15 +40,14 @@ class TestRenameE2E:
         new_path = project_data["project_path"] / "new-name"
         assert new_path.exists()
 
-    def test_rename_changes_directory_name(
-        self, gitspaces_project, monkeypatch, capsys
-    ):
+    def test_rename_changes_directory_name(self, gitspaces_project, monkeypatch, capsys):
         """Verify filesystem directory is renamed."""
         project_data = gitspaces_project
 
         monkeypatch.chdir(project_data["main_space"])
 
         from gitspaces.modules import runshell
+
         monkeypatch.setattr(runshell.fs, "chdir", lambda x: None)
 
         args = Mock()
@@ -75,6 +73,7 @@ class TestRenameE2E:
         monkeypatch.chdir(project_data["main_space"])
 
         from gitspaces.modules import runshell
+
         monkeypatch.setattr(runshell.fs, "chdir", lambda x: None)
 
         args = Mock()
@@ -90,9 +89,7 @@ class TestRenameE2E:
         content = shell_pid_file["file"].read_text()
         assert "my-new-name" in content
 
-    def test_rename_with_both_arguments(
-        self, gitspaces_project, monkeypatch, capsys
-    ):
+    def test_rename_with_both_arguments(self, gitspaces_project, monkeypatch, capsys):
         """Test rename when both old_name and new_name are provided."""
         project_data = gitspaces_project
 
@@ -100,6 +97,7 @@ class TestRenameE2E:
         monkeypatch.chdir(project_data["project_path"])
 
         from gitspaces.modules import runshell
+
         monkeypatch.setattr(runshell.fs, "chdir", lambda x: None)
 
         args = Mock()
@@ -116,9 +114,7 @@ class TestRenameE2E:
         new_path = project_data["project_path"] / "feature-v2"
         assert new_path.exists()
 
-    def test_rename_prevents_overwrite(
-        self, gitspaces_project, monkeypatch, capsys
-    ):
+    def test_rename_prevents_overwrite(self, gitspaces_project, monkeypatch, capsys):
         """Test that rename fails if target name already exists."""
         project_data = gitspaces_project
 
