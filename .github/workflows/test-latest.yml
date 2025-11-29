@@ -1,4 +1,4 @@
-name: "01 — Python Tests (latest only)"
+name: "01 - Python Tests (latest only)"
 
 on:
   push:
