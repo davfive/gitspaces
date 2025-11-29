@@ -67,7 +67,7 @@ def test_switch_command_interactive_select(gitspaces_project, monkeypatch, mock_
 
 
 def test_switch_command_not_in_project(
-    temp_home, gitspaces_config, monkeypatch, capsys, mock_console_select
+    temp_home, gitspaces_config, monkeypatch, capsys
 ):
     """Test switching when not in a project directory lists all projects."""
     # Change to home directory (not a project)

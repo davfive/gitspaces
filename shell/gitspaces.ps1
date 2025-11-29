@@ -32,7 +32,7 @@ function Invoke-GitSpaces {
         }
     }
 
-    exit $exitCode
+    return $exitCode
 }
 
 # Set up aliases
