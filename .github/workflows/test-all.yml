@@ -1,4 +1,4 @@
-name: "02 - Python Tests (all supported versions)"
+name: "02 - Test Supported Pythons"
 
 on:
   workflow_dispatch: {}
