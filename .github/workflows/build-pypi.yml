@@ -1,4 +1,4 @@
-name: "99 - Build PyPI Package"
+name: "99-build-pypi-package"
 
 on:
   workflow_call:

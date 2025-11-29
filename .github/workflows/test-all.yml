@@ -1,4 +1,4 @@
-name: "02 - Test Supported Pythons"
+name: "02-test-pyall"
 
 on:
   workflow_dispatch: {}

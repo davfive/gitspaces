@@ -1,4 +1,4 @@
-name: "01 - Test Latest Python"
+name: "01-test-pylatest"
 
 on:
   push:

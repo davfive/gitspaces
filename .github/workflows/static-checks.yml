@@ -1,4 +1,4 @@
-name: "00 - Static/Security checks"
+name: "00-static+security-checks"
 
 on:
   workflow_dispatch: {}
