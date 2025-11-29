@@ -65,8 +65,12 @@ def create_parser():
 
     # Rename command
     rename_parser = subparsers.add_parser("rename", help="Rename a space")
-    rename_parser.add_argument("old_name", help="Current space name")
-    rename_parser.add_argument("new_name", help="New space name")
+    rename_parser.add_argument(
+        "old_name",
+        nargs="?",
+        help="Current space name (optional if in a space directory)",
+    )
+    rename_parser.add_argument("new_name", nargs="?", help="New space name")
     rename_parser.set_defaults(func=cmd_rename.rename_command)
 
     # Code command

@@ -9,7 +9,9 @@ from gitspaces.modules.cmd_clone import clone_command
 from gitspaces.modules.project import Project
 
 
-def test_clone_command_with_directory(temp_git_repo, gitspaces_config, monkeypatch):
+def test_clone_command_with_directory(
+    temp_git_repo, gitspaces_config, monkeypatch, mock_console_input
+):
     """Test cloning a repository to a specific directory."""
     target_dir = gitspaces_config["projects_dir"] / "cloned-project"
 
@@ -17,6 +19,14 @@ def test_clone_command_with_directory(temp_git_repo, gitspaces_config, monkeypat
     args.url = str(temp_git_repo)
     args.num_spaces = 2
     args.directory = str(target_dir.parent)
+
+    # Mock the prompt for space name
+    mock_console_input(["main"])
+
+    # Mock chdir to avoid errors
+    from gitspaces.modules import runshell
+
+    monkeypatch.setattr(runshell.fs, "chdir", lambda x: None)
 
     # Change to temp directory
     monkeypatch.chdir(gitspaces_config["projects_dir"])
@@ -29,12 +39,22 @@ def test_clone_command_with_directory(temp_git_repo, gitspaces_config, monkeypat
     assert (project_path / Project.DOTFILE).exists()
 
 
-def test_clone_command_uses_config_path(temp_git_repo, gitspaces_config, monkeypatch):
+def test_clone_command_uses_config_path(
+    temp_git_repo, gitspaces_config, monkeypatch, mock_console_input
+):
     """Test cloning uses configured project path when no directory specified."""
     args = Mock()
     args.url = str(temp_git_repo)
     args.num_spaces = 1
     args.directory = None
+
+    # Mock the prompt for space name
+    mock_console_input(["main"])
+
+    # Mock chdir to avoid errors
+    from gitspaces.modules import runshell
+
+    monkeypatch.setattr(runshell.fs, "chdir", lambda x: None)
 
     # Change to temp directory
     monkeypatch.chdir(gitspaces_config["projects_dir"])
@@ -47,12 +67,22 @@ def test_clone_command_uses_config_path(temp_git_repo, gitspaces_config, monkeyp
     assert (project_path / Project.DOTFILE).exists()
 
 
-def test_clone_command_multiple_spaces(temp_git_repo, gitspaces_config, monkeypatch):
+def test_clone_command_multiple_spaces(
+    temp_git_repo, gitspaces_config, monkeypatch, mock_console_input
+):
     """Test cloning with multiple spaces."""
     args = Mock()
     args.url = str(temp_git_repo)
     args.num_spaces = 3
     args.directory = None
+
+    # Mock the prompt for space name
+    mock_console_input(["main"])
+
+    # Mock chdir to avoid errors
+    from gitspaces.modules import runshell
+
+    monkeypatch.setattr(runshell.fs, "chdir", lambda x: None)
 
     # Change to temp directory
     monkeypatch.chdir(gitspaces_config["projects_dir"])
