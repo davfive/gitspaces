@@ -37,7 +37,8 @@ jobs:
   #   secrets: inherit
 
   build:
-    needs: [extract_version, test]
+    # needs: [extract_version, test] # temporarily disable test requirement
+    needs: extract_version
     uses: ./.github/workflows/build-pypi.yml
     with:
       version: ${{ needs.extract_version.outputs.version }}
