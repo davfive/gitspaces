@@ -103,6 +103,22 @@ setup_venv_build() {
   twine check dist/*
 }
 
+update_pyproject_version() {
+  # Strip leading 'v' from tag to get version
+  local version="${TAG#v}"
+  
+  # Update version in pyproject.toml
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS sed
+    sed -i '' "s/^version = \".*\"/version = \"${version}\"/" pyproject.toml
+  else
+    # Linux sed
+    sed -i "s/^version = \".*\"/version = \"${version}\"/" pyproject.toml
+  fi
+  
+  echo "Updated pyproject.toml version to ${version}"
+}
+
 compose_release_notes() {
   local tmp
   tmp="$(mktemp -t gitspaces-release-XXXXXX.md)"
@@ -125,13 +141,26 @@ compose_release_notes() {
   [[ -n "${RELEASE_NOTES// }" ]] || { echo "Empty release notes"; exit 1; }
 }
 
+commit_version_changes() {
+  git add pyproject.toml
+  # Use first line of release notes as commit subject
+  local subject
+  subject="$(echo "$RELEASE_NOTES" | head -n1)"
+  
+  # Create commit message with subject and full notes as body
+  git commit -m "$subject" -m "$RELEASE_NOTES"
+  echo "Committed version update with release notes"
+}
+
 create_and_push_tag() {
+  # Tag points to the commit we just made
   git tag -a "$TAG" -m "$RELEASE_NOTES"
   if $PUSH; then
+    git push "$REMOTE" main
     git push "$REMOTE" "$TAG"
-    echo "Pushed tag $TAG to $REMOTE"
+    echo "Pushed commit and tag $TAG to $REMOTE"
   else
-    echo "Tag $TAG created locally. Re-run with --push to push."
+    echo "Tag $TAG created locally. Re-run with --push to push commit and tag."
   fi
 }
 
@@ -143,6 +172,8 @@ main() {
   ensure_tag_available
   setup_venv_build
   compose_release_notes
+  update_pyproject_version
+  commit_version_changes
   create_and_push_tag
   echo "Release script completed for $TAG"
 }

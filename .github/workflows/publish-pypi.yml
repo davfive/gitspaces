@@ -27,13 +27,14 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
-  test:
-    needs: extract_version
-    uses: ./.github/workflows/test-all.yml
-    permissions:
-      contents: read
-      security-events: write
-    secrets: inherit
+  # Run without tests so we can test pypi publishing separately
+  # test:
+  #   needs: extract_version
+  #   uses: ./.github/workflows/test-all.yml
+  #   permissions:
+  #     contents: read
+  #     security-events: write
+  #   secrets: inherit
 
   build:
     needs: [extract_version, test]
