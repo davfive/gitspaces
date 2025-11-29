@@ -1,6 +1,7 @@
 """Switch command for GitSpaces - switch between spaces."""
 
 from pathlib import Path
+from typing import List, Optional
 from gitspaces.modules.config import Config
 from gitspaces.modules.console import Console
 from gitspaces.modules.project import Project
@@ -9,7 +10,7 @@ from gitspaces.modules.path import write_shell_target
 from gitspaces.modules import runshell
 
 
-def _find_all_projects() -> list[Project]:
+def _find_all_projects() -> List[Project]:
     """Find all GitSpaces projects in configured project paths.
 
     Returns:
@@ -33,7 +34,7 @@ def _find_all_projects() -> list[Project]:
     return projects
 
 
-def _get_current_space_name(project: Project) -> str | None:
+def _get_current_space_name(project: Project) -> Optional[str]:
     """Get the name of the current space if we're in one.
 
     Args:
@@ -163,7 +164,7 @@ def switch_command(args):
         raise
 
 
-def _wake_and_switch(project: Project, sleeper_name: str | None):
+def _wake_and_switch(project: Project, sleeper_name: Optional[str]):
     """Wake a sleeping space and switch to it.
 
     Args:

@@ -2,13 +2,14 @@
 
 import json
 from pathlib import Path
+from typing import Optional
 from gitspaces.modules.config import Config
 from gitspaces.modules.console import Console
 from gitspaces.modules.project import Project
 from gitspaces.modules import runshell
 
 
-def _get_current_space_name(project: Project) -> str | None:
+def _get_current_space_name(project: Project) -> Optional[str]:
     """Get the name of the current space if we're in one.
 
     Args:
