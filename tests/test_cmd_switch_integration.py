@@ -66,8 +66,8 @@ def test_switch_command_interactive_select(gitspaces_project, monkeypatch, mock_
     assert "feature" in str(chdir_called_with[0])
 
 
-def test_switch_command_not_in_project(temp_home, monkeypatch, capsys):
-    """Test switching when not in a project directory."""
+def test_switch_command_not_in_project(temp_home, gitspaces_config, monkeypatch, capsys):
+    """Test switching when not in a project directory lists all projects."""
     # Change to home directory (not a project)
     monkeypatch.chdir(temp_home)
 
@@ -76,9 +76,9 @@ def test_switch_command_not_in_project(temp_home, monkeypatch, capsys):
 
     switch_command(args)
 
-    # Verify error message
+    # Verify no projects found message (since config has no projects yet)
     captured = capsys.readouterr()
-    assert "Not in a GitSpaces project" in captured.out
+    assert "No GitSpaces projects found" in captured.out
 
 
 def test_switch_command_space_not_found(gitspaces_project, monkeypatch, capsys):
@@ -121,24 +121,37 @@ def test_switch_command_no_spaces(gitspaces_project, monkeypatch, capsys):
     assert "No spaces found" in captured.out
 
 
-def test_switch_command_sleeping_space(gitspaces_project, monkeypatch, capsys):
-    """Test that switching to a sleeping space shows not found."""
+def test_switch_command_sleeping_space(gitspaces_project, monkeypatch, capsys, mock_console_input):
+    """Test that switching to a sleeping space prompts for wake."""
     project_data = gitspaces_project
 
     # Create a sleeping space
     import shutil
 
-    sleeping_space = project_data["zzz_dir"] / "sleep1"
+    sleeping_space = project_data["zzz_dir"] / "zzz-0"
     shutil.copytree(project_data["main_space"], sleeping_space)
 
     # Change to project directory
     monkeypatch.chdir(project_data["main_space"])
 
+    # Mock the input for new space name
+    mock_console_input(["new-space"])
+
+    # Mock chdir
+    chdir_called_with = []
+
+    def mock_chdir(path):
+        chdir_called_with.append(path)
+
+    from gitspaces.modules import runshell
+
+    monkeypatch.setattr(runshell.fs, "chdir", mock_chdir)
+
     args = Mock()
-    args.space = ".zzz/sleep1"
+    args.space = ".zzz/zzz-0"
 
     switch_command(args)
 
-    # Verify error message (sleeping spaces are listed differently)
+    # Verify the space was woken and chdir was called
     captured = capsys.readouterr()
-    assert "not found" in captured.out or "Cannot switch" in captured.out
+    assert "Woke space" in captured.out or len(chdir_called_with) > 0

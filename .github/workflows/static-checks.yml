@@ -49,29 +49,19 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt || true
-          pip install flake8 black mypy semgrep
+          pip install pip-audit semgrep
 
-      - name: flake8
-        run: flake8 src/gitspaces
+      - name: Run static checks (quick)
+        run: ./scripts/static-checks.sh --quick
 
-      - name: black (format check)
-        run: black --check src/gitspaces tests
-
-      - name: mypy
-        run: mypy src/gitspaces
-
-      # fast dependency vuln scanner (default enabled)
+      # Security checks (run separately for better reporting)
       - name: pip-audit (dependency vuln scan)
         if: ${{ inputs.run-security }}
-        run: |
-          python -m pip install pip-audit
-          pip-audit || true
+        run: pip-audit || true
 
-      # bandit SAST (quick scan; produce JSON artifact)
       - name: Bandit (quick SAST)
         if: ${{ inputs.run-security }}
         run: |
-          python -m pip install bandit
           bandit -r src/gitspaces -f json -o bandit-report.json || true
           bandit -r src/gitspaces -lll || true
 

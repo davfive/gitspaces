@@ -77,6 +77,6 @@ def extend_command(args):
     if created_count > 0:
         Console.println(f"\n✓ Successfully created {created_count} additional clone(s)")
         Console.println(f"Total spaces in project: {len(project.list_spaces())}")
-        Console.println("\nUse 'gitspaces sleep' to wake and name the new clones")
+        Console.println("\nUse 'gitspaces switch' to wake and name the new clones")
     else:
         Console.println("\n✗ No clones were created")

@@ -42,3 +42,38 @@ def join_paths(*paths: str) -> str:
         The joined path as a string.
     """
     return os.path.join(*paths)
+
+
+def shell_targets_dir() -> Path:
+    """Get the directory where shell target PID files are stored.
+
+    Returns:
+        The Path to the shell targets directory (~/.gitspaces/).
+    """
+    return Path.home() / ".gitspaces"
+
+
+def write_shell_target(target_path: str | Path) -> bool:
+    """Write the shell target file for the current process.
+
+    This writes the target path to ~/.gitspaces/pid-{PID} so that
+    the shell wrapper can read it and cd to that directory.
+
+    Args:
+        target_path: The path that the shell should cd to.
+
+    Returns:
+        True if the file was written successfully, False otherwise.
+    """
+    try:
+        targets_dir = shell_targets_dir()
+        targets_dir.mkdir(parents=True, exist_ok=True)
+
+        pid = os.getpid()
+        pid_file = targets_dir / f"pid-{pid}"
+        pid_file.write_text(str(target_path))
+        return True
+    except (OSError, IOError):
+        # Silently fail if we can't write the PID file
+        # The shell wrapper will simply not cd, which is acceptable
+        return False

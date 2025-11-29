@@ -261,3 +261,172 @@ def mock_console_confirm(monkeypatch):
         return mock_confirm
 
     return _mock_confirm
+
+
+@pytest.fixture
+def bare_git_repo(temp_home):
+    """Create a bare git repository suitable for cloning.
+
+    This is used for testing clone operations without network access.
+    """
+    repo_path = (temp_home / "bare-repo.git").resolve()
+
+    # Create a regular repo first, then make a bare clone
+    source_path = (temp_home / "source-repo").resolve()
+    source_path.mkdir()
+
+    # Initialize source repo
+    repo = Repo.init(str(source_path))
+    readme = source_path / "README.md"
+    readme.write_text("# Test Repository\n")
+
+    original_dir = os.getcwd()
+    try:
+        os.chdir(str(source_path))
+        repo.index.add(["README.md"])
+        repo.index.commit("Initial commit")
+
+        # Create bare clone
+        Repo.clone_from(str(source_path), str(repo_path), bare=True)
+    finally:
+        os.chdir(original_dir)
+        repo.close()
+
+    yield repo_path
+
+    # Cleanup
+    _close_git_repos_in_directory(repo_path)
+
+
+@pytest.fixture
+def gitspaces_project_with_sleepers(temp_home, gitspaces_config, temp_git_repo):
+    """Create a GitSpaces project with both active and sleeping spaces."""
+    from gitspaces.modules.project import Project
+
+    projects_dir = gitspaces_config["projects_dir"]
+    project_name = "test-project"
+    project_path = projects_dir / project_name
+    project_path.mkdir(parents=True, exist_ok=True)
+
+    # Create project marker file
+    dotfile = project_path / Project.DOTFILE
+    dotfile.touch()
+
+    # Create .zzz directory for sleeping spaces
+    zzz_dir = project_path / Project.ZZZ_DIR
+    zzz_dir.mkdir(exist_ok=True)
+
+    # Create main space
+    main_space = project_path / "main"
+    main_space.mkdir(exist_ok=True)
+
+    # Initialize as git repo
+    repo = Repo.init(str(main_space))
+    readme = main_space / "README.md"
+    readme.write_text("# Test Project\n")
+
+    original_dir = os.getcwd()
+    try:
+        os.chdir(str(main_space))
+        repo.index.add(["README.md"])
+        repo.index.commit("Initial commit")
+    finally:
+        os.chdir(original_dir)
+        repo.close()
+        if hasattr(repo, "git"):
+            repo.git.clear_cache()
+
+    # Create sleeping spaces
+    sleeper1 = zzz_dir / "zzz-0"
+    sleeper2 = zzz_dir / "zzz-1"
+    shutil.copytree(main_space, sleeper1)
+    shutil.copytree(main_space, sleeper2)
+
+    project = Project(str(project_path))
+
+    yield {
+        "project": project,
+        "project_path": project_path,
+        "main_space": main_space,
+        "zzz_dir": zzz_dir,
+        "sleeper1": sleeper1,
+        "sleeper2": sleeper2,
+    }
+
+    _close_git_repos_in_directory(project_path)
+
+
+@pytest.fixture
+def multiple_projects(temp_home, gitspaces_config):
+    """Create multiple GitSpaces projects for testing project listing."""
+    from gitspaces.modules.project import Project
+
+    projects_dir = gitspaces_config["projects_dir"]
+    projects = []
+
+    for i, name in enumerate(["project-alpha", "project-beta", "project-gamma"]):
+        project_path = projects_dir / name
+        project_path.mkdir(parents=True, exist_ok=True)
+
+        # Create project marker file
+        dotfile = project_path / Project.DOTFILE
+        dotfile.touch()
+
+        # Create .zzz directory
+        zzz_dir = project_path / Project.ZZZ_DIR
+        zzz_dir.mkdir(exist_ok=True)
+
+        # Create a space
+        space = project_path / "main"
+        space.mkdir(exist_ok=True)
+
+        # Initialize as git repo
+        repo = Repo.init(str(space))
+        readme = space / "README.md"
+        readme.write_text(f"# {name}\n")
+
+        original_dir = os.getcwd()
+        try:
+            os.chdir(str(space))
+            repo.index.add(["README.md"])
+            repo.index.commit("Initial commit")
+        finally:
+            os.chdir(original_dir)
+            repo.close()
+
+        projects.append(
+            {
+                "name": name,
+                "path": project_path,
+                "space": space,
+                "zzz_dir": zzz_dir,
+            }
+        )
+
+    yield {
+        "projects_dir": projects_dir,
+        "projects": projects,
+    }
+
+    for proj in projects:
+        _close_git_repos_in_directory(proj["path"])
+
+
+@pytest.fixture
+def shell_pid_file(temp_home):
+    """Fixture to check and cleanup shell PID files after tests."""
+    gitspaces_dir = temp_home / ".gitspaces"
+    gitspaces_dir.mkdir(parents=True, exist_ok=True)
+
+    pid = os.getpid()
+    pid_file = gitspaces_dir / f"pid-{pid}"
+
+    yield {
+        "dir": gitspaces_dir,
+        "pid": pid,
+        "file": pid_file,
+    }
+
+    # Cleanup the PID file if it exists
+    if pid_file.exists():
+        pid_file.unlink()

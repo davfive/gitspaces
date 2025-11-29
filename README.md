@@ -32,6 +32,48 @@ cd gitspaces
 pip install -e .
 ```
 
+## Shell Integration (Required for directory switching)
+
+GitSpaces commands like `switch`, `clone`, and `rename` need to change your shell's working directory. Since a subprocess cannot change the parent shell's directory, you need to install a shell wrapper that enables this behavior.
+
+### Bash / Zsh / WSL
+
+Add this to your `~/.bashrc`, `~/.zshrc`, or WSL bash configuration:
+
+```bash
+# GitSpaces shell integration
+source /path/to/gitspaces/shell/gitspaces.sh
+```
+
+Or if installed via pip, find the shell directory with:
+```bash
+python -c "import gitspaces; print(gitspaces.__file__)" | xargs dirname
+# Then source the shell/gitspaces.sh from that location
+```
+
+### Windows PowerShell
+
+Add this to your PowerShell profile (`$PROFILE`):
+
+```powershell
+# GitSpaces shell integration
+. C:\path\to\gitspaces\shell\gitspaces.ps1
+```
+
+### Windows CMD
+
+Add the `shell` directory to your PATH, or copy `gitspaces.cmd` to a directory in your PATH.
+
+### After Installation
+
+Once the shell wrapper is installed, use `gs` or `gitspaces` commands:
+
+```bash
+gs switch    # Switch workspace and cd into it
+gs clone     # Clone repo and cd into new workspace
+gs rename    # Rename current workspace and cd into it
+```
+
 ## Quick Start
 
 Configure project paths and editor:

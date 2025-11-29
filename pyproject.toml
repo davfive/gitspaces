@@ -65,6 +65,9 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v --cov=src/gitspaces --cov-report=term-missing --cov-report=html"
+markers = [
+    "e2e: End-to-end tests (may require more setup and take longer to run)",
+]
 
 [tool.black]
 line-length = 100
