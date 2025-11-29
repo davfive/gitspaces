@@ -88,9 +88,9 @@ ensure_tag_available() {
   if git rev-parse "$TAG" >/dev/null 2>&1; then
     echo "Tag $TAG already exists locally"; exit 1
   fi
-  git ls-remote --tags "$REMOTE" "refs/tags/${TAG}" | grep -q "$TAG" && {
-    echo "Tag $TAG already exists on $REMOTE"; exit 1;
-  }
+  if git ls-remote --tags "$REMOTE" "refs/tags/${TAG}" | grep -q "$TAG"; then
+    echo "Tag $TAG already exists on $REMOTE"; exit 1
+  fi
 }
 
 setup_venv_build() {
