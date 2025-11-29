@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-import sys
 from pathlib import Path
 from unittest.mock import Mock
 import pytest
@@ -15,10 +14,6 @@ from gitspaces.modules.project import Project
 class TestRenameE2E:
     """End-to-end tests for the rename command."""
 
-    @pytest.mark.skipif(
-        sys.platform == "win32",
-        reason="Windows locks directories when they are the current working directory",
-    )
     def test_rename_uses_current_clone_as_source(self, gitspaces_project, monkeypatch, capsys):
         """When in clone dir, only require new_name argument."""
         project_data = gitspaces_project
@@ -45,10 +40,6 @@ class TestRenameE2E:
         new_path = project_data["project_path"] / "new-name"
         assert new_path.exists()
 
-    @pytest.mark.skipif(
-        sys.platform == "win32",
-        reason="Windows locks directories when they are the current working directory",
-    )
     def test_rename_changes_directory_name(self, gitspaces_project, monkeypatch, capsys):
         """Verify filesystem directory is renamed."""
         project_data = gitspaces_project
@@ -73,10 +64,6 @@ class TestRenameE2E:
         # Verify git repo still works
         assert (new_path / ".git").exists()
 
-    @pytest.mark.skipif(
-        sys.platform == "win32",
-        reason="Windows locks directories when they are the current working directory",
-    )
     def test_rename_writes_new_path_for_shell_cd(
         self, gitspaces_project, monkeypatch, shell_pid_file, capsys
     ):

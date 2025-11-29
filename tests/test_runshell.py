@@ -95,11 +95,47 @@ def test_git_is_valid_repo_false():
         assert result is False
 
 
-def test_fs_move():
-    """Test fs.move."""
-    with patch("gitspaces.modules.runshell.shutil.move") as mock_move:
-        runshell.fs.move("/src", "/dst")
-        mock_move.assert_called_once_with("/src", "/dst")
+def test_fs_move_not_inside_src(tmp_path):
+    """Test fs.move when not inside the source directory."""
+    # Create source directory
+    src_dir = tmp_path / "source"
+    src_dir.mkdir()
+    (src_dir / "file.txt").write_text("test")
+
+    dst_dir = tmp_path / "destination"
+
+    # Move from outside the source directory
+    runshell.fs.move(src_dir, dst_dir)
+
+    # Verify the move happened
+    assert not src_dir.exists()
+    assert dst_dir.exists()
+    assert (dst_dir / "file.txt").exists()
+
+
+def test_fs_move_inside_src_directory(tmp_path, monkeypatch):
+    """Test fs.move when current directory is inside the source directory."""
+    # Create source directory with a subdirectory
+    src_dir = tmp_path / "source"
+    src_subdir = src_dir / "subdir"
+    src_subdir.mkdir(parents=True)
+    (src_subdir / "file.txt").write_text("test")
+
+    dst_dir = tmp_path / "destination"
+
+    # Change into the subdirectory
+    monkeypatch.chdir(src_subdir)
+
+    # Move the source directory
+    runshell.fs.move(src_dir, dst_dir)
+
+    # Verify the move happened
+    assert not src_dir.exists()
+    assert dst_dir.exists()
+    assert (dst_dir / "subdir" / "file.txt").exists()
+
+    # Verify we're now in the new location
+    assert Path.cwd() == dst_dir / "subdir"
 
 
 def test_fs_copy_tree():

@@ -117,11 +117,45 @@ class fs:
     def move(src: str | Path, dst: str | Path) -> None:
         """Move a file or directory.
 
+        On Windows, if the current working directory is inside the source directory,
+        we need to change out of it before moving, then change back into the new
+        location after the move.
+
         Args:
             src: Source path
             dst: Destination path
         """
-        shutil.move(str(src), str(dst))
+        src_path = Path(src).resolve()
+        dst_path = Path(dst)
+        cwd = Path.cwd().resolve()
+
+        # Check if we're inside the source directory
+        try:
+            cwd.relative_to(src_path)
+            inside_src = True
+        except ValueError:
+            inside_src = False
+
+        if inside_src:
+            # Calculate the relative path from src to cwd
+            rel_path = cwd.relative_to(src_path)
+            # Change to parent of src to unlock the directory
+            os.chdir(src_path.parent)
+            try:
+                shutil.move(str(src_path), str(dst_path))
+                # Change back to equivalent path in new location
+                new_cwd = dst_path / rel_path
+                if new_cwd.exists():
+                    os.chdir(new_cwd)
+                else:
+                    os.chdir(dst_path)
+            except Exception:
+                # Try to restore original cwd on failure
+                if src_path.exists():
+                    os.chdir(cwd)
+                raise
+        else:
+            shutil.move(str(src_path), str(dst_path))
 
     @staticmethod
     def copy_tree(src: str | Path, dst: str | Path, symlinks: bool = True) -> None:

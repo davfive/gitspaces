@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import shutil
-import sys
 from pathlib import Path
 from unittest.mock import Mock
 import pytest
@@ -15,10 +14,6 @@ from gitspaces.modules.project import Project
 class TestSleepE2E:
     """End-to-end tests for the sleep command."""
 
-    @pytest.mark.skipif(
-        sys.platform == "win32",
-        reason="Windows locks directories when they are the current working directory",
-    )
     def test_sleep_puts_active_clone_to_sleep(self, gitspaces_project, monkeypatch, capsys):
         """Move clone dir to .zzz/ with next available number."""
         project_data = gitspaces_project
@@ -64,10 +59,6 @@ class TestSleepE2E:
         # Verify the space was moved
         assert not project_data["feature_space"].exists()
 
-    @pytest.mark.skipif(
-        sys.platform == "win32",
-        reason="Windows locks directories when they are the current working directory",
-    )
     def test_sleep_wakes_sleeper_with_new_name(
         self,
         gitspaces_project_with_sleepers,
@@ -110,10 +101,6 @@ class TestSleepE2E:
         woken_path = project_data["project_path"] / "woken-space"
         assert woken_path.exists()
 
-    @pytest.mark.skipif(
-        sys.platform == "win32",
-        reason="Windows locks directories when they are the current working directory",
-    )
     def test_sleep_list_shows_all_sleepers(
         self, gitspaces_project_with_sleepers, monkeypatch, capsys
     ):
@@ -148,10 +135,6 @@ class TestSleepE2E:
         # Should have offered both sleepers
         assert ".zzz/zzz-0" in wake_choices or ".zzz/zzz-1" in wake_choices
 
-    @pytest.mark.skipif(
-        sys.platform == "win32",
-        reason="Windows locks directories when they are the current working directory",
-    )
     def test_sleep_preserves_git_repo(self, gitspaces_project, monkeypatch, capsys):
         """Verify git repository is preserved when sleeping."""
         project_data = gitspaces_project
