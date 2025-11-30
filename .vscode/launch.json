@@ -1,100 +1,96 @@
 {
-  // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "gitspaces create:https",
-      "type": "go",
+      "name": "Debug gitspaces CLI",
+      "type": "debugpy",
       "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}",
-      "cwd": "/Users/davidmay/code/testarea",
+      "module": "gitspaces",
       "args": [
-        "--wrapid", "0",
-        "create",
+        // Add command args here, e.g.: "switch", "--help"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      }
+    },
+    {
+      "name": "Debug: gitspaces switch",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "gitspaces",
+      "args": ["switch"],
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Debug: gitspaces clone",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "gitspaces",
+      "args": [
+        "clone",
         "https://github.com/davfive/gitspaces.git",
-        "-n",
-        "3"
+        "-n", "3"
       ],
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "cwd": "/Users/davidmay/code/testarea"
     },
     {
-      "name": "gitspaces create:ssh",
-      "type": "go",
+      "name": "Debug: gitspaces setup",
+      "type": "debugpy",
       "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}",
-      "cwd": "/Users/davidmay/code/testarea",
-      "args": [
-        "--wrapid", "0",
-        "create",
-        "git@github.com:davfive/gitspaces.git",
-        "-n",
-        "3"
-      ],
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "gitspaces switch",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}",
-      "cwd": "${workspaceFolder}",
-      "args": ["--wrapid", "0", "switch"],
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "gitspaces setup",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}",
-      "cwd": "${workspaceFolder}",
+      "module": "gitspaces",
       "args": ["setup"],
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "cwd": "${workspaceFolder}"
     },
     {
-      "name": "gitspaces -v",
-      "type": "go",
+      "name": "Debug: gitspaces --version",
+      "type": "debugpy",
       "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}",
-      "cwd": "${workspaceFolder}",
-      "args": ["-v"],
-      "console": "integratedTerminal"
+      "module": "gitspaces",
+      "args": ["--version"],
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "cwd": "${workspaceFolder}"
     },
     {
-      "name": "gitspaces -h",
-      "type": "go",
+      "name": "Debug: gitspaces --help",
+      "type": "debugpy",
       "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}",
-      "cwd": "${workspaceFolder}",
-      "args": ["-h"],
-      "console": "integratedTerminal"
+      "module": "gitspaces",
+      "args": ["--help"],
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "cwd": "${workspaceFolder}"
     },
     {
-      "name": "gitspaces --wrapid=0 <empty>",
-      "type": "go",
+      "name": "Debug: gitspaces (no args)",
+      "type": "debugpy",
       "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}",
-      "cwd": "${workspaceFolder}",
-      "args": ["--wrapid", "0"],
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "gitspaces <empty>",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "program": "${workspaceFolder}",
-      "cwd": "${workspaceFolder}",
+      "module": "gitspaces",
       "args": [],
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Debug Current Test File",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "${file}",
+        "-v"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": false
     }
   ]
 }

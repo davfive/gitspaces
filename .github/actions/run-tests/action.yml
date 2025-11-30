@@ -75,59 +75,24 @@ runs:
         requirements-file: ${{ inputs.requirements-file }}
         shell-type: ${{ runner.os == 'Windows' && inputs.windows-shell || '' }}
 
-    # Unix / macOS path
-    - name: Run tests on Unix/macOS
+
+    # Unix / macOS path (shared script)
+    - name: Run tests (bash)
       if: runner.os != 'Windows'
-      id: run_unix
       shell: bash
-      env:
-        INPUT_COVERAGE_FILE: ${{ inputs.coverage-file }}
-        INPUT_PYTHON_VERSION: ${{ inputs.python-version }}
-        INPUT_TEST_ARGS: ${{ inputs.test-args }}
-        VENV_PATH: ${{ steps.venv.outputs.venv-path }}
-      run: |
-        COVERAGE_FILE="$INPUT_COVERAGE_FILE"
-        if [ -z "$COVERAGE_FILE" ]; then
-          COVERAGE_FILE="coverage-$INPUT_PYTHON_VERSION.xml"
-        fi
-        source "$VENV_PATH/bin/activate"
-        python -m pytest $INPUT_TEST_ARGS --cov=src/gitspaces --cov-report=xml:$COVERAGE_FILE --cov-report=term
-        echo "coverage-file=$COVERAGE_FILE" >> $GITHUB_OUTPUT
+      run: ./scripts/run-tests.sh ${{ inputs.test-args }}
 
-    # Windows: native cmd.exe
-    - name: Run tests on Windows (cmd)
+    # Windows: native cmd.exe (shared script)
+    - name: Run tests (cmd)
       if: runner.os == 'Windows' && (inputs.windows-shell == 'cmd')
-      id: run_win_cmd
       shell: cmd
-      env:
-        INPUT_COVERAGE_FILE: ${{ inputs.coverage-file }}
-        INPUT_PYTHON_VERSION: ${{ inputs.python-version }}
-        INPUT_TEST_ARGS: ${{ inputs.test-args }}
-        VENV_PATH: ${{ steps.venv.outputs.venv-path }}
-      run: |
-        set "COVERAGE_FILE=%INPUT_COVERAGE_FILE%"
-        if "%COVERAGE_FILE%"=="" set "COVERAGE_FILE=coverage-%INPUT_PYTHON_VERSION%.xml"
-        call "%VENV_PATH%\Scripts\activate.bat"
-        python -m pytest %INPUT_TEST_ARGS% --cov=src/gitspaces --cov-report=xml:%COVERAGE_FILE% --cov-report=term
-        echo coverage-file=%COVERAGE_FILE%>> %GITHUB_OUTPUT%
+      run: scripts\run-tests.cmd ${{ inputs.test-args }}
 
-    # Windows: PowerShell
-    - name: Run tests on Windows (PowerShell)
+    # Windows: PowerShell (shared script)
+    - name: Run tests (pwsh)
       if: runner.os == 'Windows' && (inputs.windows-shell == 'pwsh')
-      id: run_win_pwsh
       shell: pwsh
-      env:
-        INPUT_COVERAGE_FILE: ${{ inputs.coverage-file }}
-        INPUT_PYTHON_VERSION: ${{ inputs.python-version }}
-        INPUT_TEST_ARGS: ${{ inputs.test-args }}
-        VENV_PATH: ${{ steps.venv.outputs.venv-path }}
-      run: |
-        $coverage = $env:INPUT_COVERAGE_FILE
-        if ([string]::IsNullOrEmpty($coverage)) { $coverage = "coverage-$env:INPUT_PYTHON_VERSION.xml" }
-        $testArgs = $env:INPUT_TEST_ARGS
-        & "$env:VENV_PATH\Scripts\Activate.ps1"
-        Invoke-Expression "python -m pytest $testArgs --cov=src/gitspaces --cov-report=xml:$coverage --cov-report=term"
-        Write-Output ("coverage-file=$coverage") | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+      run: ./scripts/run-tests.ps1 ${{ inputs.test-args }}
 
     # Windows: run inside WSL (invoked via wsl.exe). Uses host cmd shell to convert paths and call wsl.
     - name: Run tests on Windows (WSL)

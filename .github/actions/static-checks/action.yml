@@ -1,0 +1,30 @@
+name: "static-checks"
+description: "Run static analysis checks (flake8, black, mypy, etc.) using shared scripts. Supports bash, cmd, pwsh."
+
+inputs:
+  quick:
+    description: "If 'true', run only fast checks (flake8, black, mypy)"
+    required: false
+    default: "false"
+  windows-shell:
+    description: "On Windows, which shell to use: cmd | pwsh | wsl"
+    required: false
+    default: "cmd"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Static checks (bash)
+      if: runner.os != 'Windows'
+      shell: bash
+      run: ./scripts/static-checks.sh ${{ inputs.quick == 'true' && '--quick' || '' }}
+
+    - name: Static checks (cmd)
+      if: runner.os == 'Windows' && (inputs.windows-shell == 'cmd')
+      shell: cmd
+      run: scripts\static-checks.cmd ${{ inputs.quick == 'true' && '--quick' || '' }}
+
+    - name: Static checks (pwsh)
+      if: runner.os == 'Windows' && (inputs.windows-shell == 'pwsh')
+      shell: pwsh
+      run: ./scripts/static-checks.ps1 ${{ inputs.quick == 'true' && '--quick' || '' }}

@@ -52,7 +52,10 @@ jobs:
           pip install pip-audit semgrep
 
       - name: Run static checks (quick)
-        run: ./scripts/static-checks.sh --quick
+        uses: ./.github/actions/static-checks
+        with:
+          quick: true
+
 
       # Security checks (run separately for better reporting)
       - name: pip-audit (dependency vuln scan)
