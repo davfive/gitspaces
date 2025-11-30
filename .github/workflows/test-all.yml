@@ -48,8 +48,28 @@ jobs:
             shell: wsl-bash
             name: windows-wsl
 
+
     steps:
       - uses: actions/checkout@v4
+
+      # Cache pip for all platforms (including WSL)
+      - name: Cache pip (native)
+        if: runner.os != 'Windows' || matrix.platform.shell != 'wsl-bash'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Cache pip (WSL)
+        if: runner.os == 'Windows' && matrix.platform.shell == 'wsl-bash'
+        uses: actions/cache@v4
+        with:
+          path: ~/gitspaces/.cache/pip
+          key: windows-wsl-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            windows-wsl-pip-
 
       - name: test-${{ matrix.platform.name }}-py3.13
         uses: ./.github/actions/run-tests
