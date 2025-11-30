@@ -15,4 +15,12 @@ fi
 pip install -e .
 pip install -r requirements-dev.txt
 
-pytest "$@"
+
+# If UPLOAD_COVERAGE or TEST_COVERAGE_FILE is set, add coverage options
+COVERAGE_ARGS=()
+if [[ "${UPLOAD_COVERAGE:-}" == "true" || -n "${TEST_COVERAGE_FILE:-}" ]]; then
+  COV_FILE="${TEST_COVERAGE_FILE:-coverage-$(python -c 'import sys; print("%d.%d" % sys.version_info[:2])').xml}"
+  COVERAGE_ARGS+=(--cov=src/gitspaces --cov-report=xml:"$COV_FILE" --cov-report=term)
+fi
+
+pytest "$@" "${COVERAGE_ARGS[@]}"
