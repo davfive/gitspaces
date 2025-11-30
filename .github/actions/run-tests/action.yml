@@ -62,7 +62,7 @@ runs:
         wsl bash -lc "cd ~/gitspaces && python%INPUT_PYTHON_VERSION% -m venv .venv-py%INPUT_PYTHON_VERSION%"
 
         rem Activate venv and install dependencies
-        wsl bash -lc "cd ~/gitspaces && source .venv-py%INPUT_PYTHON_VERSION%/bin/activate && python -m pip install --upgrade pip && python -m pip install -e . && python -m pip install -r %INPUT_REQUIREMENTS_FILE%"
+        wsl bash -lc "cd ~/gitspaces && source .venv-py%INPUT_PYTHON_VERSION%/bin/activate && python -m pip install --upgrade pip && python -m pip install -e .[dev]"
 
     # Use setup-venv action to create venv and install dependencies (non-WSL)
     - name: Setup venv and install dependencies

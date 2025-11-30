@@ -12,8 +12,7 @@ if [ -z "${VIRTUAL_ENV:-}" ]; then
   source venv/bin/activate
 fi
 
-pip install -e .
-pip install -r requirements-dev.txt
+pip install -e .[dev]
 
 
 # If UPLOAD_COVERAGE or TEST_COVERAGE_FILE is set, add coverage options

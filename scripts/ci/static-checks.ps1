@@ -8,8 +8,7 @@ if (-not $env:VIRTUAL_ENV) {
   .\venv\Scripts\Activate.ps1
 }
 
-pip install -e .
-pip install -r requirements-dev.txt
+pip install -e .[dev]
 
 $run_security = $true
 if ($args[0] -eq "--quick") { $run_security = $false }

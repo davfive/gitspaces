@@ -1,11 +1,27 @@
+*** DELETE FILE ***
+
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-mock>=3.10.0
+pytest-xdist>=3.5.0
+mypy>=1.0.0
+ruff>=0.4.0
+black>=23.1.0,<26.0.0
+semgrep
+types-PyYAML>=6.0.0
+build>=0.10.0
+twine>=4.0.0
+bandit>=1.7.0
+safety>=2.3.0
 -r requirements.txt
 pytest>=7.0.0
 pytest-cov>=4.0.0
 pytest-mock>=3.10.0
 pytest-xdist>=3.5.0
-black>=23.1.0,<26.0.0
-flake8>=6.0.0
 mypy>=1.0.0
+ruff>=0.4.0
+black>=23.1.0,<26.0.0
+semgrep
 types-PyYAML>=6.0.0
 build>=0.10.0
 twine>=4.0.0

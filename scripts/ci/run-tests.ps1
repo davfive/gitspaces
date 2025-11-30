@@ -17,7 +17,6 @@ if (-not $projectRoot) {
 Set-Location $projectRoot
 Write-Host "[run-tests] Running from: $(Get-Location)"
 
-pip install -e .
-pip install -r requirements-dev.txt
+pip install -e .[dev]
 
 pytest $args

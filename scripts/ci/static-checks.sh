@@ -14,16 +14,22 @@ if [ -z "${VIRTUAL_ENV:-}" ]; then
   source venv/bin/activate
 fi
 
-pip install -e .
-pip install -r requirements-dev.txt
+pip install -e .[dev]
 
 RUN_SECURITY=true
 if [[ "${1:-}" == "--quick" ]]; then
     RUN_SECURITY=false
 fi
 
-flake8 src/gitspaces
+
+# Ruff: lint and import sort (auto-fix with --fix if desired)
+ruff check src/gitspaces tests
+ruff check --select I src/gitspaces tests
+
+# Black: code formatting check
 black --check src/gitspaces tests
+
+# Mypy: type checking
 mypy src/gitspaces
 
 if [[ "$RUN_SECURITY" == "true" ]]; then

@@ -1,3 +1,7 @@
+
+- [ ] Remove requirements.txt and requirements-dev.txt (now using pyproject.toml only)
+- [ ] Ensure all CI and local scripts use pip install -e .[dev]
+- [ ] Remove any references to requirements*.txt from docs/scripts
 # GitSpaces v3 - E2E Testing & Shell Integration Tasks
 
 ## Context

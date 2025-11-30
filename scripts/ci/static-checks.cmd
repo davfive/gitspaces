@@ -9,8 +9,7 @@ IF NOT DEFINED VIRTUAL_ENV (
   call venv\Scripts\activate.bat
 )
 
-pip install -e .
-pip install -r requirements-dev.txt
+pip install -e .[dev]
 
 set RUN_SECURITY=true
 IF "%1"=="--quick" set RUN_SECURITY=false

@@ -29,7 +29,7 @@ Or from source:
 ```bash
 git clone https://github.com/davfive/gitspaces.git
 cd gitspaces
-pip install -e .
+pip install -e .[dev]
 ```
 
 ## Shell Integration (Required for directory switching)
