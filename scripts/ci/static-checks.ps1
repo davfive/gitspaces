@@ -1,5 +1,5 @@
 # Shared static checks runner for local and CI (PowerShell)
-# Usage: ./scripts/static-checks.ps1 [--quick]
+# Usage: ./scripts/ci/static-checks.ps1 [--quick]
 
 if (-not $env:VIRTUAL_ENV) {
   if (-not (Test-Path "venv")) {

@@ -1,5 +1,5 @@
 # Shared test runner for local and CI (PowerShell)
-# Usage: ./scripts/run-tests.ps1 [pytest args]
+# Usage: ./scripts/ci/run-tests.ps1 [pytest args]
 
 if (-not $env:VIRTUAL_ENV) {
   if (-not (Test-Path "venv")) {

@@ -17,14 +17,14 @@ runs:
     - name: Static checks (bash)
       if: runner.os != 'Windows'
       shell: bash
-      run: ./scripts/static-checks.sh ${{ inputs.quick == 'true' && '--quick' || '' }}
+      run: ./scripts/ci/static-checks.sh ${{ inputs.quick == 'true' && '--quick' || '' }}
 
     - name: Static checks (cmd)
       if: runner.os == 'Windows' && (inputs.windows-shell == 'cmd')
       shell: cmd
-      run: scripts\static-checks.cmd ${{ inputs.quick == 'true' && '--quick' || '' }}
+      run: scripts\ci\static-checks.cmd ${{ inputs.quick == 'true' && '--quick' || '' }}
 
     - name: Static checks (pwsh)
       if: runner.os == 'Windows' && (inputs.windows-shell == 'pwsh')
       shell: pwsh
-      run: ./scripts/static-checks.ps1 ${{ inputs.quick == 'true' && '--quick' || '' }}
+      run: ./scripts/ci/static-checks.ps1 ${{ inputs.quick == 'true' && '--quick' || '' }}

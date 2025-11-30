@@ -80,19 +80,19 @@ runs:
     - name: Run tests (bash)
       if: runner.os != 'Windows'
       shell: bash
-      run: ./scripts/run-tests.sh ${{ inputs.test-args }}
+      run: ./scripts/ci/run-tests.sh ${{ inputs.test-args }}
 
     # Windows: native cmd.exe (shared script)
     - name: Run tests (cmd)
       if: runner.os == 'Windows' && (inputs.windows-shell == 'cmd')
       shell: cmd
-      run: scripts\run-tests.cmd ${{ inputs.test-args }}
+      run: scripts\ci\run-tests.cmd ${{ inputs.test-args }}
 
     # Windows: PowerShell (shared script)
     - name: Run tests (pwsh)
       if: runner.os == 'Windows' && (inputs.windows-shell == 'pwsh')
       shell: pwsh
-      run: ./scripts/run-tests.ps1 ${{ inputs.test-args }}
+      run: ./scripts/ci/run-tests.ps1 ${{ inputs.test-args }}
 
     # Windows: run inside WSL (invoked via wsl.exe). Uses host cmd shell to convert paths and call wsl.
     - name: Run tests on Windows (WSL)

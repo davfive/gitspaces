@@ -57,9 +57,9 @@ parse_args() {
   # Set default target directory if not provided
   if [[ -z "$TARGET_DIR" ]]; then
     if $USE_PROD; then
-      TARGET_DIR="tmp/pypi/${TAG}"
+      TARGET_DIR="/tmp/pypi/${TAG}"
     else
-      TARGET_DIR="tmp/test.pypi/${TAG}"
+      TARGET_DIR="/tmp/test.pypi/${TAG}"
     fi
   fi
 }

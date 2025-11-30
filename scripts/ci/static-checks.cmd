@@ -1,6 +1,6 @@
 @echo off
 REM Shared static checks runner for local and CI (cmd)
-REM Usage: scripts\static-checks.cmd [--quick]
+REM Usage: scripts\ci\static-checks.cmd [--quick]
 
 IF NOT DEFINED VIRTUAL_ENV (
   IF NOT EXIST venv (
