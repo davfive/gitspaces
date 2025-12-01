@@ -20,16 +20,47 @@ def _robust_rmtree(path: Path, retries: int = 5, delay: float = 0.5):
     On Windows, Git processes may hold file handles open briefly after repo.close().
     This function retries deletion with exponential backoff.
     """
-    max_delay = 2.0  # Cap maximum delay at 2 seconds
-    for attempt in range(retries):
+    # Adjust retry strategy on CI/Windows to avoid long sleeps in job runs
+    ci_env = os.getenv("GITHUB_ACTIONS") == "true" or os.getenv("CI") is not None
+    is_windows = os.name == "nt"
+
+    # Shorter retry window for CI or Windows runners to reduce per-test teardown time
+    if is_windows and ci_env:
+        effective_retries = max(2, min(retries, 3))
+        effective_delay = max(0.1, min(delay, 0.25))
+        max_delay = 1.0
+    else:
+        effective_retries = retries
+        effective_delay = delay
+        max_delay = 2.0  # Cap maximum delay at 2 seconds
+
+    for attempt in range(effective_retries):
         try:
             # Force garbage collection to release any Python-held handles
             gc.collect()
             shutil.rmtree(path, ignore_errors=False)
             return
         except PermissionError:
-            if attempt < retries - 1:
-                time.sleep(min(delay * (2**attempt), max_delay))
+            # Try to relax permissions to help deletion on Windows
+            try:
+                for root, dirs, files in os.walk(path):
+                    for name in files:
+                        fp = os.path.join(root, name)
+                        try:
+                            os.chmod(fp, 0o666)
+                        except Exception:
+                            pass
+                    for name in dirs:
+                        dp = os.path.join(root, name)
+                        try:
+                            os.chmod(dp, 0o777)
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+
+            if attempt < effective_retries - 1:
+                time.sleep(min(effective_delay * (2**attempt), max_delay))
             else:
                 # Final attempt: use ignore_errors to clean up what we can
                 shutil.rmtree(path, ignore_errors=True)
