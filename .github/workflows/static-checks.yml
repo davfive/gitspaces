@@ -4,20 +4,11 @@ on:
   workflow_dispatch: {}
   workflow_call:
     inputs:
-      run-security:
-        required: false
-        type: boolean
-        default: true
-      run-codeql:
-        required: false
-        type: boolean
-        default: false
-      python-for-tools:
+      python-version:
         required: false
         type: string
         default: "3.13"
 
-# Needed if run-codeql may upload results; callers must allow these permissions
 permissions:
   contents: read
   security-events: write
@@ -25,83 +16,23 @@ permissions:
 jobs:
   checks:
     runs-on: ubuntu-latest
-    outputs:
-      passed: ${{ steps.set-output.outputs.passed }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python for static tools
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ inputs.python-for-tools }}
-
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install static-analysis tools
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e .[dev]
-          pip install pip-audit semgrep
+          python-version: ${{ inputs.python-version }}
 
       - name: Run static checks (quick)
         uses: ./.github/actions/static-checks
         with:
           quick: true
 
-
-      # Security checks (run separately for better reporting)
-      - name: pip-audit (dependency vuln scan)
-        if: ${{ inputs.run-security }}
-        run: pip-audit || true
-
-      - name: Bandit (quick SAST)
-        if: ${{ inputs.run-security }}
-        run: |
-          bandit -r src/gitspaces -f json -o bandit-report.json || true
-          bandit -r src/gitspaces -lll || true
-
-      - name: semgrep (fast CI rules)
-        if: ${{ inputs.run-security }}
-        run: semgrep --config p/ci || true
-
-      # Optional heavy security: CodeQL + full semgrep (only when requested)
-      - name: Initialize CodeQL (heavy)
-        if: ${{ inputs.run-codeql == true }}
-        uses: github/codeql-action/init@v4
-        with:
-          languages: python
-
-      - name: Perform CodeQL analysis (heavy)
-        if: ${{ inputs.run-codeql == true }}
-        uses: github/codeql-action/analyze@v4
-
-      - name: Semgrep (full ruleset, heavy)
-        if: ${{ inputs.run-codeql == true }}
-        run: |
-          python -m pip install semgrep
-          semgrep --config path/to/your-full-ruleset --json --output semgrep.json || true
-
-      - name: Upload semgrep SARIF
-        if: ${{ inputs.run-codeql == true }}
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: semgrep.json
-
-      - name: Upload bandit report
-        if: ${{ inputs.run-security }}
+      - name: Upload Bandit SAST report (if present)
+        if: always() && exists('bandit-report.json')
         uses: actions/upload-artifact@v4
         with:
           name: bandit-report
           path: bandit-report.json
-
-      - name: Mark passed
-        id: set-output
-        run: echo "passed=true" && echo "passed=true" >> $GITHUB_OUTPUT
