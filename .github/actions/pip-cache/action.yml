@@ -12,23 +12,22 @@ inputs:
   deps-files:
     description: "Dependency files globs (used by hashFiles). Provide as multi-line string or single glob."
     required: false
-    default: "**/pyproject.toml **/requirements*.txt"
+    default: "**/pyproject.toml"
 
 runs:
   using: "composite"
   steps:
-    - name: Normalize deps-files
-      id: deps
-      shell: bash
-      run: |
-        echo "deps=${{ inputs.deps-files }}" >> $GITHUB_OUTPUT
+    # NOTE: intentionally not writing to $GITHUB_OUTPUT here. Writing
+    # arbitrary globs into the runner file commands can cause parsing
+    # errors (seen when glob characters are expanded). We currently only
+    # rely on hashing `**/pyproject.toml` for dependency invalidation.
 
     - name: Cache pip http (non-Windows)
       if: runner.os != 'Windows'
       uses: actions/cache@v4
       with:
         path: ~/.cache/pip/http
-        key: pip-cache-http-${{ runner.os }}-${{ hashFiles('**/pyproject.toml','**/requirements*.txt') }}
+        key: pip-cache-http-${{ runner.os }}-${{ hashFiles('**/pyproject.toml') }}
         restore-keys: |
           pip-cache-http-${{ runner.os }}-
 
@@ -37,7 +36,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/pip/wheels
-        key: pip-cache-wheels-${{ runner.os }}-py${{ inputs.python-version }}-${{ hashFiles('**/pyproject.toml','**/requirements*.txt') }}
+        key: pip-cache-wheels-${{ runner.os }}-py${{ inputs.python-version }}-${{ hashFiles('**/pyproject.toml') }}
         restore-keys: |
           pip-cache-wheels-${{ runner.os }}-py${{ inputs.python-version }}-
           pip-cache-wheels-${{ runner.os }}-
@@ -62,7 +61,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: '%LOCALAPPDATA%\\pip\\Cache\\http'
-        key: pip-cache-http-${{ runner.os }}-${{ hashFiles('**/pyproject.toml','**/requirements*.txt') }}
+        key: pip-cache-http-${{ runner.os }}-${{ hashFiles('**/pyproject.toml') }}
         restore-keys: |
           pip-cache-http-${{ runner.os }}-
 
@@ -71,7 +70,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: '%LOCALAPPDATA%\\pip\\Cache\\wheels'
-        key: pip-cache-wheels-${{ runner.os }}-py${{ inputs.python-version }}-${{ hashFiles('**/pyproject.toml','**/requirements*.txt') }}
+        key: pip-cache-wheels-${{ runner.os }}-py${{ inputs.python-version }}-${{ hashFiles('**/pyproject.toml') }}
         restore-keys: |
           pip-cache-wheels-${{ runner.os }}-py${{ inputs.python-version }}-
           pip-cache-wheels-${{ runner.os }}-
@@ -97,7 +96,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: ${{ github.workspace }}/.wsl-pip-cache
-        key: pip-cache-wsl-${{ hashFiles('**/pyproject.toml','**/requirements*.txt') }}
+        key: pip-cache-wsl-${{ hashFiles('**/pyproject.toml') }}
         restore-keys: |
           pip-cache-wsl-py${{ inputs.python-version }}-
           pip-cache-wsl-
@@ -138,4 +137,4 @@ runs:
       uses: actions/cache@v4
       with:
         path: ${{ github.workspace }}/.wsl-pip-cache
-        key: pip-cache-wsl-${{ hashFiles('**/pyproject.toml','**/requirements*.txt') }}
+        key: pip-cache-wsl-${{ hashFiles('**/pyproject.toml') }}
