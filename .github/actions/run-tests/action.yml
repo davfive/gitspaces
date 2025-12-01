@@ -33,6 +33,48 @@ outputs:
 runs:
   using: "composite"
   steps:
+    # Cache pip directories per-platform so Windows doesn't re-download/build
+    # large numbers of wheels on every matrix job. Keys include python version
+    # and dependency files so caches are invalidated when deps change.
+    - name: Cache pip (non-Windows)
+      if: runner.os != 'Windows'
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ inputs.python-version }}-${{ hashFiles('**/pyproject.toml','**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ inputs.python-version }}-
+          ${{ runner.os }}-pip-
+
+    - name: Cache pip (Windows native)
+      if: runner.os == 'Windows' && (inputs.windows-shell != 'wsl')
+      uses: actions/cache@v4
+      with:
+        # Windows pip cache dir on hosted runners
+        path: '%LOCALAPPDATA%\\pip\\Cache'
+        key: windows-pip-${{ inputs.python-version }}-${{ hashFiles('**/pyproject.toml','**/requirements*.txt') }}
+        restore-keys: |
+          windows-pip-${{ inputs.python-version }}-
+          windows-pip-
+
+    # For WSL we rely on the WSL-based setup to create a venv and install
+    # packages inside the distro. WSL's filesystem is separate, and caching
+    # that state is more complex; handle it later if needed. For now we
+    # ensure native Windows pip caches are present to avoid re-downloads.
+
+    - name: Populate WSL pip cache from host (if present)
+      if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
+      shell: cmd
+      run: |
+        rem If the host pip cache was restored on Windows, copy it into WSL
+        rem so WSL installs can reuse downloaded wheels instead of re-downloading.
+        if exist "%LOCALAPPDATA%\pip\Cache" (
+          for /f "delims=" %%P in ('wsl wslpath -u "%LOCALAPPDATA%\\pip\\Cache"') do set "WSLPIP=%%P"
+          wsl bash -lc "mkdir -p ~/.cache/pip || true"
+          wsl bash -lc "cp -r '%WSLPIP%'/* ~/.cache/pip/ || true"
+        ) else (
+          echo Host pip cache not present, skipping WSL cache populate
+        )
     # Setup WSL with Ubuntu and deadsnakes PPA (required for Windows WSL shell)
     - name: Setup WSL with deadsnakes
       if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
