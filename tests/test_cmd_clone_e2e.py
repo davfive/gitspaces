@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import os
-from pathlib import Path
 from unittest.mock import Mock
+
 import pytest
+
 from gitspaces.modules.cmd_clone import clone_command
 from gitspaces.modules.project import Project
 
@@ -15,7 +15,12 @@ class TestCloneE2E:
     """End-to-end tests for the clone command."""
 
     def test_clone_prompts_for_target_directory(
-        self, bare_git_repo, gitspaces_config, monkeypatch, mock_console_select, mock_console_input
+        self,
+        bare_git_repo,
+        gitspaces_config,
+        monkeypatch,
+        mock_console_select,
+        mock_console_input,
     ):
         """User selects from configured project directories when multiple exist."""
         # Add another project path to config
@@ -97,10 +102,18 @@ class TestCloneE2E:
         project_path = gitspaces_config["projects_dir"] / "bare-repo"
 
         captured = capsys.readouterr()
-        assert "my-first-space" in captured.out or (project_path / "my-first-space").exists()
+        assert (
+            "my-first-space" in captured.out
+            or (project_path / "my-first-space").exists()
+        )
 
     def test_clone_writes_path_for_shell_cd(
-        self, bare_git_repo, gitspaces_config, monkeypatch, mock_console_input, shell_pid_file
+        self,
+        bare_git_repo,
+        gitspaces_config,
+        monkeypatch,
+        mock_console_input,
+        shell_pid_file,
     ):
         """After waking sleeper, write path for shell wrapper to cd."""
         mock_console_input(["dev-space"])

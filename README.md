@@ -1,9 +1,48 @@
 # GitSpaces
 
-[![PyPI version](https://badge.fury.io/py/gitspaces.svg)](https://badge.fury.io/py/gitspaces)
-[![Tests](https://github.com/davfive/gitspaces/actions/workflows/python-tests.yml/badge.svg)](https://github.com/davfive/gitspaces/actions/workflows/python-tests.yml)
+[![PyPI](https://img.shields.io/pypi/v/gitspaces)](https://pypi.org/project/gitspaces/)
+[![Python 3.9+](https://img.shields.io/pypi/pyversions/gitspaces.svg)](https://pypi.org/project/gitspaces/)
+[![Static Checks](https://github.com/davfive/gitspaces/actions/workflows/static-checks.yml/badge.svg)](https://github.com/davfive/gitspaces/actions/workflows/static-checks.yml)
+[![Tests](https://github.com/davfive/gitspaces/actions/workflows/test-all.yml/badge.svg)](https://github.com/davfive/gitspaces/actions/workflows/test-all.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/pypi/pyversions/gitspaces.svg)](https://pypi.org/project/gitspaces/)
+
+Manage multiple independent clones of a git repository. Similar to ClearCase Views but for Git.
+
+Work on multiple features, branches, or experiments simultaneously without branch switching overhead. Each "space" is an independent clone of your repository.
+
+> *Note: This project is currently at v3. It has evolved through several major iterations over the past 7 years — originally implemented as a collection of Bash scripts (v1), then rewritten in Go (v2), and now implemented in Python (v3). The prior v1/v2 repositories are archived and available at https://github.com/davfive/gitspaces.golang.*
+
+## Code Quality & Autofix
+
+To check code style, lint, and types:
+
+```bash
+./scripts/ci/static-checks.sh
+```
+
+To autofix all autofixable issues (ruff, black):
+
+```bash
+./scripts/ci/static-checks.sh --fix
+```
+
+On Windows, use `.cmd` or `.ps1` variants.
+# PyPI Classifiers
+
+Ensure your `pyproject.toml` includes appropriate classifiers, for example:
+
+```toml
+[project]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Intended Audience :: Developers",
+  "Topic :: Security",
+]
+```
+
+# GitSpaces
 
 Manage multiple independent clones of a git repository. Similar to ClearCase Views but for Git.
 
@@ -29,12 +68,29 @@ Or from source:
 ```bash
 git clone https://github.com/davfive/gitspaces.git
 cd gitspaces
-pip install -e .
+pip install -e .[dev]
 ```
 
 ## Shell Integration (Required for directory switching)
 
 GitSpaces commands like `switch`, `clone`, and `rename` need to change your shell's working directory. Since a subprocess cannot change the parent shell's directory, you need to install a shell wrapper that enables this behavior.
+
+
+# PyPI Classifiers
+
+Ensure your `pyproject.toml` includes appropriate classifiers, for example:
+
+```toml
+[project]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Intended Audience :: Developers",
+  "Topic :: Security",
+]
+```
+
 
 ### Bash / Zsh / WSL
 

@@ -1,7 +1,11 @@
 """Tests for error classes."""
 
-import pytest
-from gitspaces.modules.errors import GitSpacesError, ConfigError, ProjectError, SpaceError
+from gitspaces.modules.errors import (
+    ConfigError,
+    GitSpacesError,
+    ProjectError,
+    SpaceError,
+)
 
 
 def test_gitspaces_error():

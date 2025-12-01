@@ -2,12 +2,12 @@
 
 from pathlib import Path
 from typing import Optional
-from gitspaces.modules.config import Config
+
+from gitspaces.modules import runshell
 from gitspaces.modules.console import Console
+from gitspaces.modules.path import write_shell_target
 from gitspaces.modules.project import Project
 from gitspaces.modules.space import Space
-from gitspaces.modules.path import write_shell_target
-from gitspaces.modules import runshell
 
 
 def _get_current_space_name(project: Project) -> Optional[str]:
@@ -38,7 +38,7 @@ def rename_command(args):
 
     Args:
         args: Parsed command-line arguments containing:
-            - old_name: Current space name (optional - uses current clone if not provided)
+            - old_name: Current space name (optional if in space directory)
             - new_name: New space name
     """
     # Find the current project
@@ -62,7 +62,9 @@ def rename_command(args):
             new_name = old_name
             old_name = current_space
         else:
-            Console.println("✗ Not in a space directory. Specify both old_name and new_name.")
+            Console.println(
+                "✗ Not in a space directory. Specify both old_name and new_name."
+            )
             return
 
     if not old_name or not new_name:

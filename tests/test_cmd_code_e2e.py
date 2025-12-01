@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import json
-import os
-from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
+
 import pytest
+
 from gitspaces.modules.cmd_code import code_command
-from gitspaces.modules.project import Project
 
 
 @pytest.mark.e2e
@@ -144,7 +143,9 @@ class TestCodeE2E:
 
         # Check workspace file content
         ws_file = (
-            project_data["project_path"] / ".code-workspace" / "test-project~feature.code-workspace"
+            project_data["project_path"]
+            / ".code-workspace"
+            / "test-project~feature.code-workspace"
         )
         assert ws_file.exists()
 

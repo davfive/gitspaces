@@ -1,8 +1,8 @@
 """Tests for configuration module."""
 
-import pytest
 from pathlib import Path
-from gitspaces.modules.config import Config, init_config
+
+from gitspaces.modules.config import Config
 
 
 def test_config_singleton():

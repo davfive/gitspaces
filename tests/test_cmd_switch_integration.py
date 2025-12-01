@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from unittest.mock import Mock
-import pytest
+
 from gitspaces.modules.cmd_switch import switch_command
 
 
@@ -19,7 +19,7 @@ def test_switch_command_with_space_name(gitspaces_project, monkeypatch):
     args.space = "feature"
 
     # Mock chdir to track the call
-    original_chdir = Path.cwd
+    Path.cwd
     chdir_called_with = []
 
     def mock_chdir(path):
@@ -36,7 +36,9 @@ def test_switch_command_with_space_name(gitspaces_project, monkeypatch):
     assert "feature" in str(chdir_called_with[0])
 
 
-def test_switch_command_interactive_select(gitspaces_project, monkeypatch, mock_console_select):
+def test_switch_command_interactive_select(
+    gitspaces_project, monkeypatch, mock_console_select
+):
     """Test switching with interactive selection."""
     project_data = gitspaces_project
 
@@ -66,7 +68,9 @@ def test_switch_command_interactive_select(gitspaces_project, monkeypatch, mock_
     assert "feature" in str(chdir_called_with[0])
 
 
-def test_switch_command_not_in_project(temp_home, gitspaces_config, monkeypatch, capsys):
+def test_switch_command_not_in_project(
+    temp_home, gitspaces_config, monkeypatch, capsys
+):
     """Test switching when not in a project directory lists all projects."""
     # Change to home directory (not a project)
     monkeypatch.chdir(temp_home)
@@ -121,7 +125,9 @@ def test_switch_command_no_spaces(gitspaces_project, monkeypatch, capsys):
     assert "No spaces found" in captured.out
 
 
-def test_switch_command_sleeping_space(gitspaces_project, monkeypatch, capsys, mock_console_input):
+def test_switch_command_sleeping_space(
+    gitspaces_project, monkeypatch, capsys, mock_console_input
+):
     """Test that switching to a sleeping space prompts for wake."""
     project_data = gitspaces_project
 

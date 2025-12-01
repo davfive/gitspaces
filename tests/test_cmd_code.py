@@ -1,15 +1,19 @@
 """Tests for cmd_code module."""
 
-from unittest.mock import Mock, patch, MagicMock
 from pathlib import Path
+from unittest.mock import Mock, patch
+
 import pytest
+
 from gitspaces.modules.cmd_code import code_command
 
 
 @patch("gitspaces.modules.cmd_code.Console")
 @patch("gitspaces.modules.cmd_code.Config")
 @patch("gitspaces.modules.cmd_code.Project")
-def test_code_command_with_space(mock_project_cls, mock_config_cls, mock_console, tmp_path):
+def test_code_command_with_space(
+    mock_project_cls, mock_config_cls, mock_console, tmp_path
+):
     """Test code command with specified space."""
     # Setup mocks
     mock_config = Mock()
@@ -64,7 +68,9 @@ def test_code_command_no_project(mock_project_cls, mock_config_cls, mock_console
 @patch("gitspaces.modules.cmd_code.Console")
 @patch("gitspaces.modules.cmd_code.Config")
 @patch("gitspaces.modules.cmd_code.Project")
-def test_code_command_space_not_found(mock_project_cls, mock_config_cls, mock_console, tmp_path):
+def test_code_command_space_not_found(
+    mock_project_cls, mock_config_cls, mock_console, tmp_path
+):
     """Test code command when space doesn't exist."""
     mock_config = Mock()
     mock_config.default_editor = "code"
@@ -89,7 +95,9 @@ def test_code_command_space_not_found(mock_project_cls, mock_config_cls, mock_co
 @patch("gitspaces.modules.cmd_code.Console")
 @patch("gitspaces.modules.cmd_code.Config")
 @patch("gitspaces.modules.cmd_code.Project")
-def test_code_command_editor_not_found(mock_project_cls, mock_config_cls, mock_console, tmp_path):
+def test_code_command_editor_not_found(
+    mock_project_cls, mock_config_cls, mock_console, tmp_path
+):
     """Test code command when editor is not found."""
     mock_config = Mock()
     mock_config.default_editor = "nonexistent-editor"
@@ -119,7 +127,9 @@ def test_code_command_editor_not_found(mock_project_cls, mock_config_cls, mock_c
 @patch("gitspaces.modules.cmd_code.Console")
 @patch("gitspaces.modules.cmd_code.Config")
 @patch("gitspaces.modules.cmd_code.Project")
-def test_code_command_editor_error(mock_project_cls, mock_config_cls, mock_console, tmp_path):
+def test_code_command_editor_error(
+    mock_project_cls, mock_config_cls, mock_console, tmp_path
+):
     """Test code command when editor fails."""
     mock_config = Mock()
     mock_config.default_editor = "code"
@@ -148,7 +158,9 @@ def test_code_command_editor_error(mock_project_cls, mock_config_cls, mock_conso
 @patch("gitspaces.modules.cmd_code.Console")
 @patch("gitspaces.modules.cmd_code.Config")
 @patch("gitspaces.modules.cmd_code.Project")
-def test_code_command_select_space(mock_project_cls, mock_config_cls, mock_console, tmp_path):
+def test_code_command_select_space(
+    mock_project_cls, mock_config_cls, mock_console, tmp_path
+):
     """Test code command with space selection."""
     mock_config = Mock()
     mock_config.default_editor = "code"
@@ -187,7 +199,9 @@ def test_code_command_select_space(mock_project_cls, mock_config_cls, mock_conso
 @patch("gitspaces.modules.cmd_code.Console")
 @patch("gitspaces.modules.cmd_code.Config")
 @patch("gitspaces.modules.cmd_code.Project")
-def test_code_command_no_active_spaces(mock_project_cls, mock_config_cls, mock_console, tmp_path):
+def test_code_command_no_active_spaces(
+    mock_project_cls, mock_config_cls, mock_console, tmp_path
+):
     """Test code command when no active spaces available."""
     mock_config = Mock()
     mock_config.default_editor = "code"

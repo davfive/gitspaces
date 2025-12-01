@@ -2,19 +2,20 @@
 
 from __future__ import annotations
 
-import shutil
-from pathlib import Path
 from unittest.mock import Mock
+
 import pytest
+
 from gitspaces.modules.cmd_sleep import sleep_command
-from gitspaces.modules.project import Project
 
 
 @pytest.mark.e2e
 class TestSleepE2E:
     """End-to-end tests for the sleep command."""
 
-    def test_sleep_puts_active_clone_to_sleep(self, gitspaces_project, monkeypatch, capsys):
+    def test_sleep_puts_active_clone_to_sleep(
+        self, gitspaces_project, monkeypatch, capsys
+    ):
         """Move clone dir to .zzz/ with next available number."""
         project_data = gitspaces_project
 
@@ -37,7 +38,12 @@ class TestSleepE2E:
         assert sleepers[0].name == "zzz-0"
 
     def test_sleep_with_interactive_selection(
-        self, gitspaces_project, monkeypatch, mock_console_select, mock_console_confirm, capsys
+        self,
+        gitspaces_project,
+        monkeypatch,
+        mock_console_select,
+        mock_console_confirm,
+        capsys,
     ):
         """Test sleeping with interactive space selection."""
         project_data = gitspaces_project
@@ -79,7 +85,7 @@ class TestSleepE2E:
         # Need to also mock confirm to wake
         from gitspaces.modules.console import Console
 
-        original_confirm = Console.prompt_confirm
+        Console.prompt_confirm
         confirm_calls = [True]  # Yes, wake another
 
         def mock_confirm(msg, default=True):

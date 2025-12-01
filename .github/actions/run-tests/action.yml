@@ -13,6 +13,10 @@ inputs:
     description: "Additional pytest args (default: tests/ -v --maxfail=1 -n auto)"
     required: false
     default: "tests/ -v --maxfail=1 -n auto"
+  debug-timings:
+    description: "If 'true', print start/end timestamps around test runs for diagnostics"
+    required: false
+    default: "false"
   coverage-file:
     description: "Optional coverage filename (default: coverage-<version>.xml)"
     required: false
@@ -33,6 +37,33 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Prepare pip cache
+      uses: ./.github/actions/pip-cache
+      with:
+        python-version: ${{ inputs.python-version }}
+        windows-shell: ${{ inputs.windows-shell }}
+        deps-files: |
+          **/pyproject.toml
+          **/requirements*.txt
+
+    # For WSL we rely on the WSL-based setup to create a venv and install
+    # packages inside the distro. WSL's filesystem is separate, and caching
+    # that state is more complex; handle it later if needed. For now we
+    # ensure native Windows pip caches are present to avoid re-downloads.
+
+    - name: Populate WSL pip cache from host (if present)
+      if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
+      shell: cmd
+      run: |
+        rem If the host pip cache was restored on Windows, copy it into WSL
+        rem so WSL installs can reuse downloaded wheels instead of re-downloading.
+        if exist "%LOCALAPPDATA%\pip\Cache" (
+          for /f "delims=" %%P in ('wsl wslpath -u "%LOCALAPPDATA%\\pip\\Cache"') do set "WSLPIP=%%P"
+          wsl bash -lc "mkdir -p ~/.cache/pip || true"
+          wsl bash -lc "cp -r '%WSLPIP%'/* ~/.cache/pip/ || true"
+        ) else (
+          echo Host pip cache not present, skipping WSL cache populate
+        )
     # Setup WSL with Ubuntu and deadsnakes PPA (required for Windows WSL shell)
     - name: Setup WSL with deadsnakes
       if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
@@ -62,72 +93,61 @@ runs:
         wsl bash -lc "cd ~/gitspaces && python%INPUT_PYTHON_VERSION% -m venv .venv-py%INPUT_PYTHON_VERSION%"
 
         rem Activate venv and install dependencies
-        wsl bash -lc "cd ~/gitspaces && source .venv-py%INPUT_PYTHON_VERSION%/bin/activate && python -m pip install --upgrade pip && python -m pip install -e . && python -m pip install -r %INPUT_REQUIREMENTS_FILE%"
+        wsl bash -lc "cd ~/gitspaces && source .venv-py%INPUT_PYTHON_VERSION%/bin/activate && python -m pip install --upgrade pip && python -m pip install -e .[dev]"
 
-    # Use setup-venv action to create venv and install dependencies (non-WSL)
-    - name: Setup venv and install dependencies
-      if: runner.os != 'Windows' || inputs.windows-shell != 'wsl'
-      id: venv
-      uses: ./.github/actions/setup-venv
-      with:
-        python-version: ${{ inputs.python-version }}
-        venv-path: .venv
-        requirements-file: ${{ inputs.requirements-file }}
-        shell-type: ${{ runner.os == 'Windows' && inputs.windows-shell || '' }}
 
-    # Unix / macOS path
-    - name: Run tests on Unix/macOS
+
+
+    # Unix / macOS path (shared script)
+    - name: Run tests (bash)
       if: runner.os != 'Windows'
-      id: run_unix
       shell: bash
-      env:
-        INPUT_COVERAGE_FILE: ${{ inputs.coverage-file }}
-        INPUT_PYTHON_VERSION: ${{ inputs.python-version }}
-        INPUT_TEST_ARGS: ${{ inputs.test-args }}
-        VENV_PATH: ${{ steps.venv.outputs.venv-path }}
       run: |
-        COVERAGE_FILE="$INPUT_COVERAGE_FILE"
-        if [ -z "$COVERAGE_FILE" ]; then
-          COVERAGE_FILE="coverage-$INPUT_PYTHON_VERSION.xml"
+        if [ "${{ inputs.debug-timings }}" = "true" ]; then
+          echo "Start test run: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          ./scripts/ci/run-tests.sh ${{ inputs.test-args }}
+          RC=$?
+          echo "End test run: $(date -u +'%Y-%m-%dT%H:%M:%SZ') (exit=$RC)"
+          exit $RC
+        else
+          ./scripts/ci/run-tests.sh ${{ inputs.test-args }}
         fi
-        source "$VENV_PATH/bin/activate"
-        python -m pytest $INPUT_TEST_ARGS --cov=src/gitspaces --cov-report=xml:$COVERAGE_FILE --cov-report=term
-        echo "coverage-file=$COVERAGE_FILE" >> $GITHUB_OUTPUT
 
-    # Windows: native cmd.exe
-    - name: Run tests on Windows (cmd)
+    # Windows: native cmd.exe (shared script)
+    - name: Run tests (cmd)
       if: runner.os == 'Windows' && (inputs.windows-shell == 'cmd')
-      id: run_win_cmd
       shell: cmd
-      env:
-        INPUT_COVERAGE_FILE: ${{ inputs.coverage-file }}
-        INPUT_PYTHON_VERSION: ${{ inputs.python-version }}
-        INPUT_TEST_ARGS: ${{ inputs.test-args }}
-        VENV_PATH: ${{ steps.venv.outputs.venv-path }}
       run: |
-        set "COVERAGE_FILE=%INPUT_COVERAGE_FILE%"
-        if "%COVERAGE_FILE%"=="" set "COVERAGE_FILE=coverage-%INPUT_PYTHON_VERSION%.xml"
-        call "%VENV_PATH%\Scripts\activate.bat"
-        python -m pytest %INPUT_TEST_ARGS% --cov=src/gitspaces --cov-report=xml:%COVERAGE_FILE% --cov-report=term
-        echo coverage-file=%COVERAGE_FILE%>> %GITHUB_OUTPUT%
+        set "TEST_ARGS=${{ inputs.test-args }}"
+        set "DBG=${{ inputs.debug-timings }}"
+        if "%DBG%"=="true" (
+          echo Start test run: %DATE% %TIME%
+          scripts\ci\run-tests.cmd %TEST_ARGS%
+          set RC=%ERRORLEVEL%
+          echo End test run: %DATE% %TIME% (exit=%RC%)
+          exit /b %RC%
+        ) else (
+          scripts\ci\run-tests.cmd %TEST_ARGS%
+        )
 
-    # Windows: PowerShell
-    - name: Run tests on Windows (PowerShell)
+    # Windows: PowerShell (shared script)
+    - name: Run tests (pwsh)
       if: runner.os == 'Windows' && (inputs.windows-shell == 'pwsh')
-      id: run_win_pwsh
       shell: pwsh
-      env:
-        INPUT_COVERAGE_FILE: ${{ inputs.coverage-file }}
-        INPUT_PYTHON_VERSION: ${{ inputs.python-version }}
-        INPUT_TEST_ARGS: ${{ inputs.test-args }}
-        VENV_PATH: ${{ steps.venv.outputs.venv-path }}
       run: |
-        $coverage = $env:INPUT_COVERAGE_FILE
-        if ([string]::IsNullOrEmpty($coverage)) { $coverage = "coverage-$env:INPUT_PYTHON_VERSION.xml" }
-        $testArgs = $env:INPUT_TEST_ARGS
-        & "$env:VENV_PATH\Scripts\Activate.ps1"
-        Invoke-Expression "python -m pytest $testArgs --cov=src/gitspaces --cov-report=xml:$coverage --cov-report=term"
-        Write-Output ("coverage-file=$coverage") | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+        $testArgs = '${{ inputs.test-args }}'
+        $dbg = '${{ inputs.debug-timings }}'
+        $argArray = if ($testArgs) { $testArgs -split ' ' } else { @() }
+        if ($dbg -eq 'true') {
+          Write-Host "Start test run: $(Get-Date -Format o)"
+          & ./scripts/ci/run-tests.ps1 @argArray
+          $rc = $LASTEXITCODE
+          Write-Host "End test run: $(Get-Date -Format o) (exit=$rc)"
+          exit $rc
+        } else {
+          & ./scripts/ci/run-tests.ps1 @argArray
+          exit $LASTEXITCODE
+        }
 
     # Windows: run inside WSL (invoked via wsl.exe). Uses host cmd shell to convert paths and call wsl.
     - name: Run tests on Windows (WSL)
@@ -148,7 +168,17 @@ runs:
         for /f "delims=" %%P in ('wsl wslpath -u "%CD%"') do set "WPATH=%%P"
 
         rem Run pytest inside WSL using ext4 filesystem (~/gitspaces) for best performance
-        wsl bash -lc "cd ~/gitspaces && source .venv-py%INPUT_PYTHON_VERSION%/bin/activate && python -m pytest %INPUT_TEST_ARGS% --cov=src/gitspaces --cov-report=xml:%COVERAGE_FILE% --cov-report=term"
+        set "DBG=${{ inputs.debug-timings }}"
+        rem Run pytest inside WSL using ext4 filesystem (~/gitspaces) for best performance
+        if "%DBG%"=="true" (
+          echo Start WSL pytest: %DATE% %TIME%
+          wsl bash -lc "cd ~/gitspaces && source .venv-py%INPUT_PYTHON_VERSION%/bin/activate && python -m pytest %INPUT_TEST_ARGS% --cov=src/gitspaces --cov-report=xml:%COVERAGE_FILE% --cov-report=term"
+          set RC=%ERRORLEVEL%
+          echo End WSL pytest: %DATE% %TIME% (exit=%RC%)
+        ) else (
+          wsl bash -lc "cd ~/gitspaces && source .venv-py%INPUT_PYTHON_VERSION%/bin/activate && python -m pytest %INPUT_TEST_ARGS% --cov=src/gitspaces --cov-report=xml:%COVERAGE_FILE% --cov-report=term"
+          set RC=%ERRORLEVEL%
+        )
 
         rem Copy coverage file back to Windows workspace for artifact upload
         wsl bash -lc "cp ~/gitspaces/%COVERAGE_FILE% '%WPATH%/%COVERAGE_FILE%'"

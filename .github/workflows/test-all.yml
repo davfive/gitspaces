@@ -1,25 +1,20 @@
-name: "02-test-pyall"
+name: "test-pyall"
 
 on:
   workflow_dispatch: {}
   pull_request:
     branches: [ main ]
-  workflow_call:
-    inputs:
-      run-codeql:
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   contents: read
 
 jobs:
+
   static:
     uses: ./.github/workflows/static-checks.yml
     with:
-      run-security: true
-      python-for-tools: '3.13'
+      python-version: '3.13'
+      publish_reports: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main' }}
     permissions:
       contents: read
       security-events: write
@@ -48,8 +43,28 @@ jobs:
             shell: wsl-bash
             name: windows-wsl
 
+
     steps:
       - uses: actions/checkout@v4
+
+      # Cache pip for all platforms (including WSL)
+      - name: Cache pip (native)
+        if: runner.os != 'Windows' || matrix.platform.shell != 'wsl-bash'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Cache pip (WSL)
+        if: runner.os == 'Windows' && matrix.platform.shell == 'wsl-bash'
+        uses: actions/cache@v4
+        with:
+          path: ~/gitspaces/.cache/pip
+          key: windows-wsl-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            windows-wsl-pip-
 
       - name: test-${{ matrix.platform.name }}-py3.13
         uses: ./.github/actions/run-tests
@@ -81,3 +96,5 @@ jobs:
         with:
           python-version: '3.9'
           windows-shell: ${{ matrix.platform.shell == 'wsl-bash' && 'wsl' || matrix.platform.shell }}
+
+      # bandit report publishing is handled in the reusable static-checks workflow

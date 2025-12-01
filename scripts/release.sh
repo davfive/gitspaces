@@ -1,38 +1,38 @@
 #!/usr/bin/env bash
 set -euxo pipefail
 
+
 # Globals
-PUSH=false
 REMOTE="origin"
 MODE=""          # "", "editor", or "stdin" (defaults to "stdin" if unset)
 EXPLICIT_TAG=""
+RELEASE_BRANCH=""
+PREPARE_ONLY=false
 
 SEMVER_TAG_RE='^v([0-9]+)\.([0-9]+)\.([0-9]+)(-[0-9A-Za-z]+(\.[0-9A-Za-z]+)*)?$'
+
 
 parse_args() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --push) PUSH=true; shift ;;
       --remote) REMOTE="$2"; shift 2 ;;
       --editor) MODE="editor"; shift ;;
       --stdin) MODE="stdin"; shift ;;
       --tag) EXPLICIT_TAG="$2"; shift 2 ;;
+      --prepare) PREPARE_ONLY=true; shift ;;
+      --branch) RELEASE_BRANCH="$2"; shift 2 ;;
       *) echo "Unknown arg: $1" >&2; exit 1 ;;
     esac
   done
-  # Default to stdin if neither editor nor stdin specified
   if [[ -z "$MODE" ]]; then
     MODE="stdin"
   fi
 }
 
+
 check_branch_clean() {
   local branch
   branch="$(git rev-parse --abbrev-ref HEAD)"
-  if [[ "$branch" != "main" ]]; then
-    echo "Must run release.sh from main. Current: $branch" >&2
-    exit 1
-  fi
   test -z "$(git status --porcelain)" || { echo "Working tree not clean"; exit 1; }
 }
 
@@ -164,18 +164,51 @@ create_and_push_tag() {
   fi
 }
 
+
 main() {
   parse_args "$@"
-  check_branch_clean
-  determine_tag
-  confirm_tag
-  ensure_tag_available
-  setup_venv_build
-  compose_release_notes
-  update_pyproject_version
-  commit_version_changes
-  create_and_push_tag
-  echo "Release script completed for $TAG"
+
+  if $PREPARE_ONLY; then
+    # Step 1: Prepare release branch
+    check_branch_clean
+    local base_branch="main"
+    git fetch "$REMOTE" "$base_branch"
+    git checkout "$base_branch"
+    git pull "$REMOTE" "$base_branch"
+    determine_tag
+    confirm_tag
+    ensure_tag_available
+    # Create release branch
+    if [[ -z "$RELEASE_BRANCH" ]]; then
+      RELEASE_BRANCH="release/${TAG}"
+    fi
+    git checkout -b "$RELEASE_BRANCH"
+    update_pyproject_version
+    compose_release_notes
+    commit_version_changes
+    git push -u "$REMOTE" "$RELEASE_BRANCH"
+    echo "\nRelease branch '$RELEASE_BRANCH' prepared and pushed."
+    echo "Open a PR to 'main' for this branch. After merge, tag the merged commit on main with:"
+    echo "  git checkout main && git pull && git tag -a $TAG -m \"$TAG\" && git push $REMOTE $TAG"
+    echo "Release notes (for tag):\n$RELEASE_NOTES"
+    exit 0
+  else
+    # Step 2: Tag merged commit on main
+    check_branch_clean
+    local branch="$(git rev-parse --abbrev-ref HEAD)"
+    if [[ "$branch" != "main" ]]; then
+      echo "You must be on 'main' to tag the release after PR merge." >&2
+      exit 1
+    fi
+    determine_tag
+    confirm_tag
+    ensure_tag_available
+    compose_release_notes
+    git tag -a "$TAG" -m "$RELEASE_NOTES"
+    git push "$REMOTE" "$TAG"
+    echo "Tag $TAG pushed to $REMOTE. CI will now publish the release."
+    exit 0
+  fi
 }
 
 main "$@"

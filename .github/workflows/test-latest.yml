@@ -1,15 +1,9 @@
-name: "01-test-pylatest"
+name: "test-pylatest"
 
 on:
-  push:
-    branches: [ 'd5.**', 'copilot/**', 'ci/**' ]
   workflow_dispatch: {}
-  workflow_call:
-    inputs:
-      run-codeql:
-        required: false
-        type: boolean
-        default: false
+  push:
+    branches: ['**']
 
 permissions:
   contents: read
@@ -18,8 +12,7 @@ jobs:
   static:
     uses: ./.github/workflows/static-checks.yml
     with:
-      run-security: true
-      python-for-tools: '3.13'
+      publish_reports: false
     permissions:
       contents: read
       security-events: write

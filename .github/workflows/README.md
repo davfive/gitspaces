@@ -54,7 +54,6 @@ Located in `.github/actions/`:
 | Action | Purpose |
 |--------|---------|
 | `run-tests` | Setup Python, create venv, run pytest with coverage |
-| `setup-venv` | Cross-platform venv creation (bash/cmd/pwsh/wsl) |
 | `setup-wsl` | Install WSL Ubuntu + deadsnakes PPA for Python versions |
 
 ## Environment Variables

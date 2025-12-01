@@ -1,8 +1,8 @@
 """Tests for path utilities."""
 
 import os
-import pytest
 from pathlib import Path
+
 from gitspaces.modules.path import (
     ensure_dir,
     expand_path,
