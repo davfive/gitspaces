@@ -41,18 +41,21 @@ pytest tests/ -v --cov=src/gitspaces --cov-report=term-missing
 pytest tests/test_project.py -v
 ```
 
-### Code Quality
+
+### Code Quality & Autofix
 
 ```bash
-# Format code
-black src/gitspaces tests
+# Check code style, lint, types, security
+./scripts/ci/static-checks.sh
 
-# Lint code
-flake8 src/gitspaces
+# Autofix all autofixable issues (ruff, black)
+./scripts/ci/static-checks.sh --fix
 
-# Security scan
-bandit -r src/gitspaces
+# Security scan only (skip type/lint)
+./scripts/ci/static-checks.sh --quick
 ```
+
+On Windows, use `.cmd` or `.ps1` variants.
 
 ### Troubleshooting
 

@@ -1,4 +1,3 @@
-name: "setup-venv"
 description: "Set up a Python virtual environment with cross-platform support (Unix/macOS, Windows cmd/pwsh, WSL)"
 
 inputs:

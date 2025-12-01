@@ -1,3 +1,18 @@
+## Code Quality & Autofix
+
+To check code style, lint, and types:
+
+```bash
+./scripts/ci/static-checks.sh
+```
+
+To autofix all autofixable issues (ruff, black):
+
+```bash
+./scripts/ci/static-checks.sh --fix
+```
+
+On Windows, use `.cmd` or `.ps1` variants.
 # GitSpaces
 
 [![PyPI version](https://badge.fury.io/py/gitspaces.svg)](https://badge.fury.io/py/gitspaces)

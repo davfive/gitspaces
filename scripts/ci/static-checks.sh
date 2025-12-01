@@ -22,12 +22,18 @@ if [[ "${1:-}" == "--quick" ]]; then
 fi
 
 
-# Ruff: lint and import sort (auto-fix with --fix if desired)
-ruff check src/gitspaces tests
-ruff check --select I src/gitspaces tests
 
-# Black: code formatting check
-black --check src/gitspaces tests
+# Ruff/Black: lint or autofix
+if [[ "${2:-}" == "--fix" || "${1:-}" == "--fix" ]]; then
+  echo "[static-checks] Running autofix (ruff --fix, black)"
+  ruff check src/gitspaces tests --fix
+  ruff check --select I src/gitspaces tests --fix
+  black src/gitspaces tests
+else
+  ruff check src/gitspaces tests
+  ruff check --select I src/gitspaces tests
+  black --check src/gitspaces tests
+fi
 
 # Mypy: type checking
 mypy src/gitspaces

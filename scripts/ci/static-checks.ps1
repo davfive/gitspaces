@@ -13,8 +13,18 @@ pip install -e .[dev]
 $run_security = $true
 if ($args[0] -eq "--quick") { $run_security = $false }
 
-flake8 src/gitspaces
-black --check src/gitspaces tests
+
+# Ruff/Black: lint or autofix
+if ($args -contains "--fix") {
+  Write-Host "[static-checks] Running autofix (ruff --fix, black)"
+  ruff check src/gitspaces tests --fix
+  ruff check --select I src/gitspaces tests --fix
+  black src/gitspaces tests
+} else {
+  ruff check src/gitspaces tests
+  ruff check --select I src/gitspaces tests
+  black --check src/gitspaces tests
+}
 mypy src/gitspaces
 
 if ($run_security) {
