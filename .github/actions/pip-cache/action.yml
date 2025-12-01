@@ -105,14 +105,40 @@ runs:
       if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
       shell: cmd
       run: |
+        rem Ensure wsl.exe exists on the runner
+        where wsl >nul 2>nul
+        if %ERRORLEVEL% NEQ 0 (
+          echo WSL not available on this runner, skipping WSL cache populate
+          goto :EOF
+        )
+
+        rem Check that at least one WSL distribution is installed
+        wsl --list --quiet > "%TEMP%\\wsl_dists.txt" 2>nul
+        if %ERRORLEVEL% NEQ 0 (
+          echo WSL present but unable to list distributions, skipping WSL cache populate
+          goto :EOF
+        )
+        setlocal enabledelayedexpansion
+        set "HASDIST=0"
+        for /f "usebackq delims=" %%D in ("%TEMP%\\wsl_dists.txt") do (
+          if not "%%D"=="" set "HASDIST=1"
+        )
+        endlocal & if "%HASDIST%"=="0" (
+          echo No WSL distributions installed, skipping WSL cache populate
+          del "%TEMP%\\wsl_dists.txt" 2>nul || true
+          goto :EOF
+        )
+        del "%TEMP%\\wsl_dists.txt" 2>nul || true
+
         rem If the host pip cache was restored on Windows, copy it into WSL
         if exist "%LOCALAPPDATA%\pip\Cache" (
           for /f "delims=" %%P in ('wsl wslpath -u "%LOCALAPPDATA%\\pip\\Cache"') do set "WSLPIP=%%P"
           wsl bash -lc "mkdir -p ~/.cache/pip || true"
           wsl bash -lc "cp -r '%WSLPIP%'/* ~/.cache/pip/ || true"
         ) else (
-          echo Host pip cache not present, skipping WSL cache populate
+          echo Host pip cache not present, skipping host->WSL cache populate
         )
+
         rem Also apply shuttle cache restored into workspace
         if exist "%GITHUB_WORKSPACE%\\.wsl-pip-cache" (
           for /f "delims=" %%P in ('wsl wslpath -u "%GITHUB_WORKSPACE%\\.wsl-pip-cache"') do set "WSL_SHUTTLE=%%P"
@@ -126,6 +152,31 @@ runs:
       if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
       shell: cmd
       run: |
+        rem Ensure wsl.exe exists on the runner
+        where wsl >nul 2>nul
+        if %ERRORLEVEL% NEQ 0 (
+          echo WSL not available on this runner, skipping WSL->host shuttle sync
+          goto :EOF
+        )
+
+        rem Check that at least one WSL distribution is installed
+        wsl --list --quiet > "%TEMP%\\wsl_dists.txt" 2>nul
+        if %ERRORLEVEL% NEQ 0 (
+          echo WSL present but unable to list distributions, skipping WSL->host shuttle sync
+          goto :EOF
+        )
+        setlocal enabledelayedexpansion
+        set "HASDIST=0"
+        for /f "usebackq delims=" %%D in ("%TEMP%\\wsl_dists.txt") do (
+          if not "%%D"=="" set "HASDIST=1"
+        )
+        endlocal & if "%HASDIST%"=="0" (
+          echo No WSL distributions installed, skipping WSL->host shuttle sync
+          del "%TEMP%\\wsl_dists.txt" 2>nul || true
+          goto :EOF
+        )
+        del "%TEMP%\\wsl_dists.txt" 2>nul || true
+
         rem Convert Windows workspace path to WSL path
         for /f "delims=" %%P in ('wsl wslpath -u "%CD%"') do set "WPATH=%%P"
         rem Copy WSL cache into workspace shuttle dir
