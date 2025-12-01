@@ -1,0 +1,18 @@
+name: "allow-pr-merge"
+
+on:
+  workflow_run:
+    workflows: ["test-pyall"]   # must match test-all.yml 'name:'
+    types: [ completed ]
+
+permissions:
+  contents: read
+
+jobs:
+  successful-tests:
+    runs-on: ubuntu-latest
+    # only run the job when the completed run succeeded and it was a PR run
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request' }}
+    steps:
+      - name: Allow merge
+        run: echo "test-pyall succeeded for run ${{ github.event.workflow_run.id }} (branch: ${{ github.event.workflow_run.head_branch }})"

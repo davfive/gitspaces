@@ -1,4 +1,4 @@
-name: "02-test-pyall"
+name: "test-pyall"
 
 on:
   workflow_dispatch: {}
