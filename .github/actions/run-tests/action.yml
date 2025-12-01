@@ -98,12 +98,12 @@ runs:
     - name: Run tests (bash)
       if: runner.os != 'Windows'
       shell: bash
-        run: |
-          echo "Start test run: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-          ./scripts/ci/run-tests.sh ${{ inputs.test-args }}
-          RC=$?
-          echo "End test run: $(date -u +'%Y-%m-%dT%H:%M:%SZ') (exit=$RC)"
-          exit $RC
+      run: |
+        echo "Start test run: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+        ./scripts/ci/run-tests.sh ${{ inputs.test-args }}
+        RC=$?
+        echo "End test run: $(date -u +'%Y-%m-%dT%H:%M:%SZ') (exit=$RC)"
+        exit $RC
 
     # Windows: native cmd.exe (shared script)
     - name: Run tests (cmd)
@@ -123,12 +123,17 @@ runs:
     - name: Run tests (pwsh)
       if: runner.os == 'Windows' && (inputs.windows-shell == 'pwsh')
       shell: pwsh
-      run: |
-        # Replace -n auto with -n 0 on Windows PowerShell for diagnostic stability
-        $testArgs = '${{ inputs.test-args }}' -replace '-n auto','-n 0'
-        Write-Host "Start test run: $(Get-Date -Format o)"
-        $sec = (Measure-Command { ./scripts/ci/run-tests.ps1 $testArgs }).TotalSeconds
-        Write-Host "End test run: $(Get-Date -Format o) - Duration(s): $sec"
+    run: |
+      # Replace -n auto with -n 0 on Windows PowerShell for diagnostic stability
+      $testArgs = '${{ inputs.test-args }}' -replace '-n auto','-n 0'
+      Write-Host "Start test run: $(Get-Date -Format o)"
+      $start = Get-Date
+      & ./scripts/ci/run-tests.ps1 $testArgs
+      $rc = $LASTEXITCODE
+      $end = Get-Date
+      $dur = ($end - $start).TotalSeconds
+      Write-Host "End test run: $(Get-Date -Format o) - Duration(s): $dur (exit=$rc)"
+      exit $rc
 
     # Windows: run inside WSL (invoked via wsl.exe). Uses host cmd shell to convert paths and call wsl.
     - name: Run tests on Windows (WSL)
