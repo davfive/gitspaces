@@ -123,17 +123,17 @@ runs:
     - name: Run tests (pwsh)
       if: runner.os == 'Windows' && (inputs.windows-shell == 'pwsh')
       shell: pwsh
-    run: |
-      # Replace -n auto with -n 0 on Windows PowerShell for diagnostic stability
-      $testArgs = '${{ inputs.test-args }}' -replace '-n auto','-n 0'
-      Write-Host "Start test run: $(Get-Date -Format o)"
-      $start = Get-Date
-      & ./scripts/ci/run-tests.ps1 $testArgs
-      $rc = $LASTEXITCODE
-      $end = Get-Date
-      $dur = ($end - $start).TotalSeconds
-      Write-Host "End test run: $(Get-Date -Format o) - Duration(s): $dur (exit=$rc)"
-      exit $rc
+      run: |
+        # Replace -n auto with -n 0 on Windows PowerShell for diagnostic stability
+        $testArgs = '${{ inputs.test-args }}' -replace '-n auto','-n 0'
+        Write-Host "Start test run: $(Get-Date -Format o)"
+        $start = Get-Date
+        & ./scripts/ci/run-tests.ps1 $testArgs
+        $rc = $LASTEXITCODE
+        $end = Get-Date
+        $dur = ($end - $start).TotalSeconds
+        Write-Host "End test run: $(Get-Date -Format o) - Duration(s): $dur (exit=$rc)"
+        exit $rc
 
     # Windows: run inside WSL (invoked via wsl.exe). Uses host cmd shell to convert paths and call wsl.
     - name: Run tests on Windows (WSL)
