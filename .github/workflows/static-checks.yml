@@ -1,6 +1,4 @@
-
 name: "00-static-analysis-checks"
-
 
 on:
   workflow_dispatch: {}
