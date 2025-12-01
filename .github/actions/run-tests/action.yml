@@ -12,7 +12,11 @@ inputs:
   test-args:
     description: "Additional pytest args (default: tests/ -v --maxfail=1 -n auto)"
     required: false
-    default: "tests/ -v --maxfail=1 -n auto --durations=20"
+    default: "tests/ -v --maxfail=1 -n auto"
+  debug-timings:
+    description: "If 'true', print start/end timestamps around test runs for diagnostics"
+    required: false
+    default: "false"
   coverage-file:
     description: "Optional coverage filename (default: coverage-<version>.xml)"
     required: false
@@ -99,41 +103,51 @@ runs:
       if: runner.os != 'Windows'
       shell: bash
       run: |
-        echo "Start test run: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-        ./scripts/ci/run-tests.sh ${{ inputs.test-args }}
-        RC=$?
-        echo "End test run: $(date -u +'%Y-%m-%dT%H:%M:%SZ') (exit=$RC)"
-        exit $RC
+        if [ "${{ inputs.debug-timings }}" = "true" ]; then
+          echo "Start test run: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          ./scripts/ci/run-tests.sh ${{ inputs.test-args }}
+          RC=$?
+          echo "End test run: $(date -u +'%Y-%m-%dT%H:%M:%SZ') (exit=$RC)"
+          exit $RC
+        else
+          ./scripts/ci/run-tests.sh ${{ inputs.test-args }}
+        fi
 
     # Windows: native cmd.exe (shared script)
     - name: Run tests (cmd)
       if: runner.os == 'Windows' && (inputs.windows-shell == 'cmd')
       shell: cmd
       run: |
-        rem Replace -n auto with -n 0 on Windows cmd for diagnostic stability
         set "TEST_ARGS=${{ inputs.test-args }}"
-        set "TEST_ARGS=%TEST_ARGS:-n auto=-n 0%"
-        echo Start test run: %DATE% %TIME%
-        scripts\ci\run-tests.cmd %TEST_ARGS%
-        set RC=%ERRORLEVEL%
-        echo End test run: %DATE% %TIME% (exit=%RC%)
-        exit /b %RC%
+        set "DBG=${{ inputs.debug-timings }}"
+        if "%DBG%"=="true" (
+          echo Start test run: %DATE% %TIME%
+          scripts\ci\run-tests.cmd %TEST_ARGS%
+          set RC=%ERRORLEVEL%
+          echo End test run: %DATE% %TIME% (exit=%RC%)
+          exit /b %RC%
+        ) else (
+          scripts\ci\run-tests.cmd %TEST_ARGS%
+        )
 
     # Windows: PowerShell (shared script)
     - name: Run tests (pwsh)
       if: runner.os == 'Windows' && (inputs.windows-shell == 'pwsh')
       shell: pwsh
       run: |
-        # Replace -n auto with -n 0 on Windows PowerShell for diagnostic stability
-        $testArgs = '${{ inputs.test-args }}' -replace '-n auto','-n 0'
-        Write-Host "Start test run: $(Get-Date -Format o)"
-        $start = Get-Date
-        & ./scripts/ci/run-tests.ps1 $testArgs
-        $rc = $LASTEXITCODE
-        $end = Get-Date
-        $dur = ($end - $start).TotalSeconds
-        Write-Host "End test run: $(Get-Date -Format o) - Duration(s): $dur (exit=$rc)"
-        exit $rc
+        $testArgs = '${{ inputs.test-args }}'
+        $dbg = '${{ inputs.debug-timings }}'
+        $argArray = if ($testArgs) { $testArgs -split ' ' } else { @() }
+        if ($dbg -eq 'true') {
+          Write-Host "Start test run: $(Get-Date -Format o)"
+          & ./scripts/ci/run-tests.ps1 @argArray
+          $rc = $LASTEXITCODE
+          Write-Host "End test run: $(Get-Date -Format o) (exit=$rc)"
+          exit $rc
+        } else {
+          & ./scripts/ci/run-tests.ps1 @argArray
+          exit $LASTEXITCODE
+        }
 
     # Windows: run inside WSL (invoked via wsl.exe). Uses host cmd shell to convert paths and call wsl.
     - name: Run tests on Windows (WSL)
@@ -154,10 +168,17 @@ runs:
         for /f "delims=" %%P in ('wsl wslpath -u "%CD%"') do set "WPATH=%%P"
 
         rem Run pytest inside WSL using ext4 filesystem (~/gitspaces) for best performance
-        echo Start WSL pytest: %DATE% %TIME%
-        wsl bash -lc "cd ~/gitspaces && source .venv-py%INPUT_PYTHON_VERSION%/bin/activate && python -m pytest %INPUT_TEST_ARGS% --cov=src/gitspaces --cov-report=xml:%COVERAGE_FILE% --cov-report=term"
-        set RC=%ERRORLEVEL%
-        echo End WSL pytest: %DATE% %TIME% (exit=%RC%)
+        set "DBG=${{ inputs.debug-timings }}"
+        rem Run pytest inside WSL using ext4 filesystem (~/gitspaces) for best performance
+        if "%DBG%"=="true" (
+          echo Start WSL pytest: %DATE% %TIME%
+          wsl bash -lc "cd ~/gitspaces && source .venv-py%INPUT_PYTHON_VERSION%/bin/activate && python -m pytest %INPUT_TEST_ARGS% --cov=src/gitspaces --cov-report=xml:%COVERAGE_FILE% --cov-report=term"
+          set RC=%ERRORLEVEL%
+          echo End WSL pytest: %DATE% %TIME% (exit=%RC%)
+        ) else (
+          wsl bash -lc "cd ~/gitspaces && source .venv-py%INPUT_PYTHON_VERSION%/bin/activate && python -m pytest %INPUT_TEST_ARGS% --cov=src/gitspaces --cov-report=xml:%COVERAGE_FILE% --cov-report=term"
+          set RC=%ERRORLEVEL%
+        )
 
         rem Copy coverage file back to Windows workspace for artifact upload
         wsl bash -lc "cp ~/gitspaces/%COVERAGE_FILE% '%WPATH%/%COVERAGE_FILE%'"
