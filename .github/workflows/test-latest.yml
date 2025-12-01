@@ -18,8 +18,7 @@ jobs:
   static:
     uses: ./.github/workflows/static-checks.yml
     with:
-      run-security: true
-      python-for-tools: '3.13'
+      publish_reports: false
     permissions:
       contents: read
       security-events: write
