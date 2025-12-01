@@ -1,5 +1,5 @@
 # Shared static checks runner for local and CI (PowerShell)
-# Usage: ./scripts/ci/static-checks.ps1 [--quick]
+# Usage: ./scripts/ci/static-checks.ps1 [--no-security]
 
 if (-not $env:VIRTUAL_ENV) {
   if (-not (Test-Path "venv")) {
@@ -11,7 +11,7 @@ if (-not $env:VIRTUAL_ENV) {
 pip install -e .[dev]
 
 $run_security = $true
-if ($args[0] -eq "--quick") { $run_security = $false }
+if ($args -contains "--no-security") { $run_security = $false }
 
 
 # Ruff/Black: lint or autofix

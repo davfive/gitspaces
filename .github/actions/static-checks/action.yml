@@ -2,8 +2,8 @@ name: "static-checks"
 description: "Run static analysis checks (flake8, black, mypy, etc.) using shared scripts. Supports bash, cmd, pwsh."
 
 inputs:
-  quick:
-    description: "If 'true', run only fast checks (flake8, black, mypy)"
+  no-security:
+    description: "If 'true', skip security checks (bandit, semgrep, pip-audit)"
     required: false
     default: "false"
   windows-shell:
@@ -17,14 +17,14 @@ runs:
     - name: Static checks (bash)
       if: runner.os != 'Windows'
       shell: bash
-      run: ./scripts/ci/static-checks.sh ${{ inputs.quick == 'true' && '--quick' || '' }}
+      run: ./scripts/ci/static-checks.sh ${{ inputs.no-security == 'true' && '--no-security' || '' }}
 
     - name: Static checks (cmd)
       if: runner.os == 'Windows' && (inputs.windows-shell == 'cmd')
       shell: cmd
-      run: scripts\ci\static-checks.cmd ${{ inputs.quick == 'true' && '--quick' || '' }}
+      run: scripts\ci\static-checks.cmd ${{ inputs.no-security == 'true' && '--no-security' || '' }}
 
     - name: Static checks (pwsh)
       if: runner.os == 'Windows' && (inputs.windows-shell == 'pwsh')
       shell: pwsh
-      run: ./scripts/ci/static-checks.ps1 ${{ inputs.quick == 'true' && '--quick' || '' }}
+      run: ./scripts/ci/static-checks.ps1 ${{ inputs.no-security == 'true' && '--no-security' || '' }}

@@ -1,4 +1,6 @@
+
 name: "00-static-analysis-checks"
+
 
 on:
   workflow_dispatch: {}
@@ -25,13 +27,30 @@ jobs:
         with:
           python-version: ${{ inputs.python-version }}
 
-      - name: Run static checks (quick)
+      - name: Run static checks (with security)
         uses: ./.github/actions/static-checks
         with:
-          quick: true
+          no-security: false
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: python
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+
+      - name: Check for Bandit report
+        id: bandit_report_check
+        run: |
+          if [ -f bandit-report.json ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Upload Bandit SAST report (if present)
-        if: always() && exists('bandit-report.json')
+        if: steps.bandit_report_check.outputs.exists == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: bandit-report

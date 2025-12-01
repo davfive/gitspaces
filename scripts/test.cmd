@@ -26,7 +26,7 @@ if "%RUN_LINT%"=="true" (
   if "%RUN_SECURITY%"=="true" (
     call ci\static-checks.cmd
   ) else (
-    call ci\static-checks.cmd --quick
+    call ci\static-checks.cmd --no-security
   )
 )
 if "%RUN_TESTS%"=="true" call ci\run-tests.cmd

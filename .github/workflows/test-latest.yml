@@ -1,8 +1,6 @@
 name: "01-test-pylatest"
 
 on:
-  push:
-    branches: [ 'd5.**', 'copilot/**', 'ci/**' ]
   workflow_dispatch: {}
   workflow_call:
     inputs:
@@ -10,6 +8,8 @@ on:
         required: false
         type: boolean
         default: false
+  push:
+    branches: ['**']
 
 permissions:
   contents: read

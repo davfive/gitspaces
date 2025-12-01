@@ -1,6 +1,6 @@
 @echo off
 REM Shared static checks runner for local and CI (cmd)
-REM Usage: scripts\ci\static-checks.cmd [--quick]
+REM Usage: scripts\ci\static-checks.cmd [--no-security]
 
 IF NOT DEFINED VIRTUAL_ENV (
   IF NOT EXIST venv (
@@ -12,7 +12,7 @@ IF NOT DEFINED VIRTUAL_ENV (
 pip install -e .[dev]
 
 set RUN_SECURITY=true
-IF "%1"=="--quick" set RUN_SECURITY=false
+IF "%1"=="--no-security" set RUN_SECURITY=false
 
 
 

@@ -52,7 +52,7 @@ pytest tests/test_project.py -v
 ./scripts/ci/static-checks.sh --fix
 
 # Security scan only (skip type/lint)
-./scripts/ci/static-checks.sh --quick
+./scripts/ci/static-checks.sh --no-security
 ```
 
 On Windows, use `.cmd` or `.ps1` variants.

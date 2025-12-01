@@ -34,7 +34,7 @@ if ($run_lint) {
   if ($run_security) {
     .\ci\static-checks.ps1
   } else {
-    .\ci\static-checks.ps1 --quick
+    .\ci\static-checks.ps1 --no-security
   }
 }
 if ($run_tests) {

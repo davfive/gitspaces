@@ -16,9 +16,12 @@ fi
 
 pip install -e .[dev]
 
+
 RUN_SECURITY=true
-if [[ "${1:-}" == "--quick" ]]; then
-    RUN_SECURITY=false
+if [[ "${1:-}" == "--security" ]]; then
+  RUN_SECURITY=true
+elif [[ "${1:-}" == "--no-security" ]]; then
+  RUN_SECURITY=false
 fi
 
 

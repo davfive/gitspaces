@@ -27,14 +27,8 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
-  # Run without tests so we can test pypi publishing separately
-  # test:
-  #   needs: extract_version
-  #   uses: ./.github/workflows/test-all.yml
-  #   permissions:
-  #     contents: read
-  #     security-events: write
-  #   secrets: inherit
+
+  # No tests or security checks here; main branch protection ensures all checks pass before tag/publish.
 
   build:
     # needs: [extract_version, test] # temporarily disable test requirement

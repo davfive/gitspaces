@@ -7,12 +7,14 @@ set -euo pipefail
 #   ./scripts/test.sh --tests            # Run tests only
 #   ./scripts/test.sh --lint             # Run static checks only
 #   ./scripts/test.sh --security         # Run static checks with security
+#   ./scripts/test.sh --no-security      # Run static checks without security
 #   ./scripts/test.sh --all              # Run both tests and static checks
 #   ./scripts/test.sh --fix              # Autofix lint/format issues (with --lint/--all)
 #   ./scripts/test.sh --help             # Show help
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
+
 
 
 RUN_TESTS=false
@@ -31,8 +33,9 @@ else
       --security) RUN_SECURITY=true; shift ;;
       --all) RUN_TESTS=true; RUN_LINT=true; shift ;;
       --fix) RUN_FIX=true; shift ;;
+      --no-security) RUN_SECURITY=false; shift ;;
       --help|-h)
-        echo "Usage: $0 [--tests] [--lint] [--security] [--all] [--fix]"
+        echo "Usage: $0 [--tests] [--lint] [--security] [--no-security] [--all] [--fix]"
         echo "  --fix: Autofix lint/format issues (with --lint/--all)"
         exit 0
         ;;
@@ -45,12 +48,13 @@ else
 fi
 
 
+
 if $RUN_LINT; then
   STATIC_CHECKS_ARGS=()
   if $RUN_SECURITY; then
-    : # no --quick
+    STATIC_CHECKS_ARGS+=(--security)
   else
-    STATIC_CHECKS_ARGS+=(--quick)
+    STATIC_CHECKS_ARGS+=(--no-security)
   fi
   if $RUN_FIX; then
     STATIC_CHECKS_ARGS+=(--fix)
