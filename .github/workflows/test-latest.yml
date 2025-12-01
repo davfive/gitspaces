@@ -2,12 +2,6 @@ name: "01-test-pylatest"
 
 on:
   workflow_dispatch: {}
-  workflow_call:
-    inputs:
-      run-codeql:
-        required: false
-        type: boolean
-        default: false
   push:
     branches: ['**']
 
