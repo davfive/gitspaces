@@ -1,6 +1,7 @@
 """Tests for cmd_config module."""
 
 from unittest.mock import Mock, patch
+
 from gitspaces.modules.cmd_config import config_command
 
 
@@ -54,7 +55,9 @@ def test_config_command_get_nonexistent(mock_config_cls, mock_console):
 
     config_command(args)
 
-    mock_console.println.assert_called_with("✗ Configuration key 'nonexistent' not found")
+    mock_console.println.assert_called_with(
+        "✗ Configuration key 'nonexistent' not found"
+    )
 
 
 @patch("gitspaces.modules.cmd_config.Console")
@@ -91,7 +94,9 @@ def test_config_command_add_project_path(mock_config_cls, mock_console):
 
     assert "/home/user/newprojects" in mock_config.project_paths
     mock_config.save.assert_called_once()
-    mock_console.println.assert_called_with("✓ Added '/home/user/newprojects' to project_paths")
+    mock_console.println.assert_called_with(
+        "✓ Added '/home/user/newprojects' to project_paths"
+    )
 
 
 @patch("gitspaces.modules.cmd_config.Console")
@@ -108,4 +113,6 @@ def test_config_command_add_existing_project_path(mock_config_cls, mock_console)
 
     config_command(args)
 
-    mock_console.println.assert_called_with("Path '/home/user/projects' already in project_paths")
+    mock_console.println.assert_called_with(
+        "Path '/home/user/projects' already in project_paths"
+    )

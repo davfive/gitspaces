@@ -15,21 +15,22 @@ set RUN_SECURITY=true
 IF "%1"=="--quick" set RUN_SECURITY=false
 
 
+
 REM Ruff/Black: lint or autofix
 IF "%2"=="--fix" ( 
-  ECHO [static-checks] Running autofix (ruff --fix, black)
+  ECHO [static-checks] Running autofix (black, ruff --fix)
+  black src/gitspaces tests
   ruff check src/gitspaces tests --fix
   ruff check --select I src/gitspaces tests --fix
-  black src/gitspaces tests
 ) ELSE IF "%1"=="--fix" ( 
-  ECHO [static-checks] Running autofix (ruff --fix, black)
+  ECHO [static-checks] Running autofix (black, ruff --fix)
+  black src/gitspaces tests
   ruff check src/gitspaces tests --fix
   ruff check --select I src/gitspaces tests --fix
-  black src/gitspaces tests
 ) ELSE (
+  black --check src/gitspaces tests
   ruff check src/gitspaces tests
   ruff check --select I src/gitspaces tests
-  black --check src/gitspaces tests
 )
 mypy src/gitspaces
 

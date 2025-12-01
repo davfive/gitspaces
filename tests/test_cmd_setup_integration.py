@@ -2,19 +2,25 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from unittest.mock import Mock
-import pytest
-from gitspaces.modules.cmd_setup import setup_command, run_setup
+
+from gitspaces.modules.cmd_setup import run_setup, setup_command
 
 
 def test_setup_command_success(
-    temp_home, gitspaces_config, monkeypatch, mock_console_input, mock_console_confirm, capsys
+    temp_home,
+    gitspaces_config,
+    monkeypatch,
+    mock_console_input,
+    mock_console_confirm,
+    capsys,
 ):
     """Test successful setup command."""
     # Mock console interactions
     projects_path = temp_home / "code" / "new_projects"
-    mock_console_input([str(projects_path), ""])  # Enter project path, then empty to finish
+    mock_console_input(
+        [str(projects_path), ""]
+    )  # Enter project path, then empty to finish
     mock_console_confirm([True])  # Confirm to create directory
 
     args = Mock()
@@ -59,7 +65,9 @@ def test_run_setup_existing_directories(temp_home, monkeypatch, mock_console_inp
     assert result is True
 
 
-def test_run_setup_multiple_paths(temp_home, monkeypatch, mock_console_input, mock_console_confirm):
+def test_run_setup_multiple_paths(
+    temp_home, monkeypatch, mock_console_input, mock_console_confirm
+):
     """Test run_setup with multiple project paths."""
     # Mock console interactions
     path1 = temp_home / "code" / "work"

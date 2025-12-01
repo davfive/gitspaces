@@ -1,7 +1,6 @@
 """Tests for console module."""
 
-from unittest.mock import patch, MagicMock
-import pytest
+from unittest.mock import patch
 
 from gitspaces.modules.console import Console
 
@@ -95,6 +94,8 @@ class TestConsole:
         """Test prompting to select from list with default."""
         mock_select.return_value.ask.return_value = "Option 1"
 
-        result = Console.prompt_select("Choose:", ["Option 1", "Option 2"], default="Option 1")
+        result = Console.prompt_select(
+            "Choose:", ["Option 1", "Option 2"], default="Option 1"
+        )
 
         assert result == "Option 1"

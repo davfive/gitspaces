@@ -8,7 +8,7 @@ import shutil
 import tempfile
 import time
 from pathlib import Path
-from unittest.mock import Mock
+
 import pytest
 import yaml
 from git import Repo
@@ -128,7 +128,11 @@ def gitspaces_config(temp_home, monkeypatch):
     Config._config_file = None
     Config._data = {}
 
-    yield {"config_dir": config_dir, "config_file": config_file, "projects_dir": projects_dir}
+    yield {
+        "config_dir": config_dir,
+        "config_file": config_file,
+        "projects_dir": projects_dir,
+    }
 
 
 @pytest.fixture

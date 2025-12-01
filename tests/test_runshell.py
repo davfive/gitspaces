@@ -1,8 +1,10 @@
 """Tests for runshell module."""
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
 from pathlib import Path
+from unittest.mock import Mock, patch
+
+import pytest
+
 from gitspaces.modules import runshell
 from gitspaces.modules.errors import GitSpacesError
 
@@ -11,7 +13,7 @@ def test_subprocess_run():
     """Test subprocess.run wrapper."""
     with patch("subprocess.run") as mock_run:
         mock_run.return_value = Mock(returncode=0)
-        result = runshell.subprocess.run(["echo", "test"])
+        runshell.subprocess.run(["echo", "test"])
         mock_run.assert_called_once_with(["echo", "test"])
 
 
@@ -82,7 +84,7 @@ def test_git_get_active_branch_detached():
 
 def test_git_is_valid_repo_true():
     """Test is_valid_repo returns True."""
-    with patch("gitspaces.modules.runshell.Repo") as mock_repo:
+    with patch("gitspaces.modules.runshell.Repo"):
         result = runshell.git.is_valid_repo("/test/path")
         assert result is True
 

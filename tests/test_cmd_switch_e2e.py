@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import os
-from pathlib import Path
 from unittest.mock import Mock
+
 import pytest
+
 from gitspaces.modules.cmd_switch import switch_command
-from gitspaces.modules.project import Project
 from gitspaces.modules.config import Config
 
 
@@ -88,7 +87,9 @@ class TestSwitchE2E:
         # Verify sleepers are not in the main list (except in "Wake up" option)
         main_choices = [c for c in choices_offered if not c.startswith("Wake up")]
         for choice in main_choices:
-            assert not choice.startswith(".zzz/"), f"Sleeper {choice} should not be in list"
+            assert not choice.startswith(
+                ".zzz/"
+            ), f"Sleeper {choice} should not be in list"
 
     def test_switch_shows_wake_up_option_when_sleepers_exist(
         self, gitspaces_project_with_sleepers, monkeypatch, capsys
@@ -128,7 +129,9 @@ class TestSwitchE2E:
         # Should include count of sleepers
         assert "2" in wake_options[0] or "sleeping" in wake_options[0]
 
-    def test_switch_filters_current_clone_from_list(self, gitspaces_project, monkeypatch, capsys):
+    def test_switch_filters_current_clone_from_list(
+        self, gitspaces_project, monkeypatch, capsys
+    ):
         """Current clone directory should not appear in selection."""
         project_data = gitspaces_project
 

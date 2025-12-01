@@ -25,14 +25,14 @@ fi
 
 # Ruff/Black: lint or autofix
 if [[ "${2:-}" == "--fix" || "${1:-}" == "--fix" ]]; then
-  echo "[static-checks] Running autofix (ruff --fix, black)"
+  echo "[static-checks] Running autofix (black, ruff --fix)"
+  black src/gitspaces tests
   ruff check src/gitspaces tests --fix
   ruff check --select I src/gitspaces tests --fix
-  black src/gitspaces tests
 else
+  black --check src/gitspaces tests
   ruff check src/gitspaces tests
   ruff check --select I src/gitspaces tests
-  black --check src/gitspaces tests
 fi
 
 # Mypy: type checking

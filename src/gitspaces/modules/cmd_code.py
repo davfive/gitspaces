@@ -3,10 +3,11 @@
 import json
 from pathlib import Path
 from typing import Optional
+
+from gitspaces.modules import runshell
 from gitspaces.modules.config import Config
 from gitspaces.modules.console import Console
 from gitspaces.modules.project import Project
-from gitspaces.modules import runshell
 
 
 def _get_current_space_name(project: Project) -> Optional[str]:
@@ -105,7 +106,9 @@ def code_command(args):
                 Console.println("✗ No active spaces available")
                 return
 
-            space_name = Console.prompt_select("Select a space to open:", choices=active_spaces)
+            space_name = Console.prompt_select(
+                "Select a space to open:", choices=active_spaces
+            )
 
     # Construct the space path
     space_path = project.path / space_name
@@ -124,7 +127,9 @@ def code_command(args):
         Console.println(f"✓ Opened workspace in {editor}")
     except FileNotFoundError:
         Console.println(f"✗ Editor '{editor}' not found")
-        Console.println("Update your editor with: gitspaces config default_editor <editor>")
+        Console.println(
+            "Update your editor with: gitspaces config default_editor <editor>"
+        )
     except Exception as e:
         Console.println(f"✗ Error opening editor: {e}")
         raise

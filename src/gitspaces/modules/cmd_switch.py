@@ -1,16 +1,17 @@
 """Switch command for GitSpaces - switch between spaces."""
 
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
+
+from gitspaces.modules import runshell
 from gitspaces.modules.config import Config
 from gitspaces.modules.console import Console
+from gitspaces.modules.path import write_shell_target
 from gitspaces.modules.project import Project
 from gitspaces.modules.space import Space
-from gitspaces.modules.path import write_shell_target
-from gitspaces.modules import runshell
 
 
-def _find_all_projects() -> List[Project]:
+def _find_all_projects() -> list[Project]:
     """Find all GitSpaces projects in configured project paths.
 
     Returns:
@@ -83,7 +84,9 @@ def switch_command(args):
         # Let user select a project
         project_choices = [p.name for p in projects]
         Console.println("Available projects:")
-        selected_name = Console.prompt_select("Select a project:", choices=project_choices)
+        selected_name = Console.prompt_select(
+            "Select a project:", choices=project_choices
+        )
 
         # Find the selected project
         project = next((p for p in projects if p.name == selected_name), None)

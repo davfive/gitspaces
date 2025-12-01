@@ -1,20 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+
 # Unified runner for tests and static checks
 # Usage:
-#   ./scripts/run.sh --tests         # Run tests only
-#   ./scripts/run.sh --lint          # Run static checks only
-#   ./scripts/run.sh --security      # Run static checks with security
-#   ./scripts/run.sh --all           # Run both tests and static checks
-#   ./scripts/run.sh --help          # Show help
+#   ./scripts/test.sh --tests            # Run tests only
+#   ./scripts/test.sh --lint             # Run static checks only
+#   ./scripts/test.sh --security         # Run static checks with security
+#   ./scripts/test.sh --all              # Run both tests and static checks
+#   ./scripts/test.sh --fix              # Autofix lint/format issues (with --lint/--all)
+#   ./scripts/test.sh --help             # Show help
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+
 RUN_TESTS=false
 RUN_LINT=false
 RUN_SECURITY=false
+RUN_FIX=false
+
 
 if [[ $# -eq 0 ]]; then
   RUN_TESTS=true
@@ -25,8 +30,10 @@ else
       --lint) RUN_LINT=true; shift ;;
       --security) RUN_SECURITY=true; shift ;;
       --all) RUN_TESTS=true; RUN_LINT=true; shift ;;
+      --fix) RUN_FIX=true; shift ;;
       --help|-h)
-        echo "Usage: $0 [--tests] [--lint] [--security] [--all]"
+        echo "Usage: $0 [--tests] [--lint] [--security] [--all] [--fix]"
+        echo "  --fix: Autofix lint/format issues (with --lint/--all)"
         exit 0
         ;;
       *)
@@ -37,12 +44,18 @@ else
   done
 fi
 
+
 if $RUN_LINT; then
+  STATIC_CHECKS_ARGS=()
   if $RUN_SECURITY; then
-    ./ci/static-checks.sh
+    : # no --quick
   else
-    ./ci/static-checks.sh --quick
+    STATIC_CHECKS_ARGS+=(--quick)
   fi
+  if $RUN_FIX; then
+    STATIC_CHECKS_ARGS+=(--fix)
+  fi
+  ./ci/static-checks.sh "${STATIC_CHECKS_ARGS[@]}"
 fi
 
 if $RUN_TESTS; then

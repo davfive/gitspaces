@@ -1,9 +1,11 @@
 """Console output and prompting utilities."""
 
 from __future__ import annotations
+
 from typing import Any
-from rich.console import Console as RichConsole
+
 import questionary
+from rich.console import Console as RichConsole
 
 
 class Console:
@@ -61,7 +63,9 @@ class Console:
         return result if result is not None else default
 
     @classmethod
-    def prompt_select(cls, message: str, choices: list[str], default: str | None = None) -> str:
+    def prompt_select(
+        cls, message: str, choices: list[str], default: str | None = None
+    ) -> str:
         """Prompt the user to select from a list of choices.
 
         Args:

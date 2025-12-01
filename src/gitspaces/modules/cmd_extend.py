@@ -1,7 +1,7 @@
 """Extend command for GitSpaces - add more clones to a project."""
 
 from pathlib import Path
-from gitspaces.modules.config import Config
+
 from gitspaces.modules.console import Console
 from gitspaces.modules.project import Project
 from gitspaces.modules.space import Space
@@ -23,7 +23,9 @@ def extend_command(args):
         Console.println("✗ Not in a GitSpaces project directory")
         return
 
-    num_spaces = args.num_spaces if hasattr(args, "num_spaces") and args.num_spaces else 1
+    num_spaces = (
+        args.num_spaces if hasattr(args, "num_spaces") and args.num_spaces else 1
+    )
 
     # Determine which space to clone from
     spaces = project.list_spaces()
@@ -62,14 +64,18 @@ def extend_command(args):
     source_space = Space(project, str(source_space_path))
 
     # Create the additional clones
-    Console.println(f"Creating {num_spaces} additional clone(s) from '{source_space_name}'...")
+    Console.println(
+        f"Creating {num_spaces} additional clone(s) from '{source_space_name}'..."
+    )
 
     created_count = 0
     for i in range(num_spaces):
         try:
             new_space = source_space.duplicate()
             created_count += 1
-            Console.println(f"  ✓ Created clone {i + 1}/{num_spaces}: {new_space.path.name}")
+            Console.println(
+                f"  ✓ Created clone {i + 1}/{num_spaces}: {new_space.path.name}"
+            )
         except Exception as e:
             Console.println(f"  ✗ Error creating clone {i + 1}: {e}")
             break

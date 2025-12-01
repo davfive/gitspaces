@@ -1,7 +1,7 @@
 """External command execution wrapper for GitSpaces.
 
-This module encapsulates all external command execution (subprocess, git, and OS operations)
-to isolate security scanner warnings and provide OS-agnostic operations.
+This module encapsulates all external command execution (subprocess, git, and OS
+operations to isolate security scanner warnings and provide OS-agnostic operations.
 """
 
 from __future__ import annotations
@@ -9,7 +9,9 @@ from __future__ import annotations
 import os
 import shutil
 from pathlib import Path
+
 from git import Repo
+
 from gitspaces.modules.errors import GitSpacesError
 
 

@@ -1,9 +1,10 @@
 """GitSpaces CLI - Command-line interface for gitspaces."""
 
-import sys
 import argparse
+import sys
+
 from gitspaces import __version__
-from gitspaces.modules.config import Config, init_config, run_user_environment_checks
+from gitspaces.modules.config import init_config, run_user_environment_checks
 from gitspaces.modules.console import Console
 
 
@@ -15,10 +16,15 @@ def create_parser():
         epilog='Use "gitspaces <command> --help" for more information about a command.',
     )
 
-    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {__version__}"
+    )
 
     parser.add_argument(
-        "--debug", "-d", action="store_true", help="Add additional debugging information"
+        "--debug",
+        "-d",
+        action="store_true",
+        help="Add additional debugging information",
     )
 
     # Create subparsers for commands
@@ -26,14 +32,14 @@ def create_parser():
 
     # Import and register commands
     from gitspaces.modules import (
-        cmd_setup,
         cmd_clone,
-        cmd_switch,
-        cmd_sleep,
-        cmd_rename,
         cmd_code,
         cmd_config,
         cmd_extend,
+        cmd_rename,
+        cmd_setup,
+        cmd_sleep,
+        cmd_switch,
     )
 
     # Setup command
@@ -46,9 +52,15 @@ def create_parser():
     )
     clone_parser.add_argument("url", help="Git repository URL")
     clone_parser.add_argument(
-        "-n", "--num-spaces", type=int, default=3, help="Number of spaces to create (default: 3)"
+        "-n",
+        "--num-spaces",
+        type=int,
+        default=3,
+        help="Number of spaces to create (default: 3)",
     )
-    clone_parser.add_argument("-d", "--directory", help="Directory where project will be created")
+    clone_parser.add_argument(
+        "-d", "--directory", help="Directory where project will be created"
+    )
     clone_parser.set_defaults(func=cmd_clone.clone_command)
 
     # Switch command
@@ -85,7 +97,9 @@ def create_parser():
     config_parser.set_defaults(func=cmd_config.config_command)
 
     # Extend command
-    extend_parser = subparsers.add_parser("extend", help="Add more clone spaces to the project")
+    extend_parser = subparsers.add_parser(
+        "extend", help="Add more clone spaces to the project"
+    )
     extend_parser.add_argument(
         "-n",
         "--num-spaces",
@@ -94,7 +108,9 @@ def create_parser():
         help="Number of additional spaces to create (default: 1)",
     )
     extend_parser.add_argument(
-        "space", nargs="?", help="Space to clone from (default: current or first active)"
+        "space",
+        nargs="?",
+        help="Space to clone from (default: current or first active)",
     )
     extend_parser.set_defaults(func=cmd_extend.extend_command)
 

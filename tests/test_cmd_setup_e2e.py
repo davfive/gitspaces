@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import os
-from pathlib import Path
 from unittest.mock import Mock
+
 import pytest
 import yaml
-from gitspaces.modules.cmd_setup import setup_command, run_setup
+
+from gitspaces.modules.cmd_setup import run_setup, setup_command
 from gitspaces.modules.config import Config
 
 
@@ -15,7 +15,9 @@ from gitspaces.modules.config import Config
 class TestSetupE2E:
     """End-to-end tests for the setup command."""
 
-    def test_setup_creates_config_file(self, temp_home, monkeypatch, mock_console_input, capsys):
+    def test_setup_creates_config_file(
+        self, temp_home, monkeypatch, mock_console_input, capsys
+    ):
         """Creates ~/.gitspaces/config.yaml with project_dirs."""
         # Reset config singleton
         Config._instance = None
@@ -52,7 +54,9 @@ class TestSetupE2E:
         assert str(project_dir) in config_data["project_paths"]
         assert config_data["default_editor"] == "vim"
 
-    def test_setup_prompts_for_editor(self, temp_home, monkeypatch, mock_console_input, capsys):
+    def test_setup_prompts_for_editor(
+        self, temp_home, monkeypatch, mock_console_input, capsys
+    ):
         """Allow user to configure default editor."""
         Config._instance = None
         Config._config_dir = None
@@ -97,7 +101,9 @@ class TestSetupE2E:
         confirm_responses = [False]  # Don't create nonexistent
         confirm_iter = iter(confirm_responses)
         monkeypatch.setattr(
-            Console, "prompt_confirm", lambda msg, default=True: next(confirm_iter, default)
+            Console,
+            "prompt_confirm",
+            lambda msg, default=True: next(confirm_iter, default),
         )
 
         result = run_setup()
@@ -160,7 +166,9 @@ class TestSetupE2E:
         captured = capsys.readouterr()
         assert "At least one project path is required" in captured.out
 
-    def test_setup_multiple_project_paths(self, temp_home, monkeypatch, mock_console_input, capsys):
+    def test_setup_multiple_project_paths(
+        self, temp_home, monkeypatch, mock_console_input, capsys
+    ):
         """Support configuring multiple project directories."""
         Config._instance = None
         Config._config_dir = None

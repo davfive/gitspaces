@@ -2,19 +2,20 @@
 
 from __future__ import annotations
 
-import os
-from pathlib import Path
 from unittest.mock import Mock
+
 import pytest
+
 from gitspaces.modules.cmd_rename import rename_command
-from gitspaces.modules.project import Project
 
 
 @pytest.mark.e2e
 class TestRenameE2E:
     """End-to-end tests for the rename command."""
 
-    def test_rename_uses_current_clone_as_source(self, gitspaces_project, monkeypatch, capsys):
+    def test_rename_uses_current_clone_as_source(
+        self, gitspaces_project, monkeypatch, capsys
+    ):
         """When in clone dir, only require new_name argument."""
         project_data = gitspaces_project
 
@@ -40,7 +41,9 @@ class TestRenameE2E:
         new_path = project_data["project_path"] / "new-name"
         assert new_path.exists()
 
-    def test_rename_changes_directory_name(self, gitspaces_project, monkeypatch, capsys):
+    def test_rename_changes_directory_name(
+        self, gitspaces_project, monkeypatch, capsys
+    ):
         """Verify filesystem directory is renamed."""
         project_data = gitspaces_project
 

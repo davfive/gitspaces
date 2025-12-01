@@ -1,9 +1,11 @@
 """Configuration management for GitSpaces."""
 
 from __future__ import annotations
-from typing import Any
-import yaml
+
 from pathlib import Path
+from typing import Any
+
+import yaml
 
 
 class Config:
@@ -15,7 +17,7 @@ class Config:
     _data: dict[str, Any] = {}
 
     @classmethod
-    def instance(cls) -> "Config":
+    def instance(cls) -> Config:
         """Get the singleton instance of Config."""
         if cls._instance is None:
             cls._instance = cls()
@@ -59,7 +61,7 @@ class Config:
     def load(self):
         """Load configuration from file."""
         if self.config_file.exists():
-            with open(self.config_file, "r") as f:
+            with open(self.config_file) as f:
                 self._data = yaml.safe_load(f) or {}
         else:
             self._data = {}

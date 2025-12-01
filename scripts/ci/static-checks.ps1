@@ -16,14 +16,14 @@ if ($args[0] -eq "--quick") { $run_security = $false }
 
 # Ruff/Black: lint or autofix
 if ($args -contains "--fix") {
-  Write-Host "[static-checks] Running autofix (ruff --fix, black)"
+  Write-Host "[static-checks] Running autofix (black, ruff --fix)"
+  black src/gitspaces tests
   ruff check src/gitspaces tests --fix
   ruff check --select I src/gitspaces tests --fix
-  black src/gitspaces tests
 } else {
+  black --check src/gitspaces tests
   ruff check src/gitspaces tests
   ruff check --select I src/gitspaces tests
-  black --check src/gitspaces tests
 }
 mypy src/gitspaces
 

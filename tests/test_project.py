@@ -1,9 +1,8 @@
 """Tests for project module."""
 
-import pytest
 from pathlib import Path
+
 from gitspaces.modules.project import Project
-from gitspaces.modules.errors import ProjectError
 
 
 def test_project_init():
