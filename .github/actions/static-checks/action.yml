@@ -10,21 +10,54 @@ inputs:
     description: "On Windows, which shell to use: cmd | pwsh | wsl"
     required: false
     default: "cmd"
+outputs:
+  bandit_json_exists:
+    description: "Whether a bandit JSON report was produced (true|false)"
 
 runs:
   using: "composite"
   steps:
     - name: Static checks (bash)
-      if: runner.os != 'Windows'
+      if: ${{ runner.os != 'Windows' || inputs.windows-shell == 'wsl-bash' }}
       shell: bash
       run: ./scripts/ci/static-checks.sh ${{ inputs.no-security == 'true' && '--no-security' || '' }}
+
+    - name: Set action output `bandit_json_exists` (bash)
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        if [ -f bandit-report.json ]; then
+          echo "bandit_json_exists=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "bandit_json_exists=false" >> "$GITHUB_OUTPUT"
+        fi
 
     - name: Static checks (cmd)
       if: runner.os == 'Windows' && (inputs.windows-shell == 'cmd')
       shell: cmd
       run: scripts\ci\static-checks.cmd ${{ inputs.no-security == 'true' && '--no-security' || '' }}
 
+    - name: Set action output `bandit_json_exists` (cmd)
+      if: runner.os == 'Windows' && (inputs.windows-shell == 'cmd')
+      shell: cmd
+      run: |
+        IF EXIST bandit-report.json (
+          echo bandit_json_exists=true>>%GITHUB_OUTPUT%
+        ) ELSE (
+          echo bandit_json_exists=false>>%GITHUB_OUTPUT%
+        )
+
     - name: Static checks (pwsh)
       if: runner.os == 'Windows' && (inputs.windows-shell == 'pwsh')
       shell: pwsh
       run: ./scripts/ci/static-checks.ps1 ${{ inputs.no-security == 'true' && '--no-security' || '' }}
+
+    - name: Set action output `bandit_json_exists` (pwsh)
+      if: runner.os == 'Windows' && (inputs.windows-shell == 'pwsh')
+      shell: pwsh
+      run: |
+        if (Test-Path bandit-report.json) {
+          'bandit_json_exists=true' >> $env:GITHUB_OUTPUT
+        } else {
+          'bandit_json_exists=false' >> $env:GITHUB_OUTPUT
+        }
