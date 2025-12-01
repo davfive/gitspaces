@@ -19,6 +19,7 @@ runs:
   steps:
     - name: Normalize deps-files
       id: deps
+      shell: bash
       run: |
         echo "deps=${{ inputs.deps-files }}" >> $GITHUB_OUTPUT
 
@@ -138,4 +139,3 @@ runs:
       with:
         path: ${{ github.workspace }}/.wsl-pip-cache
         key: pip-cache-wsl-${{ hashFiles('**/pyproject.toml','**/requirements*.txt') }}
-*** End Patch
