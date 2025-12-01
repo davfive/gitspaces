@@ -1,0 +1,141 @@
+name: "pip-cache"
+description: "Restore and save pip caches (http + wheels) per-platform. Handles WSL shuttle cache via workspace copy."
+
+inputs:
+  python-version:
+    description: "Python version (e.g. '3.13')"
+    required: true
+  windows-shell:
+    description: "On Windows, which shell to use: cmd | pwsh | wsl"
+    required: false
+    default: "cmd"
+  deps-files:
+    description: "Dependency files globs (used by hashFiles). Provide as multi-line string or single glob."
+    required: false
+    default: "**/pyproject.toml **/requirements*.txt"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Normalize deps-files
+      id: deps
+      run: |
+        echo "deps=${{ inputs.deps-files }}" >> $GITHUB_OUTPUT
+
+    - name: Cache pip http (non-Windows)
+      if: runner.os != 'Windows'
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip/http
+        key: pip-cache-http-${{ runner.os }}-${{ hashFiles('**/pyproject.toml','**/requirements*.txt') }}
+        restore-keys: |
+          pip-cache-http-${{ runner.os }}-
+
+    - name: Cache pip wheels (non-Windows)
+      if: runner.os != 'Windows'
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip/wheels
+        key: pip-cache-wheels-${{ runner.os }}-py${{ inputs.python-version }}-${{ hashFiles('**/pyproject.toml','**/requirements*.txt') }}
+        restore-keys: |
+          pip-cache-wheels-${{ runner.os }}-py${{ inputs.python-version }}-
+          pip-cache-wheels-${{ runner.os }}-
+
+    - name: Show pip cache diagnostics (non-Windows)
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        echo "Runner: $RUNNER_OS"
+        for d in ~/.cache/pip ~/.cache/pip/http ~/.cache/pip/wheels; do
+          if [ -d "$d" ]; then
+            echo "Contents of $d:";
+            du -sh "$d" || true;
+            ls -lah "$d" | sed -n '1,200p' || true;
+          else
+            echo "$d not present";
+          fi
+        done
+
+    - name: Cache pip http (Windows native)
+      if: runner.os == 'Windows' && (inputs.windows-shell != 'wsl')
+      uses: actions/cache@v4
+      with:
+        path: '%LOCALAPPDATA%\\pip\\Cache\\http'
+        key: pip-cache-http-${{ runner.os }}-${{ hashFiles('**/pyproject.toml','**/requirements*.txt') }}
+        restore-keys: |
+          pip-cache-http-${{ runner.os }}-
+
+    - name: Cache pip wheels (Windows native)
+      if: runner.os == 'Windows' && (inputs.windows-shell != 'wsl')
+      uses: actions/cache@v4
+      with:
+        path: '%LOCALAPPDATA%\\pip\\Cache\\wheels'
+        key: pip-cache-wheels-${{ runner.os }}-py${{ inputs.python-version }}-${{ hashFiles('**/pyproject.toml','**/requirements*.txt') }}
+        restore-keys: |
+          pip-cache-wheels-${{ runner.os }}-py${{ inputs.python-version }}-
+          pip-cache-wheels-${{ runner.os }}-
+
+    - name: Show pip cache diagnostics (Windows native)
+      if: runner.os == 'Windows' && (inputs.windows-shell != 'wsl')
+      shell: pwsh
+      run: |
+        $base = Join-Path $env:LOCALAPPDATA 'pip\\Cache'
+        Write-Host "Runner: $env:RUNNER_OS"
+        foreach ($sub in @('', 'http', 'wheels')) {
+          $p = Join-Path $base $sub
+          if (Test-Path $p) {
+            $files = Get-ChildItem -Recurse -Force -ErrorAction SilentlyContinue $p
+            $sum = ($files | Measure-Object -Property Length -Sum).Sum
+            $sizeMB = if ($sum) { [math]::Round(($sum/1MB),2) } else { 0 }
+            Write-Host "PIP cache $sub size: ${sizeMB} MB (files: $($files.Count))"
+          } else { Write-Host "No pip cache at $p" }
+        }
+
+    - name: Restore WSL shuttle cache (host)
+      if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
+      uses: actions/cache@v4
+      with:
+        path: ${{ github.workspace }}/.wsl-pip-cache
+        key: pip-cache-wsl-${{ hashFiles('**/pyproject.toml','**/requirements*.txt') }}
+        restore-keys: |
+          pip-cache-wsl-py${{ inputs.python-version }}-
+          pip-cache-wsl-
+
+    - name: Populate WSL pip cache from host (if present)
+      if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
+      shell: cmd
+      run: |
+        rem If the host pip cache was restored on Windows, copy it into WSL
+        if exist "%LOCALAPPDATA%\pip\Cache" (
+          for /f "delims=" %%P in ('wsl wslpath -u "%LOCALAPPDATA%\\pip\\Cache"') do set "WSLPIP=%%P"
+          wsl bash -lc "mkdir -p ~/.cache/pip || true"
+          wsl bash -lc "cp -r '%WSLPIP%'/* ~/.cache/pip/ || true"
+        ) else (
+          echo Host pip cache not present, skipping WSL cache populate
+        )
+        rem Also apply shuttle cache restored into workspace
+        if exist "%GITHUB_WORKSPACE%\\.wsl-pip-cache" (
+          for /f "delims=" %%P in ('wsl wslpath -u "%GITHUB_WORKSPACE%\\.wsl-pip-cache"') do set "WSL_SHUTTLE=%%P"
+          wsl bash -lc "mkdir -p ~/.cache/pip || true"
+          wsl bash -lc "cp -r '%WSL_SHUTTLE%'/* ~/.cache/pip/ || true"
+        ) else (
+          echo No shuttle cache in workspace, skipping
+        )
+
+    - name: Sync WSL pip cache back to host shuttle
+      if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
+      shell: cmd
+      run: |
+        rem Convert Windows workspace path to WSL path
+        for /f "delims=" %%P in ('wsl wslpath -u "%CD%"') do set "WPATH=%%P"
+        rem Copy WSL cache into workspace shuttle dir
+        wsl bash -lc "mkdir -p ~/.cache/pip || true"
+        wsl bash -lc "cp -r ~/.cache/pip/* '%WPATH%/.wsl-pip-cache/' || true"
+
+    - name: Save WSL shuttle cache (host)
+      if: runner.os == 'Windows' && (inputs.windows-shell == 'wsl')
+      uses: actions/cache@v4
+      with:
+        path: ${{ github.workspace }}/.wsl-pip-cache
+        key: pip-cache-wsl-${{ hashFiles('**/pyproject.toml','**/requirements*.txt') }}
+*** End Patch

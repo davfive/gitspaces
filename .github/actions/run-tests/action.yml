@@ -33,29 +33,14 @@ outputs:
 runs:
   using: "composite"
   steps:
-    # Cache pip directories per-platform so Windows doesn't re-download/build
-    # large numbers of wheels on every matrix job. Keys include python version
-    # and dependency files so caches are invalidated when deps change.
-    - name: Cache pip (non-Windows)
-      if: runner.os != 'Windows'
-      uses: actions/cache@v4
+    - name: Prepare pip cache
+      uses: ./.github/actions/pip-cache
       with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ inputs.python-version }}-${{ hashFiles('**/pyproject.toml','**/requirements*.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-${{ inputs.python-version }}-
-          ${{ runner.os }}-pip-
-
-    - name: Cache pip (Windows native)
-      if: runner.os == 'Windows' && (inputs.windows-shell != 'wsl')
-      uses: actions/cache@v4
-      with:
-        # Windows pip cache dir on hosted runners
-        path: '%LOCALAPPDATA%\\pip\\Cache'
-        key: windows-pip-${{ inputs.python-version }}-${{ hashFiles('**/pyproject.toml','**/requirements*.txt') }}
-        restore-keys: |
-          windows-pip-${{ inputs.python-version }}-
-          windows-pip-
+        python-version: ${{ inputs.python-version }}
+        windows-shell: ${{ inputs.windows-shell }}
+        deps-files: |
+          **/pyproject.toml
+          **/requirements*.txt
 
     # For WSL we rely on the WSL-based setup to create a venv and install
     # packages inside the distro. WSL's filesystem is separate, and caching
