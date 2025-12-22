@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from unittest.mock import Mock
-import pytest
+
 from gitspaces.modules.cmd_switch import switch_command
 
 
@@ -19,7 +18,6 @@ def test_switch_command_with_space_name(gitspaces_project, monkeypatch):
     args.space = "feature"
 
     # Mock chdir to track the call
-    original_chdir = Path.cwd
     chdir_called_with = []
 
     def mock_chdir(path):

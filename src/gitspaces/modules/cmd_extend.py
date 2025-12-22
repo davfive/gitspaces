@@ -1,7 +1,7 @@
 """Extend command for GitSpaces - add more clones to a project."""
 
 from pathlib import Path
-from gitspaces.modules.config import Config
+
 from gitspaces.modules.console import Console
 from gitspaces.modules.project import Project
 from gitspaces.modules.space import Space

@@ -1,9 +1,10 @@
 """GitSpaces CLI - Command-line interface for gitspaces."""
 
-import sys
 import argparse
+import sys
+
 from gitspaces import __version__
-from gitspaces.modules.config import Config, init_config, run_user_environment_checks
+from gitspaces.modules.config import init_config, run_user_environment_checks
 from gitspaces.modules.console import Console
 
 
@@ -26,14 +27,14 @@ def create_parser():
 
     # Import and register commands
     from gitspaces.modules import (
-        cmd_setup,
         cmd_clone,
-        cmd_switch,
-        cmd_sleep,
-        cmd_rename,
         cmd_code,
         cmd_config,
         cmd_extend,
+        cmd_rename,
+        cmd_setup,
+        cmd_sleep,
+        cmd_switch,
     )
 
     # Setup command

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import os
-from pathlib import Path
 from unittest.mock import Mock
+
 import pytest
+
 from gitspaces.modules.cmd_clone import clone_command
 from gitspaces.modules.project import Project
 

@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from pathlib import Path
+
 from git import Repo
-from gitspaces.modules.errors import SpaceError
-from gitspaces.modules.path import ensure_dir
+
 from gitspaces.modules import runshell
+from gitspaces.modules.errors import SpaceError
 
 
 class Space:
@@ -36,7 +37,7 @@ class Space:
         return self._repo
 
     @classmethod
-    def create_space_from_url(cls, project, url: str, path) -> "Space":
+    def create_space_from_url(cls, project, url: str, path) -> Space:
         """Create a new space by cloning from a URL.
 
         Args:
@@ -55,7 +56,7 @@ class Space:
         space = cls(project, path)
         return space
 
-    def duplicate(self) -> "Space":
+    def duplicate(self) -> Space:
         """Duplicate this space to a new sleeper space.
 
         Returns:
@@ -67,11 +68,11 @@ class Space:
             # Copy the entire directory
             runshell.fs.copy_tree(self.path, new_path, symlinks=True)
         except Exception as e:
-            raise SpaceError(f"Failed to duplicate space: {e}")
+            raise SpaceError(f"Failed to duplicate space: {e}") from e
 
         return Space(self.project, new_path)
 
-    def wake(self, new_name: str | None = None) -> "Space":
+    def wake(self, new_name: str | None = None) -> Space:
         """Wake up a sleeping space and optionally rename it.
 
         Args:
@@ -104,7 +105,7 @@ class Space:
 
         return Space(self.project, new_path)
 
-    def sleep(self) -> "Space":
+    def sleep(self) -> Space:
         """Put this space to sleep (move to .zzz directory).
 
         Returns:
@@ -121,7 +122,7 @@ class Space:
 
         return Space(self.project, new_path)
 
-    def rename(self, new_name: str) -> "Space":
+    def rename(self, new_name: str) -> Space:
         """Rename this space.
 
         Args:

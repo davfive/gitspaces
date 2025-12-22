@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from unittest.mock import Mock
-import pytest
-from gitspaces.modules.cmd_setup import setup_command, run_setup
+
+from gitspaces.modules.cmd_setup import run_setup, setup_command
 
 
 def test_setup_command_success(

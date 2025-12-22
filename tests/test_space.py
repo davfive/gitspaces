@@ -1,10 +1,12 @@
 """Tests for space module."""
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
 from pathlib import Path
-from gitspaces.modules.space import Space
+from unittest.mock import Mock, patch
+
+import pytest
+
 from gitspaces.modules.errors import SpaceError
+from gitspaces.modules.space import Space
 
 
 @patch("gitspaces.modules.space.runshell")
@@ -103,7 +105,7 @@ def test_space_wake(mock_runshell):
     space = Space(mock_project, "/test/project/.zzz/sleep1")
 
     with patch.object(Path, "exists", return_value=False):
-        woken_space = space.wake("feature")
+        space.wake("feature")
 
     mock_runshell.fs.move.assert_called_once()
     assert "feature" in str(mock_runshell.fs.move.call_args[0][1])
@@ -149,7 +151,7 @@ def test_space_wake_auto_name(mock_runshell):
     space._repo = mock_repo
 
     with patch.object(Path, "exists", return_value=False):
-        woken_space = space.wake()
+        space.wake()
 
     mock_runshell.fs.move.assert_called_once()
 
@@ -162,7 +164,7 @@ def test_space_sleep(mock_runshell):
     mock_project._get_empty_sleeper_path.return_value = Path("/test/project/.zzz/sleep1")
 
     space = Space(mock_project, "/test/project/main")
-    sleeping_space = space.sleep()
+    space.sleep()
 
     mock_runshell.fs.move.assert_called_once_with(
         Path("/test/project/main"), Path("/test/project/.zzz/sleep1")
@@ -191,7 +193,7 @@ def test_space_rename(mock_runshell):
     space = Space(mock_project, "/test/project/main")
 
     with patch.object(Path, "exists", return_value=False):
-        renamed_space = space.rename("feature")
+        space.rename("feature")
 
     mock_runshell.fs.move.assert_called_once()
     assert "feature" in str(mock_runshell.fs.move.call_args[0][1])
@@ -207,7 +209,7 @@ def test_space_rename_sleeping(mock_runshell):
     space = Space(mock_project, "/test/project/.zzz/sleep1")
 
     with patch.object(Path, "exists", return_value=False):
-        renamed_space = space.rename("sleep2")
+        space.rename("sleep2")
 
     mock_runshell.fs.move.assert_called_once()
 

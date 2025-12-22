@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import os
-from pathlib import Path
 from unittest.mock import Mock
+
 import pytest
+
 from gitspaces.modules.cmd_extend import extend_command
-from gitspaces.modules.project import Project
 
 
 @pytest.mark.e2e

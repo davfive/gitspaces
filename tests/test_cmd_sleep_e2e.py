@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import shutil
-from pathlib import Path
 from unittest.mock import Mock
+
 import pytest
+
 from gitspaces.modules.cmd_sleep import sleep_command
-from gitspaces.modules.project import Project
 
 
 @pytest.mark.e2e
@@ -79,7 +78,6 @@ class TestSleepE2E:
         # Need to also mock confirm to wake
         from gitspaces.modules.console import Console
 
-        original_confirm = Console.prompt_confirm
         confirm_calls = [True]  # Yes, wake another
 
         def mock_confirm(msg, default=True):

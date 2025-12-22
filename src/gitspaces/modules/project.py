@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import glob
-import os
-import shutil
 from pathlib import Path
-from git import Repo
+
 from gitspaces.modules.errors import ProjectError
 from gitspaces.modules.path import ensure_dir
 
@@ -30,7 +27,7 @@ class Project:
         self.zzz_dir = self.path / self.ZZZ_DIR
 
     @classmethod
-    def create_project(cls, directory: str, url: str, num_spaces: int = 1) -> "Project":
+    def create_project(cls, directory: str, url: str, num_spaces: int = 1) -> Project:
         """Create a new GitSpaces project.
 
         Args:

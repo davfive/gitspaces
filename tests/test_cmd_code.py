@@ -1,8 +1,10 @@
 """Tests for cmd_code module."""
 
-from unittest.mock import Mock, patch, MagicMock
 from pathlib import Path
+from unittest.mock import Mock, patch
+
 import pytest
+
 from gitspaces.modules.cmd_code import code_command
 
 
