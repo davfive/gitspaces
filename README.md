@@ -129,6 +129,34 @@ project_paths:
 default_editor: code
 ```
 
+## Development
+
+### Quick Start
+```bash
+# Install UV
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Setup project
+git clone https://github.com/davfive/gitspaces.git
+cd gitspaces
+uv pip install -e .[dev]
+
+# Run tests
+uv run invoke test
+```
+
+### Available Commands
+```bash
+uv run invoke test              # Run tests
+uv run invoke test-all          # Test Python 3.9-3.14
+uv run invoke static            # Run all static checks
+uv run invoke security          # Security scan
+uv run invoke ci-local          # Full CI pipeline
+uv run invoke --list            # Show all tasks
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for full development guide.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).

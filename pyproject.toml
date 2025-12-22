@@ -23,6 +23,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Version Control :: Git",
 ]
 dependencies = [
@@ -34,13 +35,29 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    # Testing
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
     "pytest-mock>=3.10.0",
-    "black>=23.0.0",
-    "flake8>=6.0.0",
+    "pytest-xdist>=3.5.0",
+    
+    # Static analysis
+    "ruff>=0.4.0",
     "mypy>=1.0.0",
     "types-PyYAML>=6.0.0",
+    "vulture>=2.11",
+    "xenon>=0.9.0",
+    
+    # Security
+    "bandit>=1.7.0",
+    "safety>=3.0.0",
+    
+    # Build
+    "build>=0.10.0",
+    "twine>=4.0.0",
+    
+    # Task runner
+    "invoke>=2.2.0",
 ]
 
 [project.scripts]
@@ -69,26 +86,37 @@ markers = [
     "e2e: End-to-end tests (may require more setup and take longer to run)",
 ]
 
-[tool.black]
+[tool.ruff]
 line-length = 100
-target-version = ['py39']
-include = '\.pyi?$'
-extend-exclude = '''
-/(
-  # directories
-  \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-  | htmlcov
-)/
-'''
+target-version = "py39"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]  # Allow assert in tests
+
+[tool.vulture]
+paths = ["src/gitspaces"]
+min_confidence = 80
+
+[tool.xenon]
+max-absolute = "B"
+max-modules = "A"
+max-average = "A"
 
 [tool.mypy]
 python_version = "3.9"
