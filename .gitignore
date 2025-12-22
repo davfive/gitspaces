@@ -25,7 +25,6 @@ htmlcov/
 .tox/
 
 # UV
-uv.lock
 .python-version
 
 # Ruff
