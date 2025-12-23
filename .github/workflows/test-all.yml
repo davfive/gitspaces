@@ -15,11 +15,10 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
-      - name: Install dependencies
-        # Explicit sync ensures 'invoke' and dev tools are available in the venv
-        run: uv sync
       - name: Run Gate
-        run: uv run invoke static security --full
+        run: |
+          uv sync
+          uv run invoke static security --full
 
   # 2. GENERATE MATRIX: Dynamic mapping from .python-versions.json
   generate-matrix:
@@ -59,21 +58,27 @@ jobs:
         with:
           enable-cache: true
 
-      # EXPLICIT SHELLS: Standard strings satisfy the GitHub parser
+      # Explicit shells with combined sync and run commands
       - name: Run tests (Bash)
         if: matrix.shell == 'bash'
         shell: bash
-        run: uv run invoke test-all
+        run: |
+          uv sync
+          uv run invoke test-all
 
       - name: Run tests (PowerShell)
         if: matrix.shell == 'pwsh'
         shell: pwsh
-        run: uv run invoke test-all
+        run: |
+          uv sync
+          uv run invoke test-all
 
       - name: Run tests (CMD)
         if: matrix.shell == 'cmd'
         shell: cmd
-        run: uv run invoke test-all
+        run: |
+          uv sync
+          uv run invoke test-all
 
       - name: Run tests (WSL)
         if: matrix.shell == 'wsl'

@@ -14,10 +14,10 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
-      - name: Install dependencies
-        run: uv sync
       - name: Run Gate
-        run: uv run invoke static security --full
+        run: |
+          uv sync
+          uv run invoke static security --full
 
   generate-matrix:
     needs: gate
@@ -58,17 +58,23 @@ jobs:
       - name: Run tests (Bash)
         if: matrix.shell == 'bash'
         shell: bash
-        run: uv run invoke test-all
+        run: |
+          uv sync
+          uv run invoke test-all
 
       - name: Run tests (PowerShell)
         if: matrix.shell == 'pwsh'
         shell: pwsh
-        run: uv run invoke test-all
+        run: |
+          uv sync
+          uv run invoke test-all
 
       - name: Run tests (CMD)
         if: matrix.shell == 'cmd'
         shell: cmd
-        run: uv run invoke test-all
+        run: |
+          uv sync
+          uv run invoke test-all
 
       - name: Run tests (WSL)
         if: matrix.shell == 'wsl'
@@ -82,3 +88,9 @@ jobs:
           uv sync
           uv run invoke test-all
           cp .coverage.* $GITHUB_WORKSPACE/
+
+      - name: Upload coverage
+        if: matrix.os == 'ubuntu-latest' && matrix.shell == 'bash'
+        uses: codecov/codecov-action@v4
+        with:
+          files: .coverage.*
