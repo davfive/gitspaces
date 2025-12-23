@@ -16,7 +16,7 @@ def get_python_versions():
 def install_deps(c):
     """Sync dependencies using uv."""
     # uv sync ensures the environment matches the lockfile exactly
-    c.run("uv sync --extra dev", warn=True)
+    c.run("uv sync --all-groups", warn=True)
 
 # ============================================================================
 # CI GATE TASKS (Run once in CI on latest Ubuntu)
@@ -38,13 +38,11 @@ def security(c, full=False):
     """Run security scans. Use --full in CI for deep dependency checks."""
     install_deps(c)
     print("[security] Running Bandit (Source Scan)...")
-    # Generate a report file if we're in 'full' mode for CI upload
     report_args = "-f json -o bandit-report.json" if full else ""
     c.run(f"uv run bandit -r src/gitspaces {report_args}")
     
     if full:
         print("[security] Running Safety (Dependency Scan)...")
-        # Safety report saved to text for easy CI artifact upload
         c.run("uv run safety check --output text > safety-report.txt", warn=True)
 
 # ============================================================================
@@ -62,7 +60,10 @@ def test(c, python=None, args="", coverage=True):
     cov_args = "--cov=src/gitspaces --cov-append" if coverage else ""
     
     print(f"[test] Running pytest on Python {py_ver}...")
-    result = c.run(f"uv run pytest -n auto {cov_args} {args}", warn=True, pty=True, env=env)
+    
+    # Disable pty on Windows to avoid console hangs in CI
+    is_windows = sys.platform == "win32"
+    result = c.run(f"uv run pytest -n auto {cov_args} {args}", warn=True, pty=not is_windows, env=env)
     
     if result.exited != 0:
         raise Exit(f"Tests failed on {py_ver}", code=result.exited)

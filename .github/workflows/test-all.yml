@@ -6,7 +6,6 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  # 1. THE GATE: Fast static and security checks
   gate:
     runs-on: ubuntu-latest
     steps:
@@ -16,11 +15,9 @@ jobs:
         with:
           enable-cache: true
       - name: Run Gate
-        run: |
-          uv sync --all-groups
-          uv run invoke static security --full
+        # Using --with invoke starts it from a temp location, leaving .venv free
+        run: uv run --with invoke invoke static security --full
 
-  # 2. GENERATE MATRIX: Dynamic mapping from .python-versions.json
   generate-matrix:
     needs: gate
     runs-on: ubuntu-latest
@@ -34,71 +31,40 @@ jobs:
           MATRIX=$(jq -c '{include: [.platforms | to_entries[] | .key as $os | .value[] | {os: $os, shell: .}]}' .python-versions.json)
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 
-  # 3. TEST EXECUTION: Safe shell handling
   test:
     needs: [gate, generate-matrix]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
-    
     name: test-${{ matrix.os }}-${{ matrix.shell }}
-    
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup WSL
         if: matrix.shell == 'wsl'
         uses: Vampire/setup-wsl@v3
         with:
           distribution: Ubuntu-22.04
-
       - name: Install uv
+        if: matrix.shell != 'wsl'
         uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
 
-      # Explicit shells with combined sync and run commands
-      - name: Run tests (Bash)
-        if: matrix.shell == 'bash'
-        shell: bash
-        run: |
-          uv sync --all-groups
-          uv run invoke test-all
+      - name: Run tests (Host)
+        if: matrix.shell != 'wsl'
+        run: uv run --with invoke invoke test-all
 
-      # PowerShell (pwsh)
-      - name: Run tests (PowerShell)
-        if: matrix.shell == 'pwsh'
-        shell: pwsh
-        run: |
-          uv sync --all-groups
-          uv run invoke test-all
-
-      # Command Prompt (cmd)
-      - name: Run tests (CMD)
-        if: matrix.shell == 'cmd'
-        shell: cmd
-        run: |
-          uv sync --all-groups
-          uv run invoke test-all
-
-      # Windows Subsystem for Linux (wsl)
       - name: Run tests (WSL)
         if: matrix.shell == 'wsl'
         shell: wsl-bash {0}
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
-          source $HOME/.cargo/env
-          
-          # Move to ext4 for performance
+          source $HOME/.local/bin/env
           rm -rf ~/gitspaces-test
           cp -r . ~/gitspaces-test
           cd ~/gitspaces-test
-          
-          uv sync --all-groups
-          uv run invoke test-all
-          
-          # Sync coverage back to workspace
+          uv run --with invoke invoke test-all
           cp .coverage.* $GITHUB_WORKSPACE/
       
       - name: Upload coverage

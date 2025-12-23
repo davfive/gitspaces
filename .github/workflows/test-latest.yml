@@ -15,9 +15,7 @@ jobs:
         with:
           enable-cache: true
       - name: Run Gate
-        run: |
-          uv sync --all-groups
-          uv run invoke static security --full
+        run: uv run --with invoke invoke static security --full
 
   generate-matrix:
     needs: gate
@@ -51,42 +49,25 @@ jobs:
           distribution: Ubuntu-22.04
 
       - name: Install uv
+        if: matrix.shell != 'wsl'
         uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
 
-      - name: Run tests (Bash)
-        if: matrix.shell == 'bash'
-        shell: bash
-        run: |
-          uv sync --all-groups
-          uv run invoke test-all
-
-      - name: Run tests (PowerShell)
-        if: matrix.shell == 'pwsh'
-        shell: pwsh
-        run: |
-          uv sync --all-groups
-          uv run invoke test-all
-
-      - name: Run tests (CMD)
-        if: matrix.shell == 'cmd'
-        shell: cmd
-        run: |
-          uv sync --all-groups
-          uv run invoke test-all
+      - name: Run tests (Host)
+        if: matrix.shell != 'wsl'
+        run: uv run --with invoke invoke test-all
 
       - name: Run tests (WSL)
         if: matrix.shell == 'wsl'
         shell: wsl-bash {0}
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
-          source $HOME/.cargo/env
+          source $HOME/.local/bin/env
           rm -rf ~/gitspaces-test
           cp -r . ~/gitspaces-test
           cd ~/gitspaces-test
-          uv sync --all-groups
-          uv run invoke test-all
+          uv run --with invoke invoke test-all
           cp .coverage.* $GITHUB_WORKSPACE/
 
       - name: Upload coverage
