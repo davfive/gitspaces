@@ -9,41 +9,74 @@
 
 ## Development Setup
 
-Requirements: Python 3.8+, Git
+### Install UV (one-time setup)
+```bash
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
+# Windows
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+### Install Dependencies
 ```bash
 git clone https://github.com/davfive/gitspaces.git
 cd gitspaces
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements-dev.txt
-pip install -e .
+uv pip install -e .[dev]
 ```
 
-## Pull Request Guidelines
+## Development Workflow
 
-- Update README.md for interface changes
-- Add tests for new functionality
-- Ensure tests pass: `pytest`
-- Format code: `black src/gitspaces tests`
-- Lint: `flake8 src/gitspaces tests`
-- Security scan: `bandit -r src/gitspaces`
+### Running Tests
+```bash
+uv run invoke test              # Current Python version
+uv run invoke test --python=3.14  # Specific version
+uv run invoke test-all          # All versions (3.9-3.14)
+```
 
-## Style
+### Code Quality
+```bash
+uv run invoke static            # All checks (ruff + mypy)
+uv run invoke security          # Quick security scan (bandit)
+uv run invoke security --full   # Deep scan (bandit + safety)
 
-- PEP 8, max line length 100
-- Use `black` for formatting
-- Use type hints where appropriate
-- Google-style docstrings
+# Individual tools (if needed)
+uv run ruff format src/gitspaces tests              # Auto-format
+uv run ruff format --check src/gitspaces tests      # Check only
+uv run ruff check src/gitspaces tests               # Lint
+uv run ruff check --fix src/gitspaces tests         # Auto-fix
+uv run mypy src/gitspaces                           # Type check
+uv run bandit -r src/gitspaces                      # Security scan
+uv run vulture src/gitspaces                        # Dead code
+uv run xenon src/gitspaces                          # Complexity
+```
 
-## Testing
+### Full CI Pipeline Locally
+```bash
+uv run invoke ci-local          # static → security → test
+```
+
+### List All Tasks
+```bash
+uv run invoke --list
+```
+
+## Before Submitting PR
 
 ```bash
-pytest                                    # run all tests
-pytest --cov=src/gitspaces               # with coverage
-pytest tests/test_config.py              # specific file
-pytest tests/test_config.py::test_name   # specific test
+# Run full checks
+uv run invoke ci-local
+
+# Format code
+uv run ruff format src/gitspaces tests
 ```
+
+## Style Guide
+
+- **Formatting**: Use `ruff format` (replaces black)
+- **Line length**: 100 characters
+- **Type hints**: Use where appropriate
+- **Docstrings**: Google-style
 
 ## Commit Format
 

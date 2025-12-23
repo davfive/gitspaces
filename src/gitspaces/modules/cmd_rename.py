@@ -2,12 +2,12 @@
 
 from pathlib import Path
 from typing import Optional
-from gitspaces.modules.config import Config
+
+from gitspaces.modules import runshell
 from gitspaces.modules.console import Console
+from gitspaces.modules.path import write_shell_target
 from gitspaces.modules.project import Project
 from gitspaces.modules.space import Space
-from gitspaces.modules.path import write_shell_target
-from gitspaces.modules import runshell
 
 
 def _get_current_space_name(project: Project) -> Optional[str]:

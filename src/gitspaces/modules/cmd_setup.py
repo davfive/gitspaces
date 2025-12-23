@@ -1,6 +1,7 @@
 """Setup command for GitSpaces initial configuration."""
 
 from pathlib import Path
+
 from gitspaces.modules.config import Config
 from gitspaces.modules.console import Console
 from gitspaces.modules.path import ensure_dir

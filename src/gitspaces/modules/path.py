@@ -73,7 +73,7 @@ def write_shell_target(target_path: str | Path) -> bool:
         pid_file = targets_dir / f"pid-{pid}"
         pid_file.write_text(str(target_path))
         return True
-    except (OSError, IOError):
+    except OSError:
         # Silently fail if we can't write the PID file
         # The shell wrapper will simply not cd, which is acceptable
         return False

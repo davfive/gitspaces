@@ -1,8 +1,7 @@
 """Sleep command for GitSpaces - put spaces to sleep and wake them."""
 
-import os
 from pathlib import Path
-from gitspaces.modules.config import Config
+
 from gitspaces.modules.console import Console
 from gitspaces.modules.project import Project
 from gitspaces.modules.space import Space
@@ -50,7 +49,7 @@ def sleep_command(args):
     space = Space(project, str(space_path))
 
     try:
-        sleeping_space = space.sleep()
+        space.sleep()
         Console.println(f"✓ Space '{space_to_sleep}' is now sleeping")
     except Exception as e:
         Console.println(f"✗ Error putting space to sleep: {e}")

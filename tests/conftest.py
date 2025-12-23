@@ -8,7 +8,7 @@ import shutil
 import tempfile
 import time
 from pathlib import Path
-from unittest.mock import Mock
+
 import pytest
 import yaml
 from git import Repo
@@ -364,7 +364,7 @@ def multiple_projects(temp_home, gitspaces_config):
     projects_dir = gitspaces_config["projects_dir"]
     projects = []
 
-    for i, name in enumerate(["project-alpha", "project-beta", "project-gamma"]):
+    for _i, name in enumerate(["project-alpha", "project-beta", "project-gamma"]):
         project_path = projects_dir / name
         project_path.mkdir(parents=True, exist_ok=True)
 

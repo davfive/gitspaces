@@ -1,96 +1,106 @@
 # Development Setup
 
-## Local Development
+## Prerequisites
 
-### Prerequisites
+- [UV](https://docs.astral.sh/uv/) - Fast Python package installer and resolver
+- Git
 
-- Python 3.8 or higher
-- pip
-- git
-
-### Setup
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/davfive/gitspaces.git
-   cd gitspaces
-   ```
-
-2. **Install in editable mode:**
-   ```bash
-   pip install -e .
-   ```
-   
-   This installs the package in development mode, allowing you to make changes to the code and test them immediately.
-
-3. **Install development dependencies:**
-   ```bash
-   pip install -r requirements-dev.txt
-   ```
-
-### Running Tests
+## Setup
 
 ```bash
-# Run all tests
-pytest tests/ -v
+# Install UV
+curl -LsSf https://astral.sh/uv/install.sh | sh  # macOS/Linux
+# OR: powershell -c "irm https://astral.sh/uv/install.ps1 | iex"  # Windows
 
-# Run with coverage
-pytest tests/ -v --cov=src/gitspaces --cov-report=term-missing
-
-# Run specific test file
-pytest tests/test_project.py -v
+# Clone and setup
+git clone https://github.com/davfive/gitspaces.git
+cd gitspaces
+uv pip install -e .[dev]
 ```
 
-### Code Quality
+## Running Tests
 
 ```bash
-# Format code
-black src/gitspaces tests
+# Test current Python version
+uv run invoke test
 
-# Lint code
-flake8 src/gitspaces
+# Test all supported versions (3.9-3.14)
+uv run invoke test-all
 
-# Security scan
-bandit -r src/gitspaces
+# Test specific version
+uv run invoke test --python=3.11
+
+# Test specific file
+uv run invoke test --args="tests/test_cli.py"
+
+# Test without coverage
+uv run invoke test --no-coverage
 ```
 
-### Troubleshooting
+## Code Quality
 
-**Import errors when running tests:**
-
-If you see errors like:
-```
-ImportError: No module named 'gitspaces'
-```
-
-Make sure you've installed the package in editable mode:
 ```bash
-pip install -e .
+# Run all static checks (ruff + mypy)
+uv run invoke static
+
+# Run security scans
+uv run invoke security          # Light (bandit only)
+uv run invoke security --full   # Full (bandit + safety)
+
+# Individual tools
+uv run ruff format src/gitspaces tests              # Format code
+uv run ruff check src/gitspaces tests               # Lint
+uv run mypy src/gitspaces                           # Type check
 ```
 
-**Module not found after installation:**
+## Local CI Pipeline
 
-If the module still can't be found, verify your Python path:
+Run the full CI pipeline locally before pushing:
+
 ```bash
-python -c "import sys; print('\n'.join(sys.path))"
-pip show gitspaces
+uv run invoke ci-local
 ```
+
+This runs: static analysis → security scan → tests
+
+## Supported Python Versions
+
+Versions are defined in `.python-versions.json`:
+- Python 3.9, 3.10, 3.11, 3.12, 3.13, 3.14
+- Platforms: Ubuntu, macOS, Windows (cmd, pwsh, wsl)
+
+UV automatically downloads and manages these Python versions.
 
 ## Project Structure
 
 ```
 gitspaces/
+├── .python-versions.json   # Supported versions (single source of truth)
+├── tasks.py                # Invoke task definitions
 ├── src/gitspaces/          # Main package
 │   ├── modules/            # Core modules
-│   │   ├── config.py       # Configuration management
-│   │   ├── project.py      # Project management
-│   │   ├── space.py        # Space management
-│   │   ├── runshell.py     # External command wrapper
-│   │   └── cmd_*.py        # CLI commands
-│   ├── cli.py              # CLI entry point
-│   └── __init__.py
+│   └── cli.py              # CLI entry point
 ├── tests/                  # Test suite
-├── docs/                   # Documentation
-├── pyproject.toml          # Package metadata
-└── requirements*.txt       # Dependencies
+├── pyproject.toml          # Package metadata + tool config
+└── .github/workflows/      # CI/CD workflows
+```
+
+## Troubleshooting
+
+**UV not found after installation:**
+```bash
+# Reload shell or add to PATH
+export PATH="$HOME/.cargo/bin:$PATH"
+```
+
+**Import errors when running tests:**
+```bash
+# Ensure editable install
+uv pip install -e .[dev]
+```
+
+**Python version not available:**
+```bash
+# UV will automatically download it
+uv run --python 3.14 python --version
 ```

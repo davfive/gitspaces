@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from unittest.mock import Mock
-import pytest
+
 from gitspaces.modules.cmd_sleep import sleep_command
-from gitspaces.modules.project import Project
 
 
 def test_sleep_command_with_space_name(gitspaces_project, monkeypatch, capsys):

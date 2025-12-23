@@ -1,9 +1,11 @@
 """Console output and prompting utilities."""
 
 from __future__ import annotations
+
 from typing import Any
-from rich.console import Console as RichConsole
+
 import questionary
+from rich.console import Console as RichConsole
 
 
 class Console:

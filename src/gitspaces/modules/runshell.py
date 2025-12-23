@@ -9,7 +9,9 @@ from __future__ import annotations
 import os
 import shutil
 from pathlib import Path
+
 from git import Repo
+
 from gitspaces.modules.errors import GitSpacesError
 
 
@@ -57,7 +59,7 @@ class git:
         try:
             Repo.clone_from(url, str(target_path))
         except Exception as e:
-            raise GitSpacesError(f"Failed to clone repository: {e}")
+            raise GitSpacesError(f"Failed to clone repository: {e}") from e
 
     @staticmethod
     def get_repo(path: str | Path) -> Repo | None:

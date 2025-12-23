@@ -1,83 +1,70 @@
-name: "02-test-pyall"
+name: Test All Versions
 
 on:
-  workflow_dispatch: {}
   pull_request:
-    branches: [ main ]
-  workflow_call:
-    inputs:
-      run-codeql:
-        required: false
-        type: boolean
-        default: false
-
-permissions:
-  contents: read
+    branches: [main]
+  workflow_dispatch: {}
 
 jobs:
-  static:
-    uses: ./.github/workflows/static-checks.yml
-    with:
-      run-security: true
-      python-for-tools: '3.13'
-    permissions:
-      contents: read
-      security-events: write
-
-  test:
-    needs: static
-    name: test-${{ matrix.platform.name }}-pyall
-    runs-on: ${{ matrix.platform.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          - os: ubuntu-latest
-            shell: bash
-            name: ubuntu-bash
-          - os: macos-latest
-            shell: bash
-            name: macos-bash
-          - os: windows-latest
-            shell: pwsh
-            name: windows-pwsh
-          - os: windows-latest
-            shell: cmd
-            name: windows-cmd
-          - os: windows-latest
-            shell: wsl-bash
-            name: windows-wsl
-
+  gate:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+      - name: Run Gate
+        run: uv run invoke static security --full
 
-      - name: test-${{ matrix.platform.name }}-py3.13
-        uses: ./.github/actions/run-tests
-        with:
-          python-version: '3.13'
-          upload-coverage: ${{ matrix.platform.os == 'ubuntu-latest' && matrix.platform.shell == 'bash' && 'true' || 'false' }}
-          windows-shell: ${{ matrix.platform.shell == 'wsl-bash' && 'wsl' || matrix.platform.shell }}
+  generate-matrix:
+    needs: gate
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate matrix from .python-versions.json
+        id: set-matrix
+        run: |
+          MATRIX=$(jq -c '{include: [.platforms | to_entries[] | .key as $os | .value[] | {os: $os, shell: .}]}' .python-versions.json)
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 
-      - name: test-${{ matrix.platform.name }}-py3.12
-        uses: ./.github/actions/run-tests
+  test:
+    needs: [gate, generate-matrix]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    
+    name: test-${{ matrix.os }}-${{ matrix.shell }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: '3.12'
-          windows-shell: ${{ matrix.platform.shell == 'wsl-bash' && 'wsl' || matrix.platform.shell }}
-
-      - name: test-${{ matrix.platform.name }}-py3.11
-        uses: ./.github/actions/run-tests
+          enable-cache: true
+      
+      # Standard Runners (Linux, macOS, Windows native)
+      - name: Run tests (Standard)
+        if: matrix.shell != 'wsl'
+        shell: ${{ matrix.shell }}
+        run: uv run invoke test-all
+      
+      # WSL Runner (Self-provisioning via uv)
+      - name: Run tests (WSL)
+        if: matrix.shell == 'wsl'
+        # We assume WSL is installed on the runner
+        shell: wsl-bash {0}
+        run: |
+          rm -rf ~/gitspaces-test
+          cp -r . ~/gitspaces-test
+          cd ~/gitspaces-test
+          # uv will download the necessary Python binaries inside WSL
+          uv run invoke test-all
+          cp .coverage.* $GITHUB_WORKSPACE/
+      
+      - name: Upload coverage
+        if: matrix.os == 'ubuntu-latest' && matrix.shell == 'bash'
+        uses: codecov/codecov-action@v4
         with:
-          python-version: '3.11'
-          windows-shell: ${{ matrix.platform.shell == 'wsl-bash' && 'wsl' || matrix.platform.shell }}
-
-      - name: test-${{ matrix.platform.name }}-py3.10
-        uses: ./.github/actions/run-tests
-        with:
-          python-version: '3.10'
-          windows-shell: ${{ matrix.platform.shell == 'wsl-bash' && 'wsl' || matrix.platform.shell }}
-
-      - name: test-${{ matrix.platform.name }}-py3.9
-        uses: ./.github/actions/run-tests
-        with:
-          python-version: '3.9'
-          windows-shell: ${{ matrix.platform.shell == 'wsl-bash' && 'wsl' || matrix.platform.shell }}
+          files: .coverage.*

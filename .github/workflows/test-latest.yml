@@ -1,60 +1,93 @@
-name: "01-test-pylatest"
+name: Test All Versions
 
 on:
-  push:
-    branches: [ 'd5.**', 'copilot/**', 'ci/**' ]
+  pull_request:
+    branches: [main]
   workflow_dispatch: {}
-  workflow_call:
-    inputs:
-      run-codeql:
-        required: false
-        type: boolean
-        default: false
-
-permissions:
-  contents: read
 
 jobs:
-  static:
-    uses: ./.github/workflows/static-checks.yml
-    with:
-      run-security: true
-      python-for-tools: '3.13'
-    permissions:
-      contents: read
-      security-events: write
+  # --- THE GATE: Run once to ensure code quality before starting the matrix ---
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+      - name: Run Gate
+        # Runs static (ruff/mypy) and security (bandit/safety)
+        run: uv run invoke static security --full
 
+  # --- DYNAMIC MATRIX: Parse .python-versions.json ---
+  generate-matrix:
+    needs: gate
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate matrix
+        id: set-matrix
+        run: |
+          MATRIX=$(jq -c '{include: [.platforms | to_entries[] | .key as $os | .value[] | {os: $os, shell: .}]}' .python-versions.json)
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  # --- TEST EXECUTION ---
   test:
-    needs: static
-    name: test-${{ matrix.platform.name }}-pylatest
-    runs-on: ${{ matrix.platform.os }}
+    needs: [gate, generate-matrix]
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
-      matrix:
-        python-version: ['3.13']
-        platform:
-          - os: ubuntu-latest
-            shell: bash
-            name: ubuntu-bash
-          - os: macos-latest
-            shell: bash
-            name: macos-bash
-          - os: windows-latest
-            shell: pwsh
-            name: windows-pwsh
-          - os: windows-latest
-            shell: cmd
-            name: windows-cmd
-          - os: windows-latest
-            shell: wsl-bash
-            name: windows-wsl
-
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    
+    name: test-${{ matrix.os }}-${{ matrix.shell }}
+    
     steps:
       - uses: actions/checkout@v4
 
-      - name: test-${{ matrix.platform.name }}-py${{ matrix.python-version }}
-        uses: ./.github/actions/run-tests
+      # 1. Initialize WSL if needed (Required because WSL is not enabled by default)
+      - name: Setup WSL
+        if: matrix.shell == 'wsl'
+        uses: Vampire/setup-wsl@v3
         with:
-          python-version: ${{ matrix.python-version }}
-          upload-coverage: ${{ matrix.platform.os == 'ubuntu-latest' && matrix.platform.shell == 'bash' && 'true' || 'false' }}
-          windows-shell: ${{ matrix.platform.shell == 'wsl-bash' && 'wsl' || matrix.platform.shell }}
+          distribution: Ubuntu-22.04
+
+      # 2. Install uv on the host (Windows/Mac/Linux)
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      # 3. Standard Test Execution (Bash, CMD, PWSH)
+      - name: Run tests (Standard)
+        if: matrix.shell != 'wsl'
+        shell: ${{ matrix.shell }}
+        run: uv run invoke test-all
+      
+      # 4. WSL Test Execution (Native Linux Performance)
+      - name: Run tests (WSL)
+        if: matrix.shell == 'wsl'
+        shell: wsl-bash {0}
+        run: |
+          # Install uv inside the WSL environment (Linux-native binary)
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          source $HOME/.cargo/env
+
+          # Performance optimization: Move workspace to native ext4 filesystem
+          rm -rf ~/gitspaces-test
+          cp -r . ~/gitspaces-test
+          cd ~/gitspaces-test
+          
+          # uv will automatically download Python binaries inside WSL per .python-versions.json
+          uv run invoke test-all
+          
+          # Copy isolated coverage files back to the Windows workspace for the uploader
+          cp .coverage.* $GITHUB_WORKSPACE/
+      
+      # 5. Finalize Coverage (Ubuntu-only to prevent duplicate uploads)
+      - name: Upload coverage
+        if: matrix.os == 'ubuntu-latest' && matrix.shell == 'bash'
+        uses: codecov/codecov-action@v4
+        with:
+          files: .coverage.*

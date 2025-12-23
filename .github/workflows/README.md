@@ -1,75 +1,50 @@
-# CI/CD Workflows
+## Development and CI/CD
 
-## Overview
+This project uses uv (https://docs.astral.sh/uv/) for dependency management and Invoke (https://www.pyinvoke.org/) for task automation.
 
-```
-test-latest.yml ─→ static-checks.yml ─→ run-tests (5 platforms × 1 Python)
-test-all.yml    ─→ static-checks.yml ─→ run-tests (5 platforms × 5 Pythons sequential)
-publish-pypi.yml ─→ test-all.yml ─→ build-pypi.yml ─→ TestPyPI ─→ PyPI
-```
+### Local Development Setup
 
-## Workflows
+1. Install uv:
+   $ curl -LsSf https://astral.sh/uv/install.sh | sh
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `test-latest.yml` | Push to main/dev branches | Fast feedback: Python 3.13 only across all platforms |
-| `test-all.yml` | PRs to main, manual | Full matrix: Python 3.9–3.13 across all platforms |
-| `static-checks.yml` | Called by test workflows | Linting (flake8, black, mypy) + security scans |
-| `publish-pypi.yml` | Tag `v*.*.*` | Full test → build → TestPyPI → PyPI |
-| `build-pypi.yml` | Called by publish | Build wheel/sdist artifacts |
-| `issue-states.yml` | Project card events | Sync issue states with project board |
+2. Initialize Environment:
+   $ uv sync
 
-## Test Platforms
+3. Run Common Tasks:
+   - uv run invoke test      # Run standard test suite
+   - uv run invoke static    # Run Ruff (linting) and Mypy (types)
+   - uv run invoke security  # Run Bandit and Safety audits
+   - uv run invoke test-all  # Run full multi-version matrix
 
-| Platform | Shell | Job/Step Name |
-|----------|-------|---------------|
-| `ubuntu-latest` | bash | `test-ubuntu-bash-py*` |
-| `macos-latest` | bash | `test-macos-bash-py*` |
-| `windows-latest` | cmd | `test-windows-cmd-py*` |
-| `windows-latest` | pwsh | `test-windows-pwsh-py*` |
-| `windows-latest` | wsl-bash | `test-windows-wsl-py*` |
+### CI/CD Architecture
 
-### Naming Convention
-- **Jobs**: `test-{platform}-{shell}-pylatest` or `test-{platform}-{shell}-pyall`
-- **Steps**: `test-{platform}-{shell}-py{version}` (e.g., `test-ubuntu-bash-py3.13`)
+Our GitHub Actions pipeline follows a "Gate and Matrix" pattern:
 
-## Key Design Decisions
+* Push / Tag Trigger
+    * Phase 1: THE GATE (Fast Feedback)
+        * Runs static analysis and security audits.
+        * If these fail, the workflow stops to save resources.
+    * Phase 2: THE MATRIX (Cross-Platform Validation)
+        * Runs tests across Ubuntu, macOS, Windows, and WSL.
+        * Validates Python versions 3.9 through 3.14.
+    * Phase 3: BUILD AND RELEASE (v*.*.* Tags Only)
+        * Build: Generates distribution artifacts via 'uv build'.
+        * Approval: Pauses for manual sign-off in the GitHub 'pypi' environment.
+        * Publish: Uploads to PyPI using Trusted Publishing (OIDC).
 
-### Sequential Python versions in test-all.yml
-Python versions (3.9–3.13) run as **sequential steps**, not matrix entries. Runner startup overhead (~2 min) exceeds per-version test time (~30s–1m30s). One runner tests all versions.
+### WSL Optimization
 
-### WSL uses ext4 filesystem
-WSL tests copy workspace to `~/gitspaces` (native ext4) instead of `/mnt/...` (NTFS). This provides ~10x I/O performance improvement.
+For Windows performance, CI uses a native WSL environment. Code is mirrored 
+to the Linux ext4 filesystem to bypass NTFS mount overhead, resulting in 
+significantly faster I/O during test execution.
 
-### Editable installs for coverage
-Tests use `pip install -e .` (not wheel installs) so pytest-cov measures `src/gitspaces/` correctly. Wheel installs cause 0% coverage.
 
-### pytest-xdist parallelization
-All tests run with `-n auto` for parallel execution within each platform/version.
 
-## Composite Actions
+### Versioning
 
-Located in `.github/actions/`:
+We follow the "Single Source of Truth" model. The project version is 
+managed in pyproject.toml. At runtime, the version is accessed via 
+importlib.metadata:
 
-| Action | Purpose |
-|--------|---------|
-| `run-tests` | Setup Python, create venv, run pytest with coverage |
-| `setup-venv` | Cross-platform venv creation (bash/cmd/pwsh/wsl) |
-| `setup-wsl` | Install WSL Ubuntu + deadsnakes PPA for Python versions |
-
-## Environment Variables
-
-```yaml
-env:
-  LATEST_PYTHON_VERSION: '3.13'  # Used across workflows
-```
-
-## Supported Python Versions
-
-- 3.13 (latest)
-- 3.12
-- 3.11
-- 3.10
-- 3.9
-
-Update `test-all.yml` steps and `LATEST_PYTHON_VERSION` when adding/removing versions.
+from importlib.metadata import version
+__version__ = version("gitspaces")

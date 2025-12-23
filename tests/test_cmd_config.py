@@ -1,6 +1,7 @@
 """Tests for cmd_config module."""
 
 from unittest.mock import Mock, patch
+
 from gitspaces.modules.cmd_config import config_command
 
 
