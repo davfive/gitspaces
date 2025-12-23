@@ -17,7 +17,7 @@ jobs:
           enable-cache: true
       - name: Run Gate
         run: |
-          uv sync
+          uv sync --all-groups
           uv run invoke static security --full
 
   # 2. GENERATE MATRIX: Dynamic mapping from .python-versions.json
@@ -63,34 +63,42 @@ jobs:
         if: matrix.shell == 'bash'
         shell: bash
         run: |
-          uv sync
+          uv sync --all-groups
           uv run invoke test-all
 
+      # PowerShell (pwsh)
       - name: Run tests (PowerShell)
         if: matrix.shell == 'pwsh'
         shell: pwsh
         run: |
-          uv sync
+          uv sync --all-groups
           uv run invoke test-all
 
+      # Command Prompt (cmd)
       - name: Run tests (CMD)
         if: matrix.shell == 'cmd'
         shell: cmd
         run: |
-          uv sync
+          uv sync --all-groups
           uv run invoke test-all
 
+      # Windows Subsystem for Linux (wsl)
       - name: Run tests (WSL)
         if: matrix.shell == 'wsl'
         shell: wsl-bash {0}
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
           source $HOME/.cargo/env
+          
+          # Move to ext4 for performance
           rm -rf ~/gitspaces-test
           cp -r . ~/gitspaces-test
           cd ~/gitspaces-test
-          uv sync
+          
+          uv sync --all-groups
           uv run invoke test-all
+          
+          # Sync coverage back to workspace
           cp .coverage.* $GITHUB_WORKSPACE/
       
       - name: Upload coverage

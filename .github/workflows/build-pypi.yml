@@ -25,7 +25,9 @@ jobs:
 
       - name: Build package
         # Generates .tar.gz and .whl in the dist/ folder
-        run: uv build
+        run: |
+          uv sync --all-groups
+          uv build
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

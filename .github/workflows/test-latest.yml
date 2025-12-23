@@ -16,7 +16,7 @@ jobs:
           enable-cache: true
       - name: Run Gate
         run: |
-          uv sync
+          uv sync --all-groups
           uv run invoke static security --full
 
   generate-matrix:
@@ -59,21 +59,21 @@ jobs:
         if: matrix.shell == 'bash'
         shell: bash
         run: |
-          uv sync
+          uv sync --all-groups
           uv run invoke test-all
 
       - name: Run tests (PowerShell)
         if: matrix.shell == 'pwsh'
         shell: pwsh
         run: |
-          uv sync
+          uv sync --all-groups
           uv run invoke test-all
 
       - name: Run tests (CMD)
         if: matrix.shell == 'cmd'
         shell: cmd
         run: |
-          uv sync
+          uv sync --all-groups
           uv run invoke test-all
 
       - name: Run tests (WSL)
@@ -85,7 +85,7 @@ jobs:
           rm -rf ~/gitspaces-test
           cp -r . ~/gitspaces-test
           cd ~/gitspaces-test
-          uv sync
+          uv sync --all-groups
           uv run invoke test-all
           cp .coverage.* $GITHUB_WORKSPACE/
 
