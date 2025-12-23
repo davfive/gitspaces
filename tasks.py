@@ -1,20 +1,4 @@
-"""Invoke tasks for gitspaces development.
-
-Usage:
-    uv run invoke test              # Test current Python version
-    uv run invoke test-all          # Test all supported versions
-    uv run invoke static            # Ruff + mypy checks
-    uv run invoke security          # Security scans (--full for deep scan)
-    uv run invoke ci-local          # Full CI pipeline
-
-Individual tools (no invoke needed):
-    uv run ruff format src/gitspaces tests
-    uv run ruff check src/gitspaces tests
-    uv run mypy src/gitspaces
-    uv run bandit -r src/gitspaces
-    uv run vulture src/gitspaces
-    uv run xenon src/gitspaces
-"""
+"""Invoke tasks for gitspaces development."""
 
 import sys
 import json
@@ -24,198 +8,100 @@ from invoke import task, Exit
 PROJECT_ROOT = Path(__file__).parent
 PYVERSIONS_FILE = PROJECT_ROOT / ".python-versions.json"
 
-def load_config():
-    """Load configuration from .python-versions.json"""
-    with open(PYVERSIONS_FILE) as f:
-        return json.load(f)
-
 def get_python_versions():
-    """Get list of supported Python versions"""
-    config = load_config()
-    return config["python"]
+    """Get list of supported Python versions from .python-versions.json"""
+    with open(PYVERSIONS_FILE) as f:
+        return json.load(f)["python"]
+
+def install_deps(c):
+    """Sync dependencies using uv."""
+    # uv sync ensures the environment matches the lockfile exactly
+    c.run("uv sync --extra dev", warn=True)
 
 # ============================================================================
-# ORCHESTRATION TASKS
+# CI GATE TASKS (Run once in CI on latest Ubuntu)
+# ============================================================================
+
+@task
+def static(c):
+    """Run static analysis (Ruff, Mypy)."""
+    install_deps(c)
+    py_ver = f"{sys.version_info.major}.{sys.version_info.minor}"
+    print(f"[static] Running analysis on Python {py_ver}...")
+    
+    c.run("uv run ruff format --check src/gitspaces tests")
+    c.run("uv run ruff check src/gitspaces tests")
+    c.run("uv run mypy src/gitspaces")
+
+@task
+def security(c, full=False):
+    """Run security scans. Use --full in CI for deep dependency checks."""
+    install_deps(c)
+    print("[security] Running Bandit (Source Scan)...")
+    # Generate a report file if we're in 'full' mode for CI upload
+    report_args = "-f json -o bandit-report.json" if full else ""
+    c.run(f"uv run bandit -r src/gitspaces {report_args}")
+    
+    if full:
+        print("[security] Running Safety (Dependency Scan)...")
+        # Safety report saved to text for easy CI artifact upload
+        c.run("uv run safety check --output text > safety-report.txt", warn=True)
+
+# ============================================================================
+# TESTING TASKS (The Matrix)
 # ============================================================================
 
 @task
 def test(c, python=None, args="", coverage=True):
-    """Run tests for current or specified Python version.
+    """Run tests for the current uv environment."""
+    install_deps(c)
+    py_ver = python or f"{sys.version_info.major}.{sys.version_info.minor}"
     
-    Examples:
-        uv run invoke test
-        uv run invoke test --python=3.14
-        uv run invoke test --args="tests/test_cli.py -k test_clone"
-    """
-    py_version = python or f"{sys.version_info.major}.{sys.version_info.minor}"
+    # Isolate coverage files: .coverage.3.9, .coverage.3.10, etc.
+    env = {"COVERAGE_FILE": f".coverage.{py_ver}"} if coverage else {}
+    cov_args = "--cov=src/gitspaces --cov-append" if coverage else ""
     
-    cov_args = ""
-    if coverage:
-        cov_file = f"coverage-{py_version}.xml"
-        cov_args = f"--cov=src/gitspaces --cov-report=xml:{cov_file} --cov-report=term-missing"
+    print(f"[test] Running pytest on Python {py_ver}...")
+    result = c.run(f"uv run pytest -n auto {cov_args} {args}", warn=True, pty=True, env=env)
     
-    cmd = f"pytest -n auto {cov_args} {args}"
-    print(f"[test] Running tests with Python {py_version}...")
-    
-    result = c.run(cmd, warn=True, pty=True)
     if result.exited != 0:
-        raise Exit(f"Tests failed for Python {py_version}", code=result.exited)
-
+        raise Exit(f"Tests failed on {py_ver}", code=result.exited)
 
 @task
-def test_all(c, skip_versions=""):
-    """Run tests across all supported Python versions.
-    
-    Reads versions from .python-versions.json
-    
-    Args:
-        skip_versions: Comma-separated versions to skip (e.g., '3.9,3.10')
-    
-    Examples:
-        uv run invoke test-all
-        uv run invoke test-all --skip-versions=3.9,3.10
-    """
+def test_all(c):
+    """Run full test matrix locally with automatic uv version switching."""
     versions = get_python_versions()
-    
-    skip = [v.strip() for v in skip_versions.split(",") if v.strip()]
-    versions_to_test = [v for v in versions if v not in skip]
-    
-    print(f"[test-all] Testing Python versions: {', '.join(versions_to_test)}")
-    print(f"[test-all] (from {PYVERSIONS_FILE})")
-    if skip:
-        print(f"[test-all] Skipping: {', '.join(skip)}")
-    
     results = {}
-    for version in versions_to_test:
-        print(f"\n{'='*70}")
-        print(f"Testing Python {version}")
-        print(f"{'='*70}\n")
-        
-        result = c.run(
-            f"uv run --python {version} invoke test --python={version}",
-            warn=True,
-            pty=True
-        )
-        results[version] = result.exited == 0
-    
-    # Summary
-    print(f"\n{'='*70}")
-    print("TEST RESULTS SUMMARY")
-    print(f"{'='*70}")
-    
-    for version, passed in results.items():
-        status = "✅ PASSED" if passed else "❌ FAILED"
-        print(f"  Python {version}: {status}")
+
+    for v in versions:
+        print(f"\n{'='*70}\nSwitching to Python {v}\n{'='*70}")
+        # uv run --python handles the auto-download and isolated venv
+        res = c.run(f"uv run --python {v} invoke test --python={v}", warn=True)
+        results[v] = res.exited == 0
+
+    print(f"\n{'='*70}\nCOMBINED COVERAGE REPORT\n{'='*70}")
+    c.run("uv run coverage combine", warn=True)
+    c.run("uv run coverage report")
     
     if not all(results.values()):
-        failed = [v for v, passed in results.items() if not passed]
-        raise Exit(f"Tests failed for: {', '.join(failed)}", code=1)
-    
-    print(f"\n✅ All {len(results)} Python versions passed!")
+        raise Exit("Test matrix failed.", code=1)
 
-
-@task
-def static(c):
-    """Run all static analysis checks (ruff format, ruff check, mypy).
-    
-    Examples:
-        uv run invoke static
-    """
-    print("[static] Running static analysis checks...\n")
-    
-    checks = [
-        ("Ruff format check", "ruff format --check src/gitspaces tests"),
-        ("Ruff lint check", "ruff check src/gitspaces tests"),
-        ("Mypy type check", "mypy src/gitspaces"),
-    ]
-    
-    failed = []
-    for name, cmd in checks:
-        print(f"{'='*70}")
-        print(f"Running: {name}")
-        print(f"{'='*70}")
-        result = c.run(cmd, warn=True, pty=True)
-        if result.exited != 0:
-            failed.append(name)
-        print()
-    
-    if failed:
-        print(f"\n❌ Static analysis failed: {', '.join(failed)}")
-        raise Exit(code=1)
-    
-    print("✅ All static analysis checks passed!")
-
-
-@task
-def security(c, full=False):
-    """Run security scans.
-    
-    Args:
-        full: Run full scan including dependency checks (default: False)
-    
-    Light mode (default):
-        - bandit: Source code security scan
-    
-    Full mode (--full):
-        - bandit: Source code security scan
-        - safety: Known vulnerability database check
-    
-    Examples:
-        uv run invoke security           # Quick scan (bandit only)
-        uv run invoke security --full    # Deep scan (bandit + safety)
-    """
-    print(f"[security] Running {'FULL' if full else 'LIGHT'} security scan...\n")
-    
-    # Always run bandit
-    print("="*70)
-    print("Bandit: Source code security analysis")
-    print("="*70)
-    result = c.run("bandit -r src/gitspaces", warn=True, pty=True)
-    bandit_passed = result.exited == 0
-    print()
-    
-    safety_passed = True
-    if full:
-        print("="*70)
-        print("Safety: Dependency vulnerability scan")
-        print("="*70)
-        result = c.run("safety check", warn=True, pty=True)
-        safety_passed = result.exited == 0
-        print()
-    
-    if not (bandit_passed and safety_passed):
-        print("❌ Security scan failed!")
-        raise Exit(code=1)
-    
-    print(f"✅ Security scan passed ({'full' if full else 'light'} mode)")
-
+# ============================================================================
+# PIPELINES & UTILS
+# ============================================================================
 
 @task(pre=[static, security])
-def ci_local(c, python=None):
-    """Run full CI pipeline locally: static → security → test.
-    
-    Examples:
-        uv run invoke ci-local              # Current Python version
-        uv run invoke ci-local --python=3.14
-    """
-    print("\n" + "="*70)
-    print("Running tests...")
-    print("="*70 + "\n")
-    test(c, python=python)
-    
-    print("\n" + "="*70)
-    print("✅ LOCAL CI PIPELINE PASSED!")
-    print("="*70)
-
+def ci_local(c):
+    """Local check: Static analysis then Tests on current Python."""
+    test(c)
 
 @task
 def clean(c):
-    """Remove build artifacts, cache files, and coverage reports."""
+    """Clean all cache, coverage, and report files."""
     patterns = [
-        "build/", "dist/", "*.egg-info", "**/__pycache__", "**/*.pyc",
-        "**/*.pyo", ".pytest_cache", ".ruff_cache", ".mypy_cache",
-        "htmlcov/", "coverage*.xml", ".coverage",
+        ".pytest_cache", ".ruff_cache", ".mypy_cache", ".uv_cache", 
+        ".coverage*", "coverage.xml", "bandit-report.json", "safety-report.txt"
     ]
-    for pattern in patterns:
-        c.run(f"rm -rf {pattern}", warn=True)
-    print("✅ Cleaned build artifacts and cache files")
+    for p in patterns:
+        c.run(f"rm -rf {p}", warn=True)
+    print("[PASS] Cleanup complete.")

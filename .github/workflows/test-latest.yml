@@ -1,69 +1,93 @@
-name: Test Latest Python
+name: Test All Versions
 
 on:
-  push:
-    branches: [main, develop]
+  pull_request:
+    branches: [main]
   workflow_dispatch: {}
 
 jobs:
-  static:
+  # --- THE GATE: Run once to ensure code quality before starting the matrix ---
+  gate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: '3.14'
-      
-      - name: Install UV
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
-      
-      - name: Install dependencies
-        run: uv pip install -e .[dev]
-      
-      - name: Run static analysis
-        run: uv run invoke static
-      
-      - name: Run security scan (full)
-        run: uv run invoke security --full
-        continue-on-error: true  # Don't fail on dependency vulnerabilities
+          enable-cache: true
+      - name: Run Gate
+        # Runs static (ruff/mypy) and security (bandit/safety)
+        run: uv run invoke static security --full
 
+  # --- DYNAMIC MATRIX: Parse .python-versions.json ---
+  generate-matrix:
+    needs: gate
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate matrix
+        id: set-matrix
+        run: |
+          MATRIX=$(jq -c '{include: [.platforms | to_entries[] | .key as $os | .value[] | {os: $os, shell: .}]}' .python-versions.json)
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  # --- TEST EXECUTION ---
   test:
-    needs: static
+    needs: [gate, generate-matrix]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     
-    name: test-${{ matrix.os }}-pylatest
+    name: test-${{ matrix.os }}-${{ matrix.shell }}
     
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Setup Python
-        uses: actions/setup-python@v5
+
+      # 1. Initialize WSL if needed (Required because WSL is not enabled by default)
+      - name: Setup WSL
+        if: matrix.shell == 'wsl'
+        uses: Vampire/setup-wsl@v3
         with:
-          python-version: '3.14'
+          distribution: Ubuntu-22.04
+
+      # 2. Install uv on the host (Windows/Mac/Linux)
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      # 3. Standard Test Execution (Bash, CMD, PWSH)
+      - name: Run tests (Standard)
+        if: matrix.shell != 'wsl'
+        shell: ${{ matrix.shell }}
+        run: uv run invoke test-all
       
-      - name: Install UV (Unix)
-        if: runner.os != 'Windows'
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      # 4. WSL Test Execution (Native Linux Performance)
+      - name: Run tests (WSL)
+        if: matrix.shell == 'wsl'
+        shell: wsl-bash {0}
+        run: |
+          # Install uv inside the WSL environment (Linux-native binary)
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          source $HOME/.cargo/env
+
+          # Performance optimization: Move workspace to native ext4 filesystem
+          rm -rf ~/gitspaces-test
+          cp -r . ~/gitspaces-test
+          cd ~/gitspaces-test
+          
+          # uv will automatically download Python binaries inside WSL per .python-versions.json
+          uv run invoke test-all
+          
+          # Copy isolated coverage files back to the Windows workspace for the uploader
+          cp .coverage.* $GITHUB_WORKSPACE/
       
-      - name: Install UV (Windows)
-        if: runner.os == 'Windows'
-        run: irm https://astral.sh/uv/install.ps1 | iex
-        shell: pwsh
-      
-      - name: Install dependencies
-        run: uv pip install -e .[dev]
-      
-      - name: Run tests
-        run: uv run invoke test
-      
+      # 5. Finalize Coverage (Ubuntu-only to prevent duplicate uploads)
       - name: Upload coverage
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' && matrix.shell == 'bash'
         uses: codecov/codecov-action@v4
         with:
-          files: coverage-3.14.xml
+          files: .coverage.*
