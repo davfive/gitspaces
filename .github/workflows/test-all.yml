@@ -6,6 +6,7 @@ on:
   workflow_dispatch: {}
 
 jobs:
+  # 1. THE GATE: Fast static and security checks
   gate:
     runs-on: ubuntu-latest
     steps:
@@ -14,9 +15,13 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
+      - name: Install dependencies
+        # Explicit sync ensures 'invoke' and dev tools are available in the venv
+        run: uv sync
       - name: Run Gate
         run: uv run invoke static security --full
 
+  # 2. GENERATE MATRIX: Dynamic mapping from .python-versions.json
   generate-matrix:
     needs: gate
     runs-on: ubuntu-latest
@@ -30,6 +35,7 @@ jobs:
           MATRIX=$(jq -c '{include: [.platforms | to_entries[] | .key as $os | .value[] | {os: $os, shell: .}]}' .python-versions.json)
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 
+  # 3. TEST EXECUTION: Safe shell handling
   test:
     needs: [gate, generate-matrix]
     runs-on: ${{ matrix.os }}
@@ -53,8 +59,7 @@ jobs:
         with:
           enable-cache: true
 
-      # EXPLICIT SHELLS - NO VARIABLES IN THE 'shell:' KEY
-      
+      # EXPLICIT SHELLS: Standard strings satisfy the GitHub parser
       - name: Run tests (Bash)
         if: matrix.shell == 'bash'
         shell: bash
@@ -79,6 +84,7 @@ jobs:
           rm -rf ~/gitspaces-test
           cp -r . ~/gitspaces-test
           cd ~/gitspaces-test
+          uv sync
           uv run invoke test-all
           cp .coverage.* $GITHUB_WORKSPACE/
       

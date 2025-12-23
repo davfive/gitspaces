@@ -14,6 +14,8 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
+      - name: Install dependencies
+        run: uv sync
       - name: Run Gate
         run: uv run invoke static security --full
 
@@ -53,8 +55,6 @@ jobs:
         with:
           enable-cache: true
 
-      # EXPLICIT SHELLS - NO VARIABLES IN THE 'shell:' KEY
-      
       - name: Run tests (Bash)
         if: matrix.shell == 'bash'
         shell: bash
@@ -79,5 +79,6 @@ jobs:
           rm -rf ~/gitspaces-test
           cp -r . ~/gitspaces-test
           cd ~/gitspaces-test
+          uv sync
           uv run invoke test-all
           cp .coverage.* $GITHUB_WORKSPACE/
