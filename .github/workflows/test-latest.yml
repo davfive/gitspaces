@@ -1,12 +1,11 @@
-name: Test All Versions
+name: Test Latest Versions
 
 on:
-  pull_request:
+  push:
     branches: [main]
   workflow_dispatch: {}
 
 jobs:
-  # --- THE GATE: Run once to ensure code quality before starting the matrix ---
   gate:
     runs-on: ubuntu-latest
     steps:
@@ -16,10 +15,8 @@ jobs:
         with:
           enable-cache: true
       - name: Run Gate
-        # Runs static (ruff/mypy) and security (bandit/safety)
         run: uv run invoke static security --full
 
-  # --- DYNAMIC MATRIX: Parse .python-versions.json ---
   generate-matrix:
     needs: gate
     runs-on: ubuntu-latest
@@ -33,7 +30,6 @@ jobs:
           MATRIX=$(jq -c '{include: [.platforms | to_entries[] | .key as $os | .value[] | {os: $os, shell: .}]}' .python-versions.json)
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 
-  # --- TEST EXECUTION ---
   test:
     needs: [gate, generate-matrix]
     runs-on: ${{ matrix.os }}
@@ -41,53 +37,47 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     
-    name: test-${{ matrix.os }}-${{ matrix.shell }}
+    name: test-latest-${{ matrix.os }}-${{ matrix.shell }}
     
     steps:
       - uses: actions/checkout@v4
 
-      # 1. Initialize WSL if needed (Required because WSL is not enabled by default)
       - name: Setup WSL
         if: matrix.shell == 'wsl'
         uses: Vampire/setup-wsl@v3
         with:
           distribution: Ubuntu-22.04
 
-      # 2. Install uv on the host (Windows/Mac/Linux)
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
 
-      # 3. Standard Test Execution (Bash, CMD, PWSH)
-      - name: Run tests (Standard)
-        if: matrix.shell != 'wsl'
-        shell: ${{ matrix.shell }}
-        run: uv run invoke test-all
+      # EXPLICIT SHELLS - NO VARIABLES IN THE 'shell:' KEY
       
-      # 4. WSL Test Execution (Native Linux Performance)
+      - name: Run tests (Bash)
+        if: matrix.shell == 'bash'
+        shell: bash
+        run: uv run invoke test-all
+
+      - name: Run tests (PowerShell)
+        if: matrix.shell == 'pwsh'
+        shell: pwsh
+        run: uv run invoke test-all
+
+      - name: Run tests (CMD)
+        if: matrix.shell == 'cmd'
+        shell: cmd
+        run: uv run invoke test-all
+
       - name: Run tests (WSL)
         if: matrix.shell == 'wsl'
         shell: wsl-bash {0}
         run: |
-          # Install uv inside the WSL environment (Linux-native binary)
           curl -LsSf https://astral.sh/uv/install.sh | sh
           source $HOME/.cargo/env
-
-          # Performance optimization: Move workspace to native ext4 filesystem
           rm -rf ~/gitspaces-test
           cp -r . ~/gitspaces-test
           cd ~/gitspaces-test
-          
-          # uv will automatically download Python binaries inside WSL per .python-versions.json
           uv run invoke test-all
-          
-          # Copy isolated coverage files back to the Windows workspace for the uploader
           cp .coverage.* $GITHUB_WORKSPACE/
-      
-      # 5. Finalize Coverage (Ubuntu-only to prevent duplicate uploads)
-      - name: Upload coverage
-        if: matrix.os == 'ubuntu-latest' && matrix.shell == 'bash'
-        uses: codecov/codecov-action@v4
-        with:
-          files: .coverage.*
